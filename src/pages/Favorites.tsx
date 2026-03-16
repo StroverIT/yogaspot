@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { mockStudios, mockClasses, mockInstructors, mockSchedule, mockSubscriptions, WEEKDAYS } from '@/data/mock-data';
-import { Heart, Star, MapPin, Users, Clock, Search, ArrowRight, CreditCard, CalendarDays } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { mockStudios, mockClasses, mockInstructors, mockSchedule, mockSubscriptions, WEEKDAYS } from "@/data/mock-data";
+import { Heart, Star, MapPin, Users, Clock, Search, ArrowRight, CreditCard, CalendarDays } from "lucide-react";
+import Link from "next/link";
 import { useFavorites } from '@/hooks/useFavorites';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

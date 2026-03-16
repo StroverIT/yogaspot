@@ -1,4 +1,5 @@
-import { useParams, Link } from 'react-router-dom';
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { mockStudios, mockInstructors, mockClasses, mockReviews, mockSchedule, mockSubscriptions, WEEKDAYS } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import AuthModal from '@/components/AuthModal';
 
 const StudioDetail = () => {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string | undefined;
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'schedule' | 'classes' | 'instructors' | 'reviews'>('schedule');
 

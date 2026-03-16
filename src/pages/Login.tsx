@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,15 +11,15 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { toast.error('Моля, попълнете всички полета.'); return; }
     try {
       await login(email, password);
-      toast.success('Успешен вход!');
-      navigate('/');
+      toast.success("Успешен вход!");
+      router.push("/");
     } catch { toast.error('Грешка при вход.'); }
   };
 

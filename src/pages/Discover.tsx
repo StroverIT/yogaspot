@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import Link from "next/link";
 import { mockStudios, mockClasses, YOGA_TYPES, DIFFICULTY_LEVELS } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

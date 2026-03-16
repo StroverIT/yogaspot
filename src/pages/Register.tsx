@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +13,15 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('client');
   const { register } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) { toast.error('Моля, попълнете всички полета.'); return; }
     try {
       await register(name, email, password, role);
-      toast.success('Успешна регистрация!');
-      navigate('/');
+      toast.success("Успешна регистрация!");
+      router.push("/");
     } catch { toast.error('Грешка при регистрация.'); }
   };
 
