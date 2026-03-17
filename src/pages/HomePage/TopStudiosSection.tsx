@@ -25,7 +25,7 @@ export default function TopStudiosSection({ studios, isFavorite, onFavorite }: T
   return (
     <section className="py-20 bg-card">
       <div className="container mx-auto px-4">
-        <div className="flex items-end justify-between mb-10">
+        <div className="flex items-end justify-between mb-6 gap-4">
           <div>
             <Badge variant="secondary" className="rounded-full mb-3">
               Препоръчани
@@ -35,25 +35,61 @@ export default function TopStudiosSection({ studios, isFavorite, onFavorite }: T
             </h2>
             <p className="text-muted-foreground">Избрани от общността с най-много положителни отзиви</p>
           </div>
-          <Button asChild variant="outline" className="hidden md:flex rounded-full gap-1">
-            <Link href="/discover">
-              Виж всички <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                className="top-studios-prev inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent/60 shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Предишно студио"
+              >
+                <ArrowRight className="h-4 w-4 rotate-180" />
+              </button>
+              <button
+                className="top-studios-next inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-accent/60 shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Следващо студио"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <Button asChild variant="outline" className="rounded-full gap-1">
+              <Link href="/discover">
+                Виж всички <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={24}
           slidesPerView={1}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 4500, disableOnInteraction: true }}
-          breakpoints={{
-            640: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
+          centeredSlides={false}
+          loop={studios.length > 3}
+          grabCursor
+          keyboard={{ enabled: true }}
+          navigation={{
+            enabled: true,
+            prevEl: ".top-studios-prev",
+            nextEl: ".top-studios-next",
           }}
-          className="studios-swiper !pb-12"
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+            bulletClass: "top-studios-bullet",
+            bulletActiveClass: "top-studios-bullet-active",
+          }}
+          autoplay={{
+            delay: 5500,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          }}
+          speed={650}
+          breakpoints={{
+            640: { slidesPerView: 2, slidesPerGroup: 2 },
+            1024: { slidesPerView: 3, slidesPerGroup: 3 },
+          }}
+          className="studios-swiper !pb-14"
         >
           {studios.map((studio) => {
             const classes = mockClasses.filter((c) => c.studioId === studio.id);

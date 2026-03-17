@@ -3,3 +3,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.top-studios-bullet {
+  background-color: rgb(16 185 129 / 0.4); /* emerald-500/40 */
+}
+
+.top-studios-bullet-active {
+  background-color: rgb(16 185 129 / 1); /* emerald-500 */
+}
