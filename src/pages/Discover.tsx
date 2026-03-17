@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star, MapPin, Search, SlidersHorizontal, Heart, X, Sparkles, Users } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from '@/components/AuthModal';
@@ -50,10 +49,9 @@ const Discover = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero header */}
       <div className="bg-gradient-to-br from-primary/8 via-background to-sage/20 border-b border-border">
         <div className="container mx-auto px-4 py-12 md:py-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div>
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium text-primary">Разгледай всички студиа</span>
@@ -62,15 +60,10 @@ const Discover = () => {
             <p className="text-muted-foreground text-lg max-w-xl">
               Намери перфектното място за твоята практика сред {mockStudios.length} студиа
             </p>
-          </motion.div>
+          </div>
 
           {/* Search bar */}
-          <motion.div
-            className="mt-8 max-w-2xl"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div className="mt-8 max-w-2xl">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -85,7 +78,7 @@ const Discover = () => {
                 </button>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
@@ -152,33 +145,26 @@ const Discover = () => {
         </div>
 
         {/* Mobile filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden md:hidden mb-6"
-            >
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-card border border-border">
-                <Select value={yogaType} onValueChange={setYogaType}>
-                  <SelectTrigger className="rounded-lg"><SelectValue placeholder="Тип йога" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Всички типове</SelectItem>
-                    {YOGA_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger className="rounded-lg"><SelectValue placeholder="Ниво" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Всички нива</SelectItem>
-                    {DIFFICULTY_LEVELS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {showFilters && (
+          <div className="overflow-hidden md:hidden mb-6">
+            <div className="grid grid-cols-2 gap-3 p-4 rounded-xl bg-card border border-border">
+              <Select value={yogaType} onValueChange={setYogaType}>
+                <SelectTrigger className="rounded-lg"><SelectValue placeholder="Тип йога" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Всички типове</SelectItem>
+                  {YOGA_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={difficulty} onValueChange={setDifficulty}>
+                <SelectTrigger className="rounded-lg"><SelectValue placeholder="Ниво" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Всички нива</SelectItem>
+                  {DIFFICULTY_LEVELS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
 
         {/* Desktop filters row */}
         <div className="hidden md:flex items-center gap-3 mb-8">
@@ -202,11 +188,7 @@ const Discover = () => {
         <DiscoverGrid studios={filtered} onAuthRequired={() => setAuthModalOpen(true)} />
 
         {filtered.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-20"
-          >
+          <div className="text-center py-20">
             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
               <Search className="h-7 w-7 text-muted-foreground" />
             </div>
@@ -215,7 +197,7 @@ const Discover = () => {
             <Button variant="outline" className="rounded-full" onClick={clearFilters}>
               Изчисти филтрите
             </Button>
-          </motion.div>
+          </div>
         )}
       </div>
 
@@ -240,22 +222,17 @@ const DiscoverGrid = ({ studios, onAuthRequired }: { studios: typeof mockStudios
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {studios.map((studio, i) => (
-        <motion.div
+      {studios.map((studio) => (
+        <div
           key={studio.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.06, duration: 0.4 }}
         >
           <div className="relative group h-full">
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={(e) => handleFavorite(e, studio.id)}
-              className="absolute top-3 right-3 z-10 p-2.5 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-sm"
+              className="absolute top-3 right-3 z-10 p-2.5 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-sm transition-transform hover:scale-110 active:scale-95"
             >
               <Heart className={`h-4 w-4 transition-colors ${isFavorite(studio.id) ? 'fill-destructive text-destructive' : 'text-muted-foreground'}`} />
-            </motion.button>
+            </button>
             <Link href={`/studio/${studio.id}`} className="block h-full">
               <div className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 h-full flex flex-col">
                 <div className="aspect-[16/9] bg-gradient-to-br from-sage/40 via-primary/15 to-warm/30 flex items-center justify-center relative overflow-hidden">
@@ -295,7 +272,7 @@ const DiscoverGrid = ({ studios, onAuthRequired }: { studios: typeof mockStudios
               </div>
             </Link>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );

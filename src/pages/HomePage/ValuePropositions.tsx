@@ -1,7 +1,6 @@
 "use client";
 
 import { Search, Shield, Zap } from "lucide-react";
-import { motion } from "framer-motion";
 
 const items = [
   {
@@ -35,12 +34,9 @@ export default function ValuePropositions() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {items.map((item, i) => (
-            <motion.div
+            <div
               key={i}
               className="text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.15 }}
             >
               <div className="relative inline-block mb-5">
                 <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto text-primary">
@@ -49,7 +45,7 @@ export default function ValuePropositions() {
               </div>
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">{item.title}</h3>
               <p className="text-muted-foreground">{item.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

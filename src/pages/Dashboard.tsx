@@ -18,7 +18,6 @@ import {
   ChevronRight, BarChart3, Eye, AlertCircle, CalendarDays, CreditCard, MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 
 type ModalType = 'studio' | 'instructor' | 'class' | 'schedule' | null;
 type Section = 'overview' | 'studios' | 'instructors' | 'classes' | 'schedule';
@@ -115,44 +114,34 @@ const Dashboard = () => {
 
       {/* Main content */}
       <main className="flex-1 p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeSection === 'overview' && (
-              <OverviewSection
-                avgRating={avgRating}
-                totalEnrolled={totalEnrolled}
-                totalCapacity={totalCapacity}
-                occupancyRate={occupancyRate}
-                myStudios={myStudios}
-                myClasses={myClasses}
-                myInstructors={myInstructors}
-                revenue={revenue}
-              />
-            )}
-            {activeSection === 'studios' && (
-              <StudiosSection studios={myStudios} onAdd={() => setModalType('studio')} onEdit={() => setModalType('studio')} />
-            )}
-            {activeSection === 'instructors' && (
-              <InstructorsSection instructors={myInstructors} onAdd={() => setModalType('instructor')} onEdit={() => setModalType('instructor')} />
-            )}
-            {activeSection === 'classes' && (
-              <ClassesSection classes={myClasses} onAdd={() => setModalType('class')} onEdit={() => setModalType('class')} />
-            )}
-            {activeSection === 'schedule' && (
-              <ScheduleSection
-                studios={myStudios}
-                onAdd={() => { setEditingSchedule(null); setModalType('schedule'); }}
-                onEdit={(entry) => { setEditingSchedule(entry); setModalType('schedule'); }}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {activeSection === 'overview' && (
+          <OverviewSection
+            avgRating={avgRating}
+            totalEnrolled={totalEnrolled}
+            totalCapacity={totalCapacity}
+            occupancyRate={occupancyRate}
+            myStudios={myStudios}
+            myClasses={myClasses}
+            myInstructors={myInstructors}
+            revenue={revenue}
+          />
+        )}
+        {activeSection === 'studios' && (
+          <StudiosSection studios={myStudios} onAdd={() => setModalType('studio')} onEdit={() => setModalType('studio')} />
+        )}
+        {activeSection === 'instructors' && (
+          <InstructorsSection instructors={myInstructors} onAdd={() => setModalType('instructor')} onEdit={() => setModalType('instructor')} />
+        )}
+        {activeSection === 'classes' && (
+          <ClassesSection classes={myClasses} onAdd={() => setModalType('class')} onEdit={() => setModalType('class')} />
+        )}
+        {activeSection === 'schedule' && (
+          <ScheduleSection
+            studios={myStudios}
+            onAdd={() => { setEditingSchedule(null); setModalType('schedule'); }}
+            onEdit={(entry) => { setEditingSchedule(entry); setModalType('schedule'); }}
+          />
+        )}
 
         {/* Modals */}
         <StudioModal open={modalType === 'studio'} onClose={() => setModalType(null)} onSave={handleSave} />
@@ -185,11 +174,8 @@ const OverviewSection = ({
         { icon: Calendar, label: 'Активни класове', value: myClasses.length, sub: `${myInstructors.length} инструктора`, color: 'text-primary' },
         { icon: BarChart3, label: 'Приход', value: `${revenue} лв.`, sub: 'от записвания', color: 'text-accent' },
       ].map((card, i) => (
-        <motion.div
+        <div
           key={i}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.08 }}
           className="rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-3">
@@ -199,7 +185,7 @@ const OverviewSection = ({
           <p className="font-display text-2xl font-bold text-foreground">{card.value}</p>
           <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
           <p className="text-xs text-muted-foreground/70 mt-0.5">{card.sub}</p>
-        </motion.div>
+        </div>
       ))}
     </div>
 
@@ -271,12 +257,9 @@ const StudiosSection = ({
       <Button onClick={onAdd} className="gap-2"><Plus className="h-4 w-4" /> Добави студио</Button>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      {studios.map((studio, i) => (
-        <motion.div
+      {studios.map((studio) => (
+        <div
           key={studio.id}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.08 }}
           className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-md transition-all"
         >
           <div className="h-32 bg-gradient-to-br from-primary/15 via-secondary/30 to-accent/10 flex items-center justify-center">
@@ -308,7 +291,7 @@ const StudiosSection = ({
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   </div>
@@ -329,14 +312,11 @@ const InstructorsSection = ({
       <Button onClick={onAdd} className="gap-2"><Plus className="h-4 w-4" /> Добави инструктор</Button>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      {instructors.map((instr, i) => {
+      {instructors.map((instr) => {
         const studio = mockStudios.find(s => s.id === instr.studioId);
         return (
-          <motion.div
+          <div
             key={instr.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
             className="group rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-all"
           >
             <div className="flex items-start gap-4">
@@ -370,7 +350,7 @@ const InstructorsSection = ({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>
@@ -392,18 +372,15 @@ const ClassesSection = ({
       <Button onClick={onAdd} className="gap-2"><Plus className="h-4 w-4" /> Добави клас</Button>
     </div>
     <div className="space-y-4">
-      {classes.map((cls, i) => {
+      {classes.map((cls) => {
         const instr = mockInstructors.find(ins => ins.id === cls.instructorId);
         const studio = mockStudios.find(s => s.id === cls.studioId);
         const fill = Math.round((cls.enrolled / cls.maxCapacity) * 100);
         const isFull = cls.enrolled >= cls.maxCapacity;
 
         return (
-          <motion.div
+          <div
             key={cls.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
             className="group rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-all"
           >
             <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -455,7 +432,7 @@ const ClassesSection = ({
                 <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
               </div>
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>
@@ -687,14 +664,11 @@ const ScheduleSection = ({
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`relative px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                viewMode === mode ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                viewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
               }`}
             >
-              {viewMode === mode && (
-                <motion.div layoutId="scheduleView" className="absolute inset-0 bg-background rounded-md shadow-sm" transition={{ type: 'spring', stiffness: 400, damping: 30 }} />
-              )}
-              <span className="relative z-10">{mode === 'weekly' ? 'Седмично' : 'Месечно'}</span>
+              <span>{mode === 'weekly' ? 'Седмично' : 'Месечно'}</span>
             </button>
           ))}
         </div>
@@ -733,10 +707,8 @@ const ScheduleSection = ({
             const entries = scheduleByDay[day];
             if (entries.length === 0) return null;
             return (
-              <motion.div
+              <div
                 key={day}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
                 className="rounded-2xl border border-border bg-card overflow-hidden"
               >
                 <div className="px-5 py-3 bg-muted/50 border-b border-border">
@@ -776,7 +748,7 @@ const ScheduleSection = ({
                     );
                   })}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
           {studioSchedule.length === 0 && (

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Studio, Instructor, YogaClass } from "@/data/mock-data";
 import { Clock, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 
 interface UpcomingClassesSectionProps {
   classes: YogaClass[];
@@ -44,11 +43,8 @@ export default function UpcomingClassesSection({
             const instructor = getInstructor(cls.instructorId);
             const isFull = cls.enrolled >= cls.maxCapacity;
             return (
-              <motion.div
+              <div
                 key={cls.id}
-                initial={{ opacity: 0, x: i % 2 === 0 ? -15 : 15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 }}
               >
                 <Link href={`/studio/${cls.studioId}`}>
                   <div className="rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-all hover:-translate-y-0.5 flex gap-4">
@@ -87,7 +83,7 @@ export default function UpcomingClassesSection({
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </div>

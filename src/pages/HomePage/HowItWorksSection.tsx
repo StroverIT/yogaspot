@@ -1,7 +1,6 @@
 "use client";
 
 import { Eye, Heart, Users } from "lucide-react";
-import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -34,12 +33,9 @@ export default function HowItWorksSection() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {steps.map((step, i) => (
-            <motion.div
+            <div
               key={i}
               className="text-center relative"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.15 }}
             >
               <div className="relative inline-block mb-5">
                 <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto text-primary">
@@ -51,7 +47,7 @@ export default function HowItWorksSection() {
               </div>
               <h3 className="font-display text-xl font-semibold text-foreground mb-2">{step.title}</h3>
               <p className="text-muted-foreground">{step.desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

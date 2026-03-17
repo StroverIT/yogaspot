@@ -4,17 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Users, Building2, Calendar, Star, Trash2, EyeOff, TrendingUp, Search, Shield, BarChart3 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useMemo } from 'react';
 import { useState } from 'react';
 
 const StatCard = ({ icon, label, value, trend, color }: {
   icon: React.ReactNode; label: string; value: string | number; trend?: string; color: string;
 }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 15 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="rounded-2xl border border-border bg-card p-6 relative overflow-hidden group hover:shadow-lg transition-shadow"
-  >
+  <div className="rounded-2xl border border-border bg-card p-6 relative overflow-hidden group hover:shadow-lg transition-shadow">
     <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-10 ${color}`} />
     <div className="flex items-center gap-3 mb-4">
       <div className={`p-2.5 rounded-xl ${color} bg-opacity-10`}>{icon}</div>
@@ -27,7 +23,7 @@ const StatCard = ({ icon, label, value, trend, color }: {
         <span>{trend}</span>
       </div>
     )}
-  </motion.div>
+  </div>
 );
 
 const Admin = () => {
@@ -71,21 +67,13 @@ const Admin = () => {
                 activeSection === s.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
               }`}
             >
-              {activeSection === s.key && (
-                <motion.div
-                  layoutId="adminTab"
-                  className="absolute inset-0 bg-background rounded-lg shadow-sm"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10 flex items-center gap-2">{s.icon}{s.label}</span>
+              <span className={`relative z-10 flex items-center gap-2 ${activeSection === s.key ? '' : ''}`}>{s.icon}{s.label}</span>
             </button>
           ))}
         </div>
 
-        <AnimatePresence mode="wait">
-          {activeSection === 'overview' && (
-            <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+        {activeSection === 'overview' && (
+          <div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
                 <StatCard icon={<Users className="h-5 w-5 text-primary" />} label="Потребители" value="1,245" trend="+12% този месец" color="bg-primary" />
                 <StatCard icon={<Building2 className="h-5 w-5 text-accent" />} label="Студиа" value={mockStudios.length} trend="+2 нови" color="bg-accent" />
@@ -129,11 +117,11 @@ const Admin = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
+          </div>
+        )}
 
-          {activeSection === 'studios' && (
-            <motion.div key="studios" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+        {activeSection === 'studios' && (
+          <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative flex-1 max-w-md">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -167,11 +155,11 @@ const Admin = () => {
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-          )}
+          </div>
+        )}
 
-          {activeSection === 'users' && (
-            <motion.div key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+        {activeSection === 'users' && (
+          <div>
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="p-4 border-b border-border">
                   <div className="relative max-w-md">
@@ -231,11 +219,11 @@ const Admin = () => {
                   </tbody>
                 </table>
               </div>
-            </motion.div>
-          )}
+          </div>
+        )}
 
-          {activeSection === 'reviews' && (
-            <motion.div key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+        {activeSection === 'reviews' && (
+          <div>
               <div className="space-y-3">
                 {mockReviews.map((review, i) => (
                   <motion.div
@@ -264,9 +252,8 @@ const Admin = () => {
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
       </div>
     </div>
   );

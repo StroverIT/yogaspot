@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockStudios, mockClasses } from "@/data/mock-data";
 import { Star, MapPin, ArrowRight, Sparkles, Users, Clock, Search } from "lucide-react";
-import { motion } from "framer-motion";
 
 const totalEnrolled = mockClasses.reduce((s, c) => s + c.enrolled, 0);
 
 export default function HeroSection() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const stats = [
     { value: `${mockStudios.length}+`, label: "Партньорски студиа", icon: <MapPin className="h-5 w-5" /> },
     { value: `${mockClasses.length}+`, label: "Седмични класове", icon: <Clock className="h-5 w-5" /> },
@@ -18,15 +21,39 @@ export default function HeroSection() {
     { value: "4.7", label: "Средна оценка", icon: <Star className="h-5 w-5" /> },
   ];
 
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.from(".hero-content", {
+        opacity: 0,
+        x: -30,
+        duration: 0.7,
+        ease: "power3.out",
+      });
+
+      gsap.from(".hero-stat-card", {
+        opacity: 0,
+        y: 15,
+        duration: 0.6,
+        ease: "power3.out",
+        stagger: 0.1,
+        delay: 0.4,
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section className="relative overflow-hidden py-20 md:py-32">
       <div className="absolute inset-0">
         <Image src="/homepage/hero-yoga.jpg" alt="Yoga studio" fill className="object-cover" sizes="100vw" />
         <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px]" />
       </div>
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10" ref={containerRef}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
+          <div className="hero-content">
             <Badge variant="secondary" className="mb-5 rounded-full px-4 py-1.5 text-sm gap-2">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               Водещата йога платформа в България
@@ -52,30 +79,22 @@ export default function HeroSection() {
                 </Link>
               </Button>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="hidden lg:block"
-          >
+          <div className="hidden lg:block">
             <div className="grid grid-cols-2 gap-4">
               {stats.map((stat, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 hover:shadow-md transition-shadow"
+                  className="hero-stat-card rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 hover:shadow-md transition-shadow"
                 >
                   <div className="text-primary mb-2">{stat.icon}</div>
                   <p className="font-display text-2xl font-bold text-foreground">{stat.value}</p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

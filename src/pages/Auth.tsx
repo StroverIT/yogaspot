@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Chrome, Sparkles } from 'lucide-react';
 
 const Auth = () => {
@@ -54,24 +53,10 @@ const Auth = () => {
     { value: 'business', label: 'Бизнес', desc: 'Управлявате йога студио', emoji: '🏢' },
   ];
 
-  const slideVariants = {
-    enter: (direction: number) => ({ x: direction > 0 ? 300 : -300, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (direction: number) => ({ x: direction > 0 ? -300 : 300, opacity: 0 }),
-  };
-
-  const direction = mode === 'register' ? 1 : -1;
-
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
-        {/* Header */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             <Sparkles className="h-4 w-4" />
             {mode === 'login' ? 'Добре дошли обратно' : 'Присъединете се'}
@@ -82,51 +67,36 @@ const Auth = () => {
           <p className="text-muted-foreground mt-2">
             {mode === 'login' ? 'Влезте, за да продължите към вашата практика' : 'Регистрирайте се безплатно за секунди'}
           </p>
-        </motion.div>
+        </div>
 
-        {/* Tab switcher */}
         <div className="flex rounded-xl bg-muted p-1 mb-6">
           {(['login', 'register'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => switchMode(tab)}
-              className={`relative flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${
-                mode === tab ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${
+                mode === tab ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
               }`}
             >
-              {mode === tab && (
-                <motion.div
-                  layoutId="authTab"
-                  className="absolute inset-0 bg-background rounded-lg shadow-sm"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">{tab === 'login' ? 'Вход' : 'Регистрация'}</span>
+              <span>{tab === 'login' ? 'Вход' : 'Регистрация'}</span>
             </button>
           ))}
         </div>
 
-        {/* Animated form container */}
         <div className="rounded-2xl border border-border bg-card p-8 overflow-hidden relative min-h-[400px]">
-          <AnimatePresence mode="wait" custom={direction}>
-            {mode === 'login' ? (
-              <motion.form
-                key="login"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                onSubmit={handleLogin}
-                className="space-y-5"
-              >
+          {mode === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-5">
                 {/* Google */}
-                <Button type="button" variant="outline" className="w-full h-12 gap-3 text-base rounded-xl" onClick={async () => {
-                  await login('google.user@gmail.com', 'google');
-                  toast.success('Успешен вход с Google!');
-                  navigate('/');
-                }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-12 gap-3 text-base rounded-xl"
+                  onClick={async () => {
+                    await login('google.user@gmail.com', 'google');
+                    toast.success('Успешен вход с Google!');
+                    router.push('/');
+                  }}
+                >
                   <Chrome className="h-5 w-5" />
                   Продължи с Google
                 </Button>
@@ -161,30 +131,18 @@ const Auth = () => {
                     Регистрирайте се
                   </button>
                 </p>
-              </motion.form>
-            ) : (
-              <motion.form
-                key="register"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                onSubmit={handleRegister}
-                className="space-y-5"
-              >
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-5">
                 {/* Role selector */}
                 <div className="space-y-2">
                   <Label>Тип акаунт</Label>
                   <div className="grid grid-cols-2 gap-3">
                     {roles.map(r => (
-                      <motion.button
+                      <button
                         key={r.value}
                         type="button"
                         onClick={() => setRole(r.value)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
                         className={`rounded-xl border-2 p-4 text-left transition-all ${
                           role === r.value
                             ? 'border-primary bg-primary/5 shadow-sm'
@@ -194,7 +152,7 @@ const Auth = () => {
                         <div className="text-2xl mb-1">{r.emoji}</div>
                         <p className="font-semibold text-foreground text-sm">{r.label}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -231,9 +189,8 @@ const Auth = () => {
                     Влезте
                   </button>
                 </p>
-              </motion.form>
-            )}
-          </AnimatePresence>
+            </form>
+          )}
         </div>
       </div>
     </div>

@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { mockClasses } from "@/data/mock-data";
 import type { Studio } from "@/data/mock-data";
 import { Star, MapPin, ArrowRight, Heart, Users } from "lucide-react";
-import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -62,16 +61,14 @@ export default function TopStudiosSection({ studios, isFavorite, onFavorite }: T
             return (
               <SwiperSlide key={studio.id} className="h-auto">
                 <div className="relative group h-full">
-                  <motion.button
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
+                  <button
                     onClick={(e) => onFavorite(e, studio.id)}
-                    className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-sm"
+                    className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-sm transition-transform hover:scale-110 active:scale-95"
                   >
                     <Heart
                       className={`h-4 w-4 transition-colors ${fav ? "fill-destructive text-destructive" : "text-muted-foreground"}`}
                     />
-                  </motion.button>
+                  </button>
                   <Link href={`/studio/${studio.id}`} className="block h-full">
                     <div className="rounded-2xl border border-border bg-background overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
                       <div className="aspect-[16/10] relative overflow-hidden">

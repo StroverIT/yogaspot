@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 
 const Favorites = () => {
   const { favoriteIds, toggleFavorite } = useFavorites();
@@ -27,10 +26,9 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <div className="bg-gradient-to-br from-primary/8 via-background to-sage/15 border-b border-border">
         <div className="container mx-auto px-4 py-10">
-          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <div className="flex items-center gap-2 mb-2">
               <Heart className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium text-primary">Вашата колекция</span>
@@ -54,18 +52,14 @@ const Favorites = () => {
                 {showMock ? 'Покажи реални' : 'Покажи демо'}
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         {favoriteStudios.length === 0 ? (
           /* ─── Empty State ─── */
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-20 max-w-md mx-auto"
-          >
+          <div className="text-center py-20 max-w-md mx-auto">
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
               <Heart className="h-9 w-9 text-muted-foreground/40" />
             </div>
@@ -76,7 +70,7 @@ const Favorites = () => {
             <Button asChild size="lg" className="rounded-xl gap-2">
               <Link href="/discover"><Search className="h-4 w-4" /> Открий студио</Link>
             </Button>
-          </motion.div>
+          </div>
         ) : (
           /* ─── Favorites Grid ─── */
           <div className="space-y-6">
@@ -88,11 +82,8 @@ const Favorites = () => {
               const nextDays = WEEKDAYS.filter(d => schedule.some(s => s.day === d)).slice(0, 3);
 
               return (
-                <motion.div
+                <div
                   key={studio.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
                   className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   <div className="flex flex-col md:flex-row">
@@ -127,14 +118,12 @@ const Favorites = () => {
                             </div>
                           </div>
                         </Link>
-                        <motion.button
-                          whileHover={{ scale: 1.15 }}
-                          whileTap={{ scale: 0.9 }}
+                        <button
                           onClick={() => handleRemove(studio.id)}
-                          className="p-2 rounded-full bg-destructive/10 hover:bg-destructive/20 transition-colors shrink-0"
+                          className="p-2 rounded-full bg-destructive/10 hover:bg-destructive/20 transition-colors shrink-0 transition-transform hover:scale-110 active:scale-95"
                         >
                           <Heart className="h-4 w-4 fill-destructive text-destructive" />
-                        </motion.button>
+                        </button>
                       </div>
 
                       <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{studio.description}</p>
@@ -190,7 +179,7 @@ const Favorites = () => {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>

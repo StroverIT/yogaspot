@@ -8,7 +8,6 @@ import { Star, MapPin, Phone, Mail, Globe, Clock, Users, ArrowLeft, Heart, Calen
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 import { useFavorites } from '@/hooks/useFavorites';
 import AuthModal from '@/components/AuthModal';
 
@@ -75,7 +74,7 @@ const StudioDetail = () => {
         <ArrowLeft className="h-4 w-4" /> Обратно към търсене
       </Link>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main */}
         <div className="lg:col-span-2">
           <div className="aspect-[16/9] rounded-2xl bg-gradient-to-br from-sage/40 to-primary/20 flex items-center justify-center mb-6">
@@ -124,11 +123,7 @@ const StudioDetail = () => {
               <div className="space-y-6">
                 {/* Subscription banner */}
                 {subscription?.hasMonthlySubscription && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5"
-                  >
+                  <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5">
                     <div className="flex items-start gap-4">
                       <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
                         <CreditCard className="h-6 w-6 text-primary" />
@@ -139,7 +134,7 @@ const StudioDetail = () => {
                         <p className="text-2xl font-bold text-primary mt-2">{subscription.monthlyPrice} лв.<span className="text-sm font-normal text-muted-foreground">/месец</span></p>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* Weekly schedule */}
@@ -148,10 +143,8 @@ const StudioDetail = () => {
                     const entries = studioSchedule.filter(s => s.day === day);
                     if (entries.length === 0) return null;
                     return (
-                      <motion.div
+                      <div
                         key={day}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
                         className="rounded-xl border border-border bg-card overflow-hidden"
                       >
                         <div className="px-4 py-2.5 bg-muted/50 border-b border-border">
@@ -200,7 +193,7 @@ const StudioDetail = () => {
                             );
                           })}
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                   {studioSchedule.length === 0 && (
@@ -314,7 +307,7 @@ const StudioDetail = () => {
 
           <FavoriteButton studioId={studio.id} />
         </aside>
-      </motion.div>
+      </div>
     </div>
   );
 };
