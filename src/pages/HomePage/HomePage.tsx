@@ -40,8 +40,8 @@ export default function HomePage() {
     toast.success(added ? "Добавено в любими" : "Премахнато от любими");
   };
 
-  const getStudio = (id: string) => mockStudios.find((s) => s.id === id);
-  const getInstructor = (id: string) => mockInstructors.find((i) => i.id === id);
+  // const getStudio = (id: string) => mockStudios.find((s) => s.id === id);
+  // const getInstructor = (id: string) => mockInstructors.find((i) => i.id === id);
 
   return (
     <div className="font-body">
@@ -57,11 +57,11 @@ export default function HomePage() {
         isFavorite={isFavorite}
         onFavorite={handleFavorite}
       />
-      <UpcomingClassesSection
+      {/* <UpcomingClassesSection
         classes={upcomingClasses}
         getStudio={getStudio}
         getInstructor={getInstructor}
-      />
+      /> */}
       <ForStudiosCTA />
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
