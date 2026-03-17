@@ -13,6 +13,7 @@ import TopStudiosSection from "./TopStudiosSection";
 import UpcomingClassesSection from "./UpcomingClassesSection";
 import HowItWorksSection from "./HowItWorksSection";
 import ForStudiosCTA from "./ForStudiosCTA";
+import NearbyStudiosSection from "./NearbyStudiosSection";
 
 export default function HomePage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -50,8 +51,12 @@ export default function HomePage() {
       <ValuePropositions />
       <div className="w-full h-px bg-border" />
 
-
       <YogaTypeCategories />
+      <NearbyStudiosSection
+        studios={mockStudios}
+        isFavorite={isFavorite}
+        onFavorite={handleFavorite}
+      />
       <TopStudiosSection
         studios={topStudios}
         isFavorite={isFavorite}
