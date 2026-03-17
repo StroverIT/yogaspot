@@ -69,7 +69,7 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
         {mode === 'choice' && (
           <>
             <DialogHeader className="text-center">
-              <DialogTitle className="font-display text-2xl">Добре дошли в YogaSpot</DialogTitle>
+              <DialogTitle className="font-display text-2xl">Добре дошли в Zenno</DialogTitle>
               <DialogDescription>Влезте, за да запазите любимите си студиа</DialogDescription>
             </DialogHeader>
             <div className="space-y-3 pt-4">
@@ -121,7 +121,7 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">Създайте акаунт</DialogTitle>
-              <DialogDescription>Присъединете се към YogaSpot</DialogDescription>
+              <DialogDescription>Присъединете се към Zenno</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleRegister} className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-2">
@@ -133,9 +133,8 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
                     key={r.value}
                     type="button"
                     onClick={() => setRole(r.value)}
-                    className={`rounded-lg border-2 p-3 text-sm font-medium transition-all ${
-                      role === r.value ? 'border-primary bg-primary/5 text-foreground' : 'border-border text-muted-foreground hover:border-muted-foreground/30'
-                    }`}
+                    className={`rounded-lg border-2 p-3 text-sm font-medium transition-all ${role === r.value ? 'border-primary bg-primary/5 text-foreground' : 'border-border text-muted-foreground hover:border-muted-foreground/30'
+                      }`}
                   >
                     {r.label}
                   </button>

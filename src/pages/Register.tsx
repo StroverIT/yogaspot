@@ -35,7 +35,7 @@ const Register = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold text-foreground">Създайте акаунт</h1>
-          <p className="text-muted-foreground mt-2">Присъединете се към YogaSpot</p>
+          <p className="text-muted-foreground mt-2">Присъединете се към Zenno</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-8">
           <div className="space-y-2">
@@ -46,9 +46,8 @@ const Register = () => {
                   key={r.value}
                   type="button"
                   onClick={() => setRole(r.value)}
-                  className={`rounded-xl border-2 p-4 text-left transition-all ${
-                    role === r.value ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'
-                  }`}
+                  className={`rounded-xl border-2 p-4 text-left transition-all ${role === r.value ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'
+                    }`}
                 >
                   <p className="font-semibold text-foreground text-sm">{r.label}</p>
                   <p className="text-xs text-muted-foreground mt-1">{r.desc}</p>

@@ -31,7 +31,6 @@ const Auth = () => {
     const typeParam = searchParams?.get('type');
     const nextMode: 'login' | 'register' =
       typeParam === 'register' ? 'register' : 'login';
-    prevModeRef.current = mode;
     setMode(nextMode);
     reset();
   }, [searchParams]);
@@ -44,8 +43,11 @@ const Auth = () => {
   useEffect(() => {
     if (!formRef.current) return;
 
-    const isToRegister = mode === 'register';
-    const fromX = isToRegister ? 40 : -40;
+    const isForward = prevModeRef.current === 'login' && mode === 'register';
+    const isBackward = prevModeRef.current === 'register' && mode === 'login';
+    const direction = isForward ? 1 : isBackward ? -1 : 0;
+
+    const fromX = direction === 0 ? 0 : 40 * direction;
     const toX = 0;
 
     gsap.fromTo(
@@ -53,7 +55,7 @@ const Auth = () => {
       {
         x: fromX,
         opacity: 0,
-        rotateY: isToRegister ? -6 : 6,
+        rotateY: direction === 0 ? 0 : -6 * direction,
         scale: 0.96,
         filter: "blur(4px)",
       },
@@ -67,6 +69,8 @@ const Auth = () => {
         ease: "power3.out",
       }
     );
+
+    prevModeRef.current = mode;
   }, [mode]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -103,7 +107,7 @@ const Auth = () => {
             {mode === 'login' ? 'Добре дошли обратно' : 'Присъединете се'}
           </div>
           <h1 className="font-display text-4xl font-bold text-foreground">
-            {mode === 'login' ? 'Вход в YogaSpot' : 'Създайте акаунт'}
+            {mode === 'login' ? 'Вход в Zenno' : 'Създайте акаунт'}
           </h1>
           <p className="text-muted-foreground mt-2">
             {mode === 'login' ? 'Влезте, за да продължите към вашата практика' : 'Регистрирайте се безплатно за секунди'}
@@ -115,9 +119,8 @@ const Auth = () => {
             <button
               key={tab}
               onClick={() => switchMode(tab)}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${
-                mode === tab ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
-              }`}
+              className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${mode === tab ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
+                }`}
             >
               <span>{tab === 'login' ? 'Вход' : 'Регистрация'}</span>
             </button>
@@ -130,109 +133,108 @@ const Auth = () => {
         >
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-5">
-                {/* Google */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 gap-3 text-base rounded-xl"
-                  onClick={async () => {
-                    await login('google.user@gmail.com', 'google');
-                    toast.success('Успешен вход с Google!');
-                    router.push('/');
-                  }}
-                >
-                  <Chrome className="h-5 w-5" />
-                  Продължи с Google
-                </Button>
+              {/* Google */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 gap-3 text-base rounded-xl"
+                onClick={async () => {
+                  await login('google.user@gmail.com', 'google');
+                  toast.success('Успешен вход с Google!');
+                  router.push('/');
+                }}
+              >
+                <Chrome className="h-5 w-5" />
+                Продължи с Google
+              </Button>
 
-                <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                  <div className="relative flex justify-center text-xs"><span className="bg-card px-3 text-muted-foreground">или с имейл</span></div>
+              <div className="relative my-2">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center text-xs"><span className="bg-card px-3 text-muted-foreground">или с имейл</span></div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="login-email">Имейл</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="вашият@имейл.бг" className="pl-10" />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Имейл</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="вашият@имейл.бг" className="pl-10" />
-                  </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Парола</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="login-password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="pl-10" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Парола</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="login-password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="pl-10" />
-                  </div>
-                </div>
+              </div>
 
-                <Button type="submit" className="w-full h-12 text-base rounded-xl gap-2">
-                  Вход <ArrowRight className="h-4 w-4" />
-                </Button>
+              <Button type="submit" className="w-full h-12 text-base rounded-xl gap-2">
+                Вход <ArrowRight className="h-4 w-4" />
+              </Button>
 
-                <p className="text-center text-sm text-muted-foreground pt-2">
-                  Нямате акаунт?{' '}
-                  <button type="button" onClick={() => switchMode('register')} className="text-primary hover:underline font-medium">
-                    Регистрирайте се
-                  </button>
-                </p>
+              <p className="text-center text-sm text-muted-foreground pt-2">
+                Нямате акаунт?{' '}
+                <button type="button" onClick={() => switchMode('register')} className="text-primary hover:underline font-medium">
+                  Регистрирайте се
+                </button>
+              </p>
             </form>
           ) : (
             <form onSubmit={handleRegister} className="space-y-5">
-                {/* Role selector */}
-                <div className="space-y-2">
-                  <Label>Тип акаунт</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {roles.map(r => (
-                      <button
-                        key={r.value}
-                        type="button"
-                        onClick={() => setRole(r.value)}
-                        className={`rounded-xl border-2 p-4 text-left transition-all ${
-                          role === r.value
-                            ? 'border-primary bg-primary/5 shadow-sm'
-                            : 'border-border hover:border-muted-foreground/30'
+              {/* Role selector */}
+              <div className="space-y-2">
+                <Label>Тип акаунт</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {roles.map(r => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setRole(r.value)}
+                      className={`rounded-xl border-2 p-4 text-left transition-all ${role === r.value
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-border hover:border-muted-foreground/30'
                         }`}
-                      >
-                        <div className="text-2xl mb-1">{r.emoji}</div>
-                        <p className="font-semibold text-foreground text-sm">{r.label}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
-                      </button>
-                    ))}
-                  </div>
+                    >
+                      <div className="text-2xl mb-1">{r.emoji}</div>
+                      <p className="font-semibold text-foreground text-sm">{r.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="reg-name">Име</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="reg-name" value={name} onChange={e => setName(e.target.value)} placeholder="Вашето име" className="pl-10" />
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="reg-name">Име</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="reg-name" value={name} onChange={e => setName(e.target.value)} placeholder="Вашето име" className="pl-10" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-email">Имейл</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="reg-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="вашият@имейл.бг" className="pl-10" />
-                  </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reg-email">Имейл</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="reg-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="вашият@имейл.бг" className="pl-10" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password">Парола</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="reg-password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="pl-10" />
-                  </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reg-password">Парола</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="reg-password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="pl-10" />
                 </div>
+              </div>
 
-                <Button type="submit" className="w-full h-12 text-base rounded-xl gap-2">
-                  Регистрация <ArrowRight className="h-4 w-4" />
-                </Button>
+              <Button type="submit" className="w-full h-12 text-base rounded-xl gap-2">
+                Регистрация <ArrowRight className="h-4 w-4" />
+              </Button>
 
-                <p className="text-center text-sm text-muted-foreground pt-2">
-                  Имате акаунт?{' '}
-                  <button type="button" onClick={() => switchMode('login')} className="text-primary hover:underline font-medium">
-                    Влезте
-                  </button>
-                </p>
+              <p className="text-center text-sm text-muted-foreground pt-2">
+                Имате акаунт?{' '}
+                <button type="button" onClick={() => switchMode('login')} className="text-primary hover:underline font-medium">
+                  Влезте
+                </button>
+              </p>
             </form>
           )}
         </div>

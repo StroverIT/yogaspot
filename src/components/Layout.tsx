@@ -10,7 +10,6 @@ import AuthModal from "@/components/AuthModal";
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -23,14 +22,25 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md py-2">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
+
           <Link
             href="/"
-            className="flex items-center gap-2 font-display text-2xl font-bold text-primary tracking-tight"
+            className="flex items-center gap-2 font-display text-2xl font-bold text-primary tracking-tight "
           >
-            <Image src="/homepage/logo.png" alt="YogaSpot" width={36} height={36} className="h-9 w-9 object-contain" />
-            YogaSpot
+            <div className="relative h-28 w-28 md:h-36 md:w-36">
+              <Image
+                src="/homepage/logo.png"
+                alt="Zenno"
+                fill
+                className="object-contain"
+                sizes="10rem"
+              />
+            </div>
+            <div className="-ml-10">
+              Zenno
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 font-body text-sm font-medium">
@@ -126,8 +136,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-muted-foreground">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Image src="/homepage/logo.png" alt="YogaSpot" width={32} height={32} className="h-8 w-8 object-contain" />
-              <h4 className="font-display text-lg text-foreground">YogaSpot</h4>
+              <Image src="/homepage/logo.png" alt="Zenno" width={32} height={32} className="h-8 w-8 object-contain" />
+              <h4 className="font-display text-lg text-foreground">Zenno</h4>
             </div>
             <p>Твоят портал към йога студиа в България. Открий, запиши се и практикувай.</p>
           </div>
@@ -140,12 +150,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
           <div>
             <h4 className="font-display text-lg text-foreground mb-3">Контакт</h4>
-            <p>info@yogaspot.bg</p>
+            <p>info@Zenno.bg</p>
             <p className="mt-1">+359 2 000 0000</p>
           </div>
         </div>
         <div className="container mx-auto px-4 mt-8 pt-6 border-t border-border text-center text-xs text-muted-foreground">
-          © 2026 YogaSpot. Всички права запазени.
+          © 2026 Zenno. Всички права запазени.
         </div>
       </footer>
 

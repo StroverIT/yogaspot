@@ -67,11 +67,10 @@ const Dashboard = () => {
               <button
                 key={item.key}
                 onClick={() => setActiveSection(item.key)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  active
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                }`}
+                  }`}
               >
                 <item.icon className="h-4.5 w-4.5" />
                 {item.label}
@@ -100,9 +99,8 @@ const Dashboard = () => {
               <button
                 key={item.key}
                 onClick={() => setActiveSection(item.key)}
-                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  active ? 'text-primary' : 'text-muted-foreground'
-                }`}
+                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'
+                  }`}
               >
                 <item.icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />
                 {item.label}
@@ -664,9 +662,8 @@ const ScheduleSection = ({
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                viewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
-              }`}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
+                }`}
             >
               <span>{mode === 'weekly' ? 'Седмично' : 'Месечно'}</span>
             </button>
@@ -693,7 +690,7 @@ const ScheduleSection = ({
               )}
             </div>
           </div>
-          <Button variant="outline" size="sm" className="gap-2 rounded-lg shrink-0" onClick={() => toast.info('За активиране на абонамент, моля свържете се с нас на admin@yogaspot.bg')}>
+          <Button variant="outline" size="sm" className="gap-2 rounded-lg shrink-0" onClick={() => toast.info('За активиране на абонамент, моля свържете се с нас на admin@Zenno.bg')}>
             <MessageSquare className="h-4 w-4" />
             {subscription?.hasMonthlySubscription ? 'Промени' : 'Заявка'}
           </Button>

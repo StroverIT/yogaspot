@@ -50,7 +50,7 @@ const Profile = () => {
   const [showEmptyFavorites, setShowEmptyFavorites] = useState(false);
 
   const displayName = user?.name || 'Гост потребител';
-  const displayEmail = user?.email || 'guest@yogaspot.bg';
+  const displayEmail = user?.email || 'guest@Zenno.bg';
   const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   const selected = selectedClass ? mockClasses.find(c => c.id === selectedClass) : null;
