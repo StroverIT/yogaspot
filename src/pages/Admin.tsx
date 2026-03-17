@@ -45,14 +45,14 @@ const Admin = () => {
       {/* Header */}
       <div className="bg-gradient-to-br from-primary/8 via-background to-sage/15 border-b border-border">
         <div className="container mx-auto px-4 py-10">
-          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
             <div className="flex items-center gap-2 mb-2">
               <Shield className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium text-primary">Администрация</span>
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-1">Админ панел</h1>
             <p className="text-muted-foreground">Пълен контрол над платформата Zenno</p>
-          </motion.div>
+          </div>
         </div>
       </div>
 
@@ -129,11 +129,8 @@ const Admin = () => {
             </div>
             <div className="space-y-3">
               {mockStudios.filter(s => !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((studio, i) => (
-                <motion.div
+                <div
                   key={studio.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
                   className="rounded-xl border border-border bg-card p-5 flex items-center justify-between hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center gap-4">
@@ -151,7 +148,7 @@ const Admin = () => {
                     <Button variant="ghost" size="sm" className="rounded-lg"><EyeOff className="h-4 w-4 mr-1.5" /> Скрий</Button>
                     <Button variant="ghost" size="sm" className="rounded-lg text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-1.5" /> Изтрий</Button>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -181,11 +178,8 @@ const Admin = () => {
                     { name: 'Студио Лотос', email: 'lotos@biz.bg', role: 'business', active: true },
                     { name: 'Петър Димов', email: 'petar@mail.bg', role: 'client', active: false },
                   ].map((u, i) => (
-                    <motion.tr
+                    <tr
                       key={i}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.05 }}
                       className="border-t border-border hover:bg-muted/30 transition-colors"
                     >
                       <td className="p-4">
@@ -213,7 +207,7 @@ const Admin = () => {
                       <td className="p-4 text-right">
                         <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive rounded-lg">Спри достъп</Button>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -225,11 +219,8 @@ const Admin = () => {
           <div>
             <div className="space-y-3">
               {mockReviews.map((review, i) => (
-                <motion.div
+                <div
                   key={review.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
                   className="rounded-xl border border-border bg-card p-5 flex items-start justify-between gap-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex gap-4">
@@ -248,7 +239,7 @@ const Admin = () => {
                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive shrink-0 rounded-lg">
                     <Trash2 className="h-4 w-4 mr-1.5" /> Премахни
                   </Button>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
