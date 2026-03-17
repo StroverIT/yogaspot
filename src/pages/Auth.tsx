@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Mail, Lock, User, ArrowRight, Chrome, Sparkles } from 'lucide-react';
+import { gsap } from "gsap";
 
 const Auth = () => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -16,6 +17,9 @@ const Auth = () => {
   const [role, setRole] = useState<UserRole>('client');
   const { login, register } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const formRef = useRef<HTMLDivElement | null>(null);
+  const prevModeRef = useRef<'login' | 'register'>('login');
 
   const reset = () => {
     setEmail('');
@@ -23,10 +27,47 @@ const Auth = () => {
     setName('');
   };
 
+  useEffect(() => {
+    const typeParam = searchParams?.get('type');
+    const nextMode: 'login' | 'register' =
+      typeParam === 'register' ? 'register' : 'login';
+    prevModeRef.current = mode;
+    setMode(nextMode);
+    reset();
+  }, [searchParams]);
+
   const switchMode = (newMode: 'login' | 'register') => {
     reset();
-    setMode(newMode);
+    router.push(`/auth?type=${newMode}`);
   };
+
+  useEffect(() => {
+    if (!formRef.current) return;
+
+    const isToRegister = mode === 'register';
+    const fromX = isToRegister ? 40 : -40;
+    const toX = 0;
+
+    gsap.fromTo(
+      formRef.current,
+      {
+        x: fromX,
+        opacity: 0,
+        rotateY: isToRegister ? -6 : 6,
+        scale: 0.96,
+        filter: "blur(4px)",
+      },
+      {
+        x: toX,
+        opacity: 1,
+        rotateY: 0,
+        scale: 1,
+        filter: "blur(0px)",
+        duration: 0.6,
+        ease: "power3.out",
+      }
+    );
+  }, [mode]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +124,10 @@ const Auth = () => {
           ))}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-8 overflow-hidden relative min-h-[400px]">
+        <div
+          ref={formRef}
+          className="rounded-2xl border border-border bg-card p-8 overflow-hidden relative min-h-[400px]"
+        >
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-5">
                 {/* Google */}
