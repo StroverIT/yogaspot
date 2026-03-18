@@ -63,7 +63,6 @@ export async function GET() {
       lng: s.lng ?? 0,
       images: s.images ?? [],
       description: s.description,
-      website: s.website ?? undefined,
       phone: s.phone,
       email: s.email,
       rating: s.rating ?? 0,
@@ -75,6 +74,7 @@ export async function GET() {
         changingRoom: s.amenitiesChangingRoom,
         equipmentRental: s.amenitiesEquipmentRental,
       },
+      yogaTypes: s.yogaTypes ?? [],
     })),
   });
 }
@@ -103,8 +103,6 @@ export async function POST(request: Request) {
   const description = String(formData.get('description') ?? '').trim();
   const phone = String(formData.get('phone') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
-  const websiteRaw = String(formData.get('website') ?? '').trim();
-  const website = websiteRaw ? websiteRaw : null;
 
   const lat = parseNumberOrNull(formData.get('lat'));
   const lng = parseNumberOrNull(formData.get('lng'));
@@ -113,6 +111,9 @@ export async function POST(request: Request) {
   const amenitiesShower = toBoolean(formData.get('amenitiesShower'));
   const amenitiesChangingRoom = toBoolean(formData.get('amenitiesChangingRoom'));
   const amenitiesEquipmentRental = toBoolean(formData.get('amenitiesEquipmentRental'));
+
+  const yogaTypes = formData.getAll('yogaTypes').filter((v): v is string => typeof v === 'string' && !!v);
+  const uniqueYogaTypes = Array.from(new Set(yogaTypes));
 
   if (!name || !address || !description) {
     return NextResponse.json({ error: 'Missing required fields: name, address, description' }, { status: 400 });
@@ -167,12 +168,12 @@ export async function POST(request: Request) {
       description,
       phone,
       email,
-      website,
       images: imageUrls,
       amenitiesParking,
       amenitiesShower,
       amenitiesChangingRoom,
       amenitiesEquipmentRental,
+      yogaTypes: uniqueYogaTypes,
     },
   });
 
@@ -185,7 +186,6 @@ export async function POST(request: Request) {
       lng: created.lng ?? 0,
       images: created.images ?? [],
       description: created.description,
-      website: created.website ?? undefined,
       phone: created.phone,
       email: created.email,
       rating: created.rating ?? 0,
@@ -197,6 +197,7 @@ export async function POST(request: Request) {
         changingRoom: created.amenitiesChangingRoom,
         equipmentRental: created.amenitiesEquipmentRental,
       },
+      yogaTypes: created.yogaTypes ?? [],
     },
   });
 }

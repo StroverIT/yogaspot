@@ -76,7 +76,6 @@ model Studio {
   lat         Float?
   lng         Float?
   description String
-  website     String?
   phone       String
   email       String
 
@@ -91,6 +90,9 @@ model Studio {
   // Placeholder fields for now (computed from reviews later)
   rating      Float @default(0)
   reviewCount Int   @default(0)
+
+  // Yoga styles practiced by the studio
+  yogaTypes String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

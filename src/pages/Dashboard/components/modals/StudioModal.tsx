@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { YOGA_TYPES } from '@/data/yoga-types';
+import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 
@@ -26,13 +28,13 @@ export function StudioModal({
   const [description, setDescription] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [website, setWebsite] = useState('');
   const [amenities, setAmenities] = useState({
     parking: false,
     shower: false,
     changingRoom: false,
     equipmentRental: false,
   });
+  const [selectedYogaTypes, setSelectedYogaTypes] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [addressPredictions, setAddressPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
@@ -68,8 +70,8 @@ export function StudioModal({
     setDescription('');
     setPhone('');
     setEmail('');
-    setWebsite('');
     setAmenities({ parking: false, shower: false, changingRoom: false, equipmentRental: false });
+    setSelectedYogaTypes([]);
     setCoords(null);
     setAddress('');
     setAddressDropdownOpen(false);
@@ -238,7 +240,6 @@ export function StudioModal({
       formData.append('description', description);
       formData.append('phone', phone);
       formData.append('email', email);
-      if (website.trim()) formData.append('website', website.trim());
       if (coords) {
         formData.append('lat', String(coords.lat));
         formData.append('lng', String(coords.lng));
@@ -248,6 +249,10 @@ export function StudioModal({
       formData.append('amenitiesShower', String(amenities.shower));
       formData.append('amenitiesChangingRoom', String(amenities.changingRoom));
       formData.append('amenitiesEquipmentRental', String(amenities.equipmentRental));
+
+      for (const t of selectedYogaTypes) {
+        formData.append('yogaTypes', t);
+      }
 
       for (const file of images) {
         formData.append('images', file);
@@ -443,15 +448,6 @@ export function StudioModal({
             </div>
           </div>
           <div>
-            <Label>Уебсайт</Label>
-            <Input
-              value={website}
-              onChange={e => setWebsite(e.target.value)}
-              placeholder="https://..."
-              className="mt-1"
-            />
-          </div>
-          <div>
             <Label className="mb-2 block">Удобства</Label>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -471,6 +467,41 @@ export function StudioModal({
                   />
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Типове йога</Label>
+            <p className="text-xs text-muted-foreground -mt-1 mb-3">
+              Изберете всички стилове които практикувате
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {YOGA_TYPES.map((t) => {
+                const selected = selectedYogaTypes.includes(t.name);
+                return (
+                  <Button
+                    key={t.name}
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      'justify-start w-full h-auto py-2 px-3',
+                      selected
+                        ? 'border-accent bg-accent/10 text-accent hover:bg-accent/10'
+                        : '',
+                    )}
+                    onClick={() => {
+                      setSelectedYogaTypes((prev) =>
+                        selected ? prev.filter((x) => x !== t.name) : [...prev, t.name],
+                      );
+                    }}
+                  >
+                    <div className="min-w-0 text-left">
+                      <div className="truncate text-sm font-medium">{t.name}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-2">{t.description}</div>
+                    </div>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </div>
