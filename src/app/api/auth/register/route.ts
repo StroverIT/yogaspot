@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[register] DATABASE_URL:', process.env.DATABASE_URL);
+    }
+
     const { name, email, password, role } = await request.json();
 
     if (!name || !email || !password) {
