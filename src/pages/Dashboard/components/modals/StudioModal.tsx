@@ -7,15 +7,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { useEffect, useMemo, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 
+type StudioModalProps = {
+  open: boolean;
+  onClose: () => void;
+  onSave: () => void;
+}
+
 export function StudioModal({
   open,
   onClose,
   onSave,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSave: () => void;
-}) {
+}: StudioModalProps) {
   const [address, setAddress] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
