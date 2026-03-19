@@ -139,6 +139,10 @@ export async function POST(request: Request) {
     .getAll('images')
     .filter((v): v is File => typeof v !== 'string');
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[POST /api/studios] imageFiles:', imageFiles.length);
+  }
+
   const imageUrls: string[] = [];
   for (const file of imageFiles) {
     // Next.js provides uploaded files as `File` in formData.
@@ -149,9 +153,11 @@ export async function POST(request: Request) {
     const safeExt = ext ? ext.toLowerCase().replace(/[^a-z0-9]/g, '') : 'bin';
     const objectPath = `studios/${business.id}/${randomUUID()}${safeExt ? `.${safeExt}` : ''}`;
 
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from(bucket)
-      .upload(objectPath, file, {
+      .upload(objectPath, fileBuffer, {
         contentType: file.type ?? 'application/octet-stream',
         upsert: false,
       });

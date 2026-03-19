@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Edit, MapPin, Plus, Star, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type StudioListItem = {
   id: string;
@@ -11,7 +12,6 @@ type StudioListItem = {
   lng: number;
   images: string[];
   description: string;
-  website?: string;
   phone: string;
   email: string;
   amenities: {
@@ -36,6 +36,7 @@ export function StudiosSection({
   onAdd,
   onEdit,
 }: StudioProps) {
+  const router = useRouter();
   const [studios, setStudios] = useState<StudioListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +96,8 @@ export function StudiosSection({
         {studios.map((studio) => (
           <div
             key={studio.id}
-            className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-md transition-all"
+            className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-md transition-all cursor-pointer"
+            onClick={() => router.push(`/studio/${studio.id}`)}
           >
             <div className="h-32 bg-gradient-to-br from-primary/15 via-secondary/30 to-accent/10 flex items-center justify-center relative">
               {studio.images?.[0] ? (
@@ -108,6 +110,20 @@ export function StudiosSection({
                 <span className="text-5xl">🧘</span>
               )}
             </div>
+            {studio.images?.length > 1 ? (
+              <div className="flex gap-1 p-2 border-t border-border/50 bg-muted/20">
+                {studio.images.slice(0, 4).map((imageUrl, idx) => (
+                  <div key={`${studio.id}-image-${idx}`} className="h-10 w-10 overflow-hidden rounded-md border border-border/60">
+                    <img src={imageUrl} alt={`${studio.name} ${idx + 1}`} className="h-full w-full object-cover" />
+                  </div>
+                ))}
+                {studio.images.length > 4 ? (
+                  <div className="h-10 min-w-10 px-2 rounded-md border border-border/60 bg-background/70 text-xs text-muted-foreground flex items-center justify-center">
+                    +{studio.images.length - 4}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -115,8 +131,25 @@ export function StudiosSection({
                   <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3.5 w-3.5" />{studio.address}</p>
                 </div>
                 <div className="flex gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}><Edit className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit();
+                    }}
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{studio.description}</p>
