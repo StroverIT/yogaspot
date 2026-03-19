@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { YOGA_TYPES } from '@/data/yoga-types';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
@@ -35,8 +36,8 @@ export function StudioModal({
     equipmentRental: false,
   });
   const [selectedYogaTypes, setSelectedYogaTypes] = useState<string[]>([]);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
   const [addressPredictions, setAddressPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [addressDropdownOpen, setAddressDropdownOpen] = useState(false);
   const skipNextAddressGeocodeRef = useRef(false);
@@ -64,7 +65,6 @@ export function StudioModal({
     if (!open) return;
     // Reset transient errors when reopening.
     setAddressError(null);
-    setSubmitError(null);
     setSubmitting(false);
     setName('');
     setDescription('');
@@ -230,7 +230,6 @@ export function StudioModal({
 
   const handleSave = async () => {
     if (submitting) return;
-    setSubmitError(null);
     setSubmitting(true);
 
     try {
@@ -264,9 +263,18 @@ export function StudioModal({
         throw new Error(data?.error || `Failed to save studio (${res.status})`);
       }
 
+      toast({
+        title: 'Успех',
+        description: 'Студиото беше запазено успешно.',
+      });
       onSave();
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : 'Failed to save studio');
+      const message = e instanceof Error ? e.message : 'Неуспешно запазване на студио.';
+      toast({
+        variant: 'destructive',
+        title: 'Грешка',
+        description: message,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -511,11 +519,6 @@ export function StudioModal({
             {submitting ? 'Запазване...' : 'Запази'}
           </Button>
         </DialogFooter>
-        {submitError ? (
-          <div className="px-6 pb-6 text-sm text-destructive">
-            {submitError}
-          </div>
-        ) : null}
       </DialogContent>
     </Dialog>
   );

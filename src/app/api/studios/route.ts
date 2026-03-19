@@ -116,11 +116,17 @@ export async function POST(request: Request) {
   const uniqueYogaTypes = Array.from(new Set(yogaTypes));
 
   if (!name || !address || !description) {
-    return NextResponse.json({ error: 'Missing required fields: name, address, description' }, { status: 400 });
+    const missing = [(!name && 'име'), (!address && 'адрес'), (!description && 'описание')].filter(Boolean).join(', ');
+    const error = `Липсват задължителни полета: ${missing}.`;
+    if (process.env.NODE_ENV === 'development') console.error('[POST /api/studios] Validation:', error);
+    return NextResponse.json({ error }, { status: 400 });
   }
 
   if (!phone || !email) {
-    return NextResponse.json({ error: 'Missing required fields: phone, email' }, { status: 400 });
+    const missing = [(!phone && 'телефон'), (!email && 'имейл')].filter(Boolean).join(', ');
+    const error = `Липсват задължителни полета: ${missing}.`;
+    if (process.env.NODE_ENV === 'development') console.error('[POST /api/studios] Validation:', error);
+    return NextResponse.json({ error }, { status: 400 });
   }
 
   const ownerUserId = sessionUser.id as string;
@@ -151,7 +157,11 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      return NextResponse.json({ error: uploadError.message }, { status: 400 });
+      const message = `Качването на снимката не успя: ${uploadError.message}. Уверете се, че bucket „${bucket}" съществува в Supabase Storage и е публичен.`;
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[POST /api/studios] Storage upload error:', uploadError);
+      }
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     const { data: publicUrlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(uploadData.path);
