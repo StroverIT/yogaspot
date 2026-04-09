@@ -15,7 +15,7 @@ export function AdminOverview() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4">Последни студиа</h3>
           <div className="space-y-3">
             {mockStudios.slice(0, 3).map(studio => (
@@ -34,7 +34,7 @@ export function AdminOverview() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-md">
           <h3 className="font-display text-lg font-semibold text-foreground mb-4">Последни ревюта</h3>
           <div className="space-y-3">
             {mockReviews.map(review => (

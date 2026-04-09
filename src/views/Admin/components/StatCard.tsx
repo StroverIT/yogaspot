@@ -19,7 +19,7 @@ type StatCardProps = {
 
 export function StatCard({ icon, label, value, trend, tint }: StatCardProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 relative overflow-hidden group hover:shadow-lg transition-shadow">
+    <div className="rounded-2xl border border-border bg-white p-6 relative overflow-hidden group hover:shadow-lg transition-shadow shadow-md">
       <div className={`pointer-events-none absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl ${statTints[tint].blob}`} />
       <div className="relative z-10 flex items-center gap-3 mb-4">
         <div className={`shrink-0 flex items-center justify-center p-2.5 rounded-xl ${statTints[tint].iconBg}`}>{icon}</div>

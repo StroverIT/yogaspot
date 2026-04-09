@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { mockStudios, mockClasses, mockInstructors } from "@/data/mock-data";
+import { mockStudios, mockClasses } from "@/data/mock-data";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import HeroSection from "./HeroSection";
-import YogaTypeCategories from "./YogaTypeCategories";
-import ValuePropositions from "./ValuePropositions";
+// import YogaTypeCategories from "./YogaTypeCategories";
+// import ValuePropositions from "./ValuePropositions";
 import TopStudiosSection from "./TopStudiosSection";
-import UpcomingClassesSection from "./UpcomingClassesSection";
+// import UpcomingClassesSection from "./UpcomingClassesSection";
 import HowItWorksSection from "./HowItWorksSection";
 import ForStudiosCTA from "./ForStudiosCTA";
 import NearbyStudiosSection from "./NearbyStudiosSection";
@@ -25,10 +25,10 @@ export default function HomePage() {
     []
   );
 
-  const upcomingClasses = useMemo(
-    () => [...mockClasses].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4),
-    []
-  );
+  // const upcomingClasses = useMemo(
+  //   () => [...mockClasses].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4),
+  //   []
+  // );
 
   const handleFavorite = (e: React.MouseEvent, studioId: string) => {
     e.preventDefault();
@@ -48,10 +48,10 @@ export default function HomePage() {
     <div className="font-body">
       <HeroSection />
       <HowItWorksSection />
-      <ValuePropositions />
-      <div className="w-full h-px bg-border" />
+      {/* <ValuePropositions /> */}
+      {/* <div className="w-full h-px bg-border" /> */}
 
-      <YogaTypeCategories />
+      {/* <YogaTypeCategories /> */}
       <NearbyStudiosSection
         studios={mockStudios}
         isFavorite={isFavorite}
