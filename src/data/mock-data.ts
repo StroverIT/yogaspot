@@ -18,6 +18,8 @@ export interface Studio {
   rating: number;
   reviewCount: number;
   businessId: string;
+  /** ISO date — за сортиране „най-нови първи“ в админ преглед */
+  createdAt: string;
 }
 
 export interface Instructor {
@@ -57,6 +59,14 @@ export interface Review {
   rating: number;
   text: string;
   date: string;
+}
+
+export interface RecentEnrollment {
+  id: string;
+  userName: string;
+  className: string;
+  studioName: string;
+  enrolledAt: string;
 }
 
 export const WEEKDAYS = ['Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък', 'Събота', 'Неделя'] as const;
@@ -107,6 +117,7 @@ export const mockStudios: Studio[] = [
     rating: 4.8,
     reviewCount: 124,
     businessId: 'b1',
+    createdAt: '2023-04-12',
   },
   {
     id: 's2',
@@ -122,6 +133,7 @@ export const mockStudios: Studio[] = [
     rating: 4.6,
     reviewCount: 89,
     businessId: 'b2',
+    createdAt: '2024-01-20',
   },
   {
     id: 's3',
@@ -137,6 +149,7 @@ export const mockStudios: Studio[] = [
     rating: 4.9,
     reviewCount: 67,
     businessId: 'b3',
+    createdAt: '2024-09-05',
   },
   {
     id: 's4',
@@ -152,6 +165,7 @@ export const mockStudios: Studio[] = [
     rating: 4.5,
     reviewCount: 156,
     businessId: 'b1',
+    createdAt: '2025-11-18',
   },
 ];
 
@@ -211,6 +225,17 @@ export const mockReviews: Review[] = [
   { id: 'r1', userId: 'u1', userName: 'Анна К.', targetId: 's1', targetType: 'studio', rating: 5, text: 'Прекрасно студио с невероятна атмосфера!', date: '2026-02-10' },
   { id: 'r2', userId: 'u2', userName: 'Петър Д.', targetId: 's1', targetType: 'studio', rating: 4, text: 'Много добри инструктори, удобна локация.', date: '2026-02-08' },
   { id: 'r3', userId: 'u3', userName: 'Ива М.', targetId: 'i1', targetType: 'instructor', rating: 5, text: 'Мария е невероятен учител! Препоръчвам горещо.', date: '2026-02-05' },
+  { id: 'r4', userId: 'u4', userName: 'Даниел С.', targetId: 's2', targetType: 'studio', rating: 5, text: 'Отлични занятия по Аштанга, чисти съблекални.', date: '2026-02-12' },
+  { id: 'r5', userId: 'u5', userName: 'Елена В.', targetId: 's4', targetType: 'studio', rating: 4, text: 'Динамични класове, понякога е претъпкано.', date: '2026-02-11' },
+];
+
+export const mockRecentEnrollments: RecentEnrollment[] = [
+  { id: 'en1', userName: 'Кристина П.', className: 'Виняса Флоу', studioName: 'Лотос Йога Студио', enrolledAt: '2026-02-14T09:15:00' },
+  { id: 'en2', userName: 'Виктор Н.', className: 'Пауър Йога', studioName: 'Асана Фит', enrolledAt: '2026-02-13T16:40:00' },
+  { id: 'en3', userName: 'Стефани Р.', className: 'Вечерна Ин Йога', studioName: 'Прана Студио', enrolledAt: '2026-02-13T11:05:00' },
+  { id: 'en4', userName: 'Мартин Т.', className: 'Аштанга Първична серия', studioName: 'Шанти Йога Център', enrolledAt: '2026-02-12T07:20:00' },
+  { id: 'en5', userName: 'Гергана Л.', className: 'Сутрешна Хатха', studioName: 'Лотос Йога Студио', enrolledAt: '2026-02-11T06:50:00' },
+  { id: 'en6', userName: 'Алекс Й.', className: 'Аеро Йога', studioName: 'Асана Фит', enrolledAt: '2026-02-10T17:30:00' },
 ];
 
 export const mockSchedule: ScheduleEntry[] = [
