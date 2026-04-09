@@ -54,10 +54,6 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 relative z-10" ref={containerRef}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="hero-content">
-            <Badge variant="secondary" className="mb-5 rounded-full px-4 py-1.5 text-sm gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Водещата йога платформа в България
-            </Badge>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6">
               Твоята практика
               <br />

@@ -10,19 +10,23 @@
   --font-body: "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   --font-heading: "Playfair Display", "Times New Roman", serif;
-  --yoga-bg: #f7faf7;
+  --yoga-bg: #fff6ea;
   --yoga-surface: #ffffff;
-  --yoga-accent: #34d399; /* emerald-400 */
-  --yoga-accent-soft: rgba(52, 211, 153, 0.14);
-  --yoga-text: #0f172a;
-  --yoga-text-soft: #64748b;
+  --yoga-accent: #6563a5;
+  --yoga-accent-soft: rgba(101, 99, 165, 0.2);
+  --yoga-secondary: #7da5bc;
+  --yoga-secondary-deep: #678b9f;
+  --yoga-tertiary: #bdb5da;
+  --yoga-warm: #f4ccc1;
+  --yoga-text: #2d2a4f;
+  --yoga-text-soft: #678b9f;
 }
 
 body {
   font-family: var(--font-body);
   background:
-    radial-gradient(circle at top left, rgba(52, 211, 153, 0.12), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.1), transparent 55%),
+    radial-gradient(circle at top left, rgba(101, 99, 165, 0.18), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(125, 165, 188, 0.16), transparent 55%),
     var(--yoga-bg);
   color: var(--yoga-text);
 }
@@ -57,5 +61,5 @@ a:hover {
 .top-studios-bullet-active {
   background-color: var(--yoga-accent);
   border-radius: 9999px;
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 24px rgba(101, 99, 165, 0.35);
 }

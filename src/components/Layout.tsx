@@ -27,19 +27,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           <Link
             href="/"
-            className="flex items-center gap-2 font-display text-2xl font-bold text-primary tracking-tight "
+            className="flex items-center shrink-0 rounded-xl overflow-hidden ring-1 ring-border/60 shadow-sm"
+            aria-label="Zenno — начало"
           >
-            <div className="relative h-28 w-28 md:h-36 md:w-36 -ml-10">
+            <div className="relative h-12 w-12 md:h-14 md:w-14">
               <Image
                 src="/homepage/logo.png"
                 alt="Zenno"
                 fill
-                className="object-contain"
-                sizes="10rem"
+                className="object-contain p-1"
+                sizes="(max-width: 768px) 48px, 56px"
+                priority
               />
-            </div>
-            <div className="-ml-10">
-              Zenno
             </div>
           </Link>
 
@@ -136,16 +135,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-muted-foreground">
           <div>
             <div className="flex items-center mb-3">
-              <div className="relative h-28 w-28 md:h-36 md:w-36 -ml-10">
+              <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/60 bg-black">
                 <Image
                   src="/homepage/logo.png"
                   alt="Zenno"
                   fill
-                  className="object-contain"
-                  sizes="10rem"
+                  className="object-contain p-1.5"
+                  sizes="(max-width: 768px) 80px, 96px"
                 />
               </div>
-              <h4 className="font-display text-lg text-foreground -ml-8">Zenno</h4>
             </div>
             <p>Твоят портал към йога студиа в България. Открий, запиши се и практикувай.</p>
           </div>
