@@ -1,17 +1,88 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart, User, LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import AuthModal from "@/components/AuthModal";
+
+const LOGO_SCROLL_THRESHOLD_PX = 8;
+const LOGO_LARGE = { width: "7rem", height: "7rem" }; // h-28 w-28
+const LOGO_COMPACT = { width: "7rem", height: "6rem" }; // w-28 h-24
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const logoWrapRef = useRef<HTMLDivElement>(null);
+  const logoModeRef = useRef<"large" | "compact" | null>(null);
+
+  useLayoutEffect(() => {
+    const el = logoWrapRef.current;
+    if (!el) return;
+
+    const mdQuery = window.matchMedia("(min-width: 768px)");
+    const isCompact = () => window.scrollY > LOGO_SCROLL_THRESHOLD_PX;
+
+    const applyDesktop = (animate: boolean) => {
+      const compact = isCompact();
+      const mode: "large" | "compact" = compact ? "compact" : "large";
+      const target = compact ? LOGO_COMPACT : LOGO_LARGE;
+
+      if (animate && logoModeRef.current === mode) return;
+      if (!animate) {
+        gsap.set(el, target);
+        logoModeRef.current = mode;
+        return;
+      }
+      logoModeRef.current = mode;
+      gsap.to(el, {
+        ...target,
+        duration: 0.45,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    };
+
+    const onScroll = () => {
+      requestAnimationFrame(() => {
+        if (!mdQuery.matches) return;
+        applyDesktop(true);
+      });
+    };
+
+    const onMdChange = () => {
+      if (!mdQuery.matches) {
+        gsap.killTweensOf(el);
+        gsap.set(el, { clearProps: "width,height" });
+        logoModeRef.current = null;
+        return;
+      }
+      logoModeRef.current = null;
+      applyDesktop(false);
+    };
+
+    if (mdQuery.matches) {
+      applyDesktop(false);
+    } else {
+      gsap.set(el, { clearProps: "width,height" });
+      logoModeRef.current = null;
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    mdQuery.addEventListener("change", onMdChange);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      mdQuery.removeEventListener("change", onMdChange);
+      gsap.killTweensOf(el);
+    };
+  }, []);
 
   const handleFavoritesClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
@@ -27,16 +98,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           <Link
             href="/"
-            className="flex items-center shrink-0 rounded-xl overflow-hidden ring-1 ring-border/60 shadow-sm"
+            className="flex items-center"
             aria-label="Zenno — начало"
           >
-            <div className="relative h-12 w-12 md:h-14 md:w-14">
+            <div
+              ref={logoWrapRef}
+              className="relative h-12 w-12 shrink-0 md:h-28 md:w-28"
+            >
               <Image
                 src="/homepage/logo.png"
                 alt="Zenno"
                 fill
                 className="object-contain p-1"
-                sizes="(max-width: 768px) 48px, 56px"
+                sizes="(max-width: 768px) 48px, 96px"
                 priority
               />
             </div>
@@ -129,18 +203,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         )}
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 min-h-0 overflow-x-clip">
+        {children}
+      </main>
 
       <footer className="border-t border-border bg-card py-12">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-muted-foreground">
           <div>
             <div className="flex items-center mb-3">
-              <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/60 bg-black">
+              <div className="relative h-28 w-28">
                 <Image
                   src="/homepage/logo.png"
                   alt="Zenno"
                   fill
-                  className="object-contain p-1.5"
+                  className="object-contain"
                   sizes="(max-width: 768px) 80px, 96px"
                 />
               </div>

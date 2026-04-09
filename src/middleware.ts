@@ -11,15 +11,15 @@ export default withAuth(
         const pathname = req.nextUrl.pathname;
         const role = (token as any)?.role as string | undefined;
 
-        if (!token) return false;
+        // if (!token) return false;
 
-        if (pathname.startsWith('/admin')) {
-          return role === 'admin';
-        }
+        // if (pathname.startsWith('/admin')) {
+        //   return role === 'admin';
+        // }
 
-        if (pathname.startsWith('/dashboard')) {
-          return role === 'business';
-        }
+        // if (pathname.startsWith('/dashboard')) {
+        //   return role === 'business';
+        // }
 
         return true;
       },
