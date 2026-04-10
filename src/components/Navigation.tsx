@@ -130,7 +130,7 @@ const Navigation: React.FC = () => {
           >
             <div
               ref={logoWrapRef}
-              className="relative h-12 w-12 shrink-0 md:h-28 md:w-28"
+              className="relative shrink-0 h-28 w-28"
             >
               <Image
                 src="/homepage/logo.png"
