@@ -15,9 +15,22 @@ export default {
     extend: {
       fontFamily: {
         display: ['"Playfair Display"', 'serif'],
+        serif: ['"Playfair Display"', 'Times New Roman', 'serif'],
         body: ['"Source Sans 3"', 'sans-serif'],
       },
       colors: {
+        yoga: {
+          bg: "var(--yoga-bg)",
+          surface: "var(--yoga-surface)",
+          accent: "var(--yoga-accent)",
+          "accent-soft": "var(--yoga-accent-soft)",
+          secondary: "var(--yoga-secondary)",
+          "secondary-deep": "var(--yoga-secondary-deep)",
+          tertiary: "var(--yoga-tertiary)",
+          warm: "var(--yoga-warm)",
+          text: "var(--yoga-text)",
+          "text-soft": "var(--yoga-text-soft)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
