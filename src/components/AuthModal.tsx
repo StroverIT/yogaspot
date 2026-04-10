@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Mail, Chrome } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { GoogleGIcon } from '@/components/icons/brand-icons';
 
 interface AuthModalProps {
   open: boolean;
@@ -74,7 +75,7 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
             </DialogHeader>
             <div className="space-y-3 pt-4">
               <Button variant="outline" className="w-full h-12 gap-3 text-base" onClick={handleGoogleLogin}>
-                <Chrome className="h-5 w-5" />
+                <GoogleGIcon className="h-5 w-5 shrink-0" />
                 Продължи с Google
               </Button>
               <div className="relative my-2">

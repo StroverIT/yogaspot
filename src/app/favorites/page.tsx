@@ -1,6 +1,6 @@
 "use client";
 
-import Favorites from "@/pages/Favorites";
+import Favorites from "@/views/Favorites";
 
 export default function FavoritesPage() {
   return <Favorites />;

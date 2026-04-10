@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Facebook, Instagram } from "lucide-react";
+import { FacebookIcon, InstagramIcon } from "@/components/icons/brand-icons";
 import { FOOTER_SOCIAL, footerColumnHeadingClass } from "./constants";
 
 const socialButtonClass =
@@ -20,7 +20,7 @@ export const FooterSocial = () => {
                     className={socialButtonClass}
                     aria-label="Instagram"
                 >
-                    <Instagram className="h-6 w-6" strokeWidth={1.75} />
+                    <InstagramIcon className="h-6 w-6" />
                 </a>
                 <a
                     href={FOOTER_SOCIAL.facebook}
@@ -29,7 +29,7 @@ export const FooterSocial = () => {
                     className={socialButtonClass}
                     aria-label="Facebook"
                 >
-                    <Facebook className="h-6 w-6" strokeWidth={1.75} />
+                    <FacebookIcon className="h-6 w-6" />
                 </a>
             </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import StudioDetail from "@/pages/StudioDetail";
+import StudioDetail from "@/views/StudioDetail";
 
 export default function StudioDetailPage() {
   return <StudioDetail />;

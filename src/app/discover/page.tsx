@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Discover from "@/pages/Discover";
+import Discover from "@/views/Discover";
 
 export const metadata: Metadata = {
   title: "Открий студио | Zenno",
