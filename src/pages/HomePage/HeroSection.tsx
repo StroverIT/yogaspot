@@ -26,21 +26,27 @@ export default function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="hero-content gsap-reveal-block">
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6">
-              Твоята практика
-              <br />
-              <span className="text-primary">Твоят ритъм</span>
+              Йога, която пасва на ритъма ти
             </h1>
-            <p className="text-lg text-muted-foreground max-w-lg mb-8 leading-relaxed">
-              Открий идеалното студио за теб. Разгледай реални отзиви, сравни разписания и
-              запази място за секунди.
+            <p className="text-lg text-muted-foreground max-w-xl mb-8 leading-relaxed">
+              Открий студиа, графици и практики на едно място.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl gap-2">
+              <Button
+                asChild
+                size="lg"
+                className="text-base px-8 py-6 rounded-xl gap-2 border-0 bg-yoga-accent text-white shadow-md shadow-yoga-accent/25 hover:bg-yoga-accent/90 hover:text-white focus-visible:ring-yoga-accent no-underline hover:no-underline"
+              >
                 <Link href="/discover">
-                  <Search className="h-4 w-4" /> Открий студио
+                  <Search className="h-4 w-4" /> Разгледай студиа
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-base px-8 py-6 rounded-xl">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="text-base px-8 py-6 rounded-xl border-2 border-yoga-accent bg-background/90 text-yoga-accent hover:bg-yoga-accent/10 hover:text-yoga-accent focus-visible:ring-yoga-accent no-underline hover:no-underline"
+              >
                 <Link href="/auth">
                   Добави своето студио <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
@@ -55,7 +61,7 @@ export default function HeroSection() {
                   key={i}
                   className="hero-stat-card gsap-reveal-stagger rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 hover:shadow-md transition-shadow"
                 >
-                  <div className="text-primary mb-2">{stat.icon}</div>
+                  <div className="text-yoga-accent mb-2">{stat.icon}</div>
                   <p className="font-display text-2xl font-bold text-foreground">{stat.value}</p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                 </div>
