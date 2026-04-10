@@ -1,12 +1,10 @@
-@import "../index.css";
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-sans:
-    var(--font-nunito), "Nunito", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  --font-serif:
-    var(--font-playfair), "Playfair Display", "Times New Roman", serif;
-  --font-mono: var(--font-geist-mono), "Geist Mono", monospace;
+  /* Zenno Brand Colors */
   --yoga-bg: #fff6ea;
   --yoga-surface: #ffffff;
   --yoga-accent: #6563a5;
@@ -17,6 +15,28 @@
   --yoga-warm: #f4ccc1;
   --yoga-text: #2d2a4f;
   --yoga-text-soft: #678b9f;
+
+  /* Map to semantic tokens */
+  --background: #fff6ea;
+  --foreground: #2d2a4f;
+  --card: #ffffff;
+  --card-foreground: #2d2a4f;
+  --popover: #ffffff;
+  --popover-foreground: #2d2a4f;
+  --primary: #6563a5;
+  --primary-foreground: #ffffff;
+  --secondary: #7da5bc;
+  --secondary-foreground: #ffffff;
+  --muted: #f4ccc1;
+  --muted-foreground: #678b9f;
+  --accent: #bdb5da;
+  --accent-foreground: #2d2a4f;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(101, 99, 165, 0.2);
+  --input: rgba(101, 99, 165, 0.2);
+  --ring: #6563a5;
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -65,42 +85,13 @@
   --color-yoga-text-soft: #678b9f;
 }
 
-body {
-  font-family: var(--font-sans);
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(101, 99, 165, 0.18),
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(125, 165, 188, 0.16),
-      transparent 55%
-    ),
-    var(--yoga-bg);
-  color: var(--yoga-text);
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-serif);
-  letter-spacing: 0.03em;
-}
-
-p {
-  color: var(--yoga-text-soft);
-}
-
-a {
-  color: var(--yoga-accent);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-yoga-bg text-yoga-text;
+  }
 }
 
 .top-studios-bullet {
