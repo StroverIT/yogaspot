@@ -218,6 +218,8 @@ export function runHoverPreset(
   hoverType: ButtonHoverType,
   refs: HoverAnimRefs
 ): void {
+  const isIconOnly = el.dataset.iconOnly === "true";
+
   switch (hoverType) {
     case "breathing":
       breathing(el, refs);
@@ -251,7 +253,7 @@ export function runHoverPreset(
       break;
   }
 
-  if (icon && hoverType !== "textFloat") {
+  if (icon && hoverType !== "textFloat" && !isIconOnly) {
     nudgeIcon(icon, hoverType, refs);
   }
 }

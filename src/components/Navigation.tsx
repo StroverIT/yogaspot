@@ -17,7 +17,13 @@ const LOGO_COMPACT = { width: "7rem", height: "6rem" }; // w-28 h-24
 const DESKTOP_NAV_LINK_CLASS =
   "relative text-foreground/70 transition-all duration-300 ease-out hover:text-primary hover:-translate-y-0.5 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-primary after:transition-transform after:duration-300 after:ease-out hover:after:scale-x-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 const ICON_BUTTON_CLASS =
-  "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/10 hover:text-primary hover:shadow-sm active:translate-y-0";
+  "border border-transparent bg-background/70 text-foreground/80 backdrop-blur-sm transition-all duration-300 ease-out hover:border-primary/15 hover:bg-background hover:text-primary hover:shadow-md hover:shadow-primary/10 active:translate-y-0";
+const HEART_ICON_BUTTON_CLASS =
+  "hover:[&_svg]:rotate-[12deg] hover:[&_svg]:scale-125";
+const PROFILE_ICON_BUTTON_CLASS =
+  "hover:[&_svg]:scale-110 hover:[&_svg]:-translate-y-0.5";
+const LOGOUT_ICON_BUTTON_CLASS =
+  "hover:[&_svg]:translate-x-0.5 hover:[&_svg]:-translate-y-0.5 hover:text-destructive hover:before:bg-destructive/10 hover:border-destructive/15 hover:shadow-destructive/10";
 const AUTH_GHOST_BUTTON_CLASS =
   "transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/10 hover:text-primary active:translate-y-0";
 const AUTH_PRIMARY_BUTTON_CLASS =
@@ -275,17 +281,32 @@ const Navigation: React.FC = () => {
 
           <div className="hidden md:flex items-center gap-3">
             <Link href="/favorites" onClick={handleFavoritesClick}>
-              <Button variant="ghost" size="icon" className={ICON_BUTTON_CLASS}><Heart className="h-5 w-5" /></Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                hoverType="petalRipple"
+                className={`${ICON_BUTTON_CLASS} ${HEART_ICON_BUTTON_CLASS}`}
+              >
+                <Heart className="h-5 w-5" />
+              </Button>
             </Link>
             {isAuthenticated ? (
               <>
                 <Link href="/profile">
-                  <Button variant="ghost" size="icon" className={ICON_BUTTON_CLASS}><User className="h-5 w-5" /></Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    hoverType="softGlowEnergy"
+                    className={`${ICON_BUTTON_CLASS} ${PROFILE_ICON_BUTTON_CLASS}`}
+                  >
+                    <User className="h-5 w-5" />
+                  </Button>
                 </Link>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={ICON_BUTTON_CLASS}
+                  hoverType="energyLineSweep"
+                  className={`${ICON_BUTTON_CLASS} ${LOGOUT_ICON_BUTTON_CLASS}`}
                   onClick={() => {
                     logout();
                     router.push("/");

@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 
 export type { ButtonHoverType };
 
+const iconOnlyMotionClasses =
+  "relative overflow-hidden rounded-full before:absolute before:inset-0 before:scale-75 before:rounded-full before:bg-primary/0 before:opacity-0 before:transition-all before:duration-300 before:ease-out hover:before:scale-100 hover:before:bg-primary/10 hover:before:opacity-100 active:before:scale-95 [&_svg]:transition-transform [&_svg]:duration-300 [&_svg]:ease-out hover:[&_svg]:scale-110 active:[&_svg]:scale-95";
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[color,background-color,border-color,box-shadow,filter,transform] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none disabled:transform-none motion-safe:transform-gpu [&_svg]:pointer-events-none [&_svg]:relative [&_svg]:z-[1] [&_svg]:size-4 [&_svg]:shrink-0",
   {
@@ -49,11 +52,13 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, asChild = false, disabled, hoverType = "breathing", ...props },
+    { className, variant, size, asChild = false, disabled, hoverType, ...props },
     ref
   ) => {
     const Comp = asChild ? Slot : "button";
-    const { elementRef } = useButtonHover({ disabled, hoverType });
+    const isIconOnly = size === "icon";
+    const resolvedHoverType = hoverType ?? (isIconOnly ? "softGlowEnergy" : "breathing");
+    const { elementRef } = useButtonHover({ disabled, hoverType: resolvedHoverType });
 
     const setRef = React.useCallback(
       (node: HTMLButtonElement | null) => {
@@ -71,8 +76,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size }), getHoverTypeClasses(hoverType), className)}
-        data-hover-type={hoverType}
+        className={cn(
+          buttonVariants({ variant, size }),
+          isIconOnly && iconOnlyMotionClasses,
+          getHoverTypeClasses(resolvedHoverType),
+          className
+        )}
+        data-hover-type={resolvedHoverType}
+        data-icon-only={isIconOnly ? "true" : undefined}
         ref={setRef}
         disabled={disabled}
         {...props}
