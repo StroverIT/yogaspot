@@ -1,9 +1,9 @@
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
 import { BarChart3, Calendar, MapPin, Star, TrendingUp, Users } from 'lucide-react';
 
 import { dashboardCardClass, dashboardInsetClass } from '../dashboardUi';
+import { DashboardOccupancyBar } from './DashboardOccupancyBar';
 import { DashboardPageHeader } from './DashboardPageHeader';
 
 export function OverviewSection({
@@ -92,7 +92,13 @@ export function OverviewSection({
             {occupancyRate}%
           </span>
         </div>
-        <Progress value={occupancyRate} className="h-3" />
+        <DashboardOccupancyBar
+          percent={occupancyRate}
+          heightClass="h-3"
+          ariaLabel={`Обща заетост: ${totalEnrolled} от ${totalCapacity} места`}
+          ariaValueNow={totalEnrolled}
+          ariaValueMax={totalCapacity}
+        />
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
           {myClasses.map(cls => {
             const fill = Math.round((cls.enrolled / cls.maxCapacity) * 100);
@@ -107,7 +113,13 @@ export function OverviewSection({
                     </Badge>
                   )}
                 </div>
-                <Progress value={fill} className="mb-1.5 h-2" />
+                <DashboardOccupancyBar
+                  percent={fill}
+                  className="mb-1.5"
+                  ariaLabel={`${cls.name}: ${cls.enrolled} от ${cls.maxCapacity} места`}
+                  ariaValueNow={cls.enrolled}
+                  ariaValueMax={cls.maxCapacity}
+                />
                 <p className="text-xs text-muted-foreground">
                   {cls.enrolled}/{cls.maxCapacity} записани
                 </p>

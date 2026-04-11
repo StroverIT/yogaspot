@@ -4,29 +4,9 @@ import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
 import { AlertCircle, Building2, Clock, Edit, GraduationCap, Plus, Trash2 } from 'lucide-react';
 
 import { dashboardCardClass } from '../dashboardUi';
+import { DashboardOccupancyBar } from './DashboardOccupancyBar';
 import { DashboardPageHeader } from './DashboardPageHeader';
 import { DifficultyBadge } from './DifficultyBadge';
-
-function ClassOccupancyBar({ enrolled, maxCapacity }: { enrolled: number; maxCapacity: number }) {
-  const filledPct =
-    maxCapacity > 0 ? Math.min(100, Math.max(0, Math.round((enrolled / maxCapacity) * 100))) : 0;
-
-  return (
-    <div
-      className="relative h-2.5 w-full overflow-hidden rounded-full border border-border/50 bg-white shadow-[inset_0_1px_2px_rgba(45,42,79,0.06)]"
-      role="progressbar"
-      aria-valuenow={enrolled}
-      aria-valuemin={0}
-      aria-valuemax={maxCapacity}
-      aria-label={`Заетост: ${enrolled} от ${maxCapacity} места`}
-    >
-      <div
-        className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
-        style={{ width: `${filledPct}%` }}
-      />
-    </div>
-  );
-}
 
 export function ClassesSection({
   classes,
@@ -131,7 +111,16 @@ export function ClassesSection({
                     </div>
 
                     <div className="mt-auto flex items-center gap-3 border-t border-border/40 pt-3">
-                      <ClassOccupancyBar enrolled={cls.enrolled} maxCapacity={cls.maxCapacity} />
+                      <DashboardOccupancyBar
+                        percent={
+                          cls.maxCapacity > 0
+                            ? (cls.enrolled / cls.maxCapacity) * 100
+                            : 0
+                        }
+                        ariaLabel={`Заетост: ${cls.enrolled} от ${cls.maxCapacity} места`}
+                        ariaValueNow={cls.enrolled}
+                        ariaValueMax={cls.maxCapacity}
+                      />
                       <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                         {cls.enrolled}/{cls.maxCapacity}
                       </span>
