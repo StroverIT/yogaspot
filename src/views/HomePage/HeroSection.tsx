@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Star, MapPin, ArrowRight, Users, Clock, Search } from "lucide-react";
 
@@ -16,6 +17,12 @@ export default function HeroSection({
   totalEnrolled: number;
   avgRating: string;
 }) {
+  const { status } = useSession();
+  const addStudioHref =
+    status === "authenticated"
+      ? "/dashboard/studios"
+      : "/auth?type=register&role=business";
+
   const stats = [
     { value: `${studioCount}+`, label: "Партньорски студиа", icon: <MapPin className="h-5 w-5" /> },
     { value: `${classCount}+`, label: "Седмични класове", icon: <Clock className="h-5 w-5" /> },
@@ -54,7 +61,7 @@ export default function HeroSection({
                 size="lg"
                 className="text-base px-8 py-6 rounded-xl border-2 border-yoga-accent bg-background/90 focus-visible:ring-yoga-accent"
               >
-                <Link href="/auth">
+                <Link href={addStudioHref}>
                   Добави своето студио <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>

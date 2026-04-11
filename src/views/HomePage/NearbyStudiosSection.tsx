@@ -1,19 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Studio, YogaClass } from "@/data/mock-data";
+import { getStudioCoverSrc } from "@/lib/studio-cover-src";
 import { Star, MapPin, ArrowRight, Heart, Users, LocateFixed } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-
-const getStudioImageSrc = (studioId: string) => `/homepage/studio-${studioId.slice(1)}.jpg`;
 
 interface NearbyStudiosSectionProps {
   studios: Studio[];
@@ -207,12 +205,12 @@ export default function NearbyStudiosSection({ studios, classes, isFavorite, onF
                   <Link href={`/studio/${studio.id}`} className="block h-full">
                     <div className="rounded-2xl border border-border bg-background overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
                       <div className="aspect-[16/10] relative overflow-hidden">
-                        <Image
-                          src={getStudioImageSrc(studio.id)}
+                        <img
+                          src={getStudioCoverSrc(studio)}
                           alt={studio.name}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <div className="absolute bottom-3 left-3 flex gap-2">
                           <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-sm text-xs font-medium">

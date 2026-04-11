@@ -38,6 +38,12 @@ const Auth = () => {
     const nextMode: 'login' | 'register' =
       typeParam === 'register' ? 'register' : 'login';
     setMode(nextMode);
+    if (nextMode === 'register') {
+      const roleParam = searchParams?.get('role');
+      setRole(
+        roleParam === 'business' || roleParam === 'client' ? roleParam : 'client',
+      );
+    }
     reset();
   }, [searchParams]);
 
@@ -51,7 +57,12 @@ const Auth = () => {
 
   const switchMode = (newMode: 'login' | 'register') => {
     reset();
-    router.push(`/auth?type=${newMode}`);
+    if (newMode === 'login') {
+      router.push('/auth?type=login');
+    } else {
+      const q = new URLSearchParams({ type: 'register', role });
+      router.push(`/auth?${q.toString()}`);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
