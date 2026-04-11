@@ -9,6 +9,7 @@ export interface User {
   email: string;
   role: UserRole;
   favorites: string[];
+  image?: string | null;
 }
 
 export type LoginWithGoogleOptions = {
@@ -91,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: sessionUser.email ?? '',
         role: (sessionUser.role as UserRole) ?? 'client',
         favorites: [],
+        image: (sessionUser as { image?: string | null }).image ?? null,
       }
     : null;
 

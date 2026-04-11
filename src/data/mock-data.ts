@@ -18,6 +18,8 @@ export interface Studio {
   rating: number;
   reviewCount: number;
   businessId: string;
+  /** User id of the business owner — used to hide “add review” for own studios. */
+  ownerUserId: string;
   /** ISO date — за сортиране „най-нови първи“ в админ преглед */
   createdAt: string;
 }
@@ -54,6 +56,8 @@ export interface Review {
   id: string;
   userId: string;
   userName: string;
+  /** Profile image URL when available (e.g. Google avatar). */
+  userImage?: string;
   userEmail?: string;
   targetId: string;
   targetType: 'studio' | 'instructor' | 'class';
@@ -132,6 +136,7 @@ export const mockStudios: Studio[] = [
     rating: 4.8,
     reviewCount: 124,
     businessId: 'b1',
+    ownerUserId: 'mock-owner-b1',
     createdAt: '2023-04-12',
   },
   {
@@ -148,6 +153,7 @@ export const mockStudios: Studio[] = [
     rating: 4.6,
     reviewCount: 89,
     businessId: 'b2',
+    ownerUserId: 'mock-owner-b2',
     createdAt: '2024-01-20',
   },
   {
@@ -164,6 +170,7 @@ export const mockStudios: Studio[] = [
     rating: 4.9,
     reviewCount: 67,
     businessId: 'b3',
+    ownerUserId: 'mock-owner-b3',
     createdAt: '2024-09-05',
   },
   {
@@ -180,6 +187,7 @@ export const mockStudios: Studio[] = [
     rating: 4.5,
     reviewCount: 156,
     businessId: 'b1',
+    ownerUserId: 'mock-owner-b1',
     createdAt: '2025-11-18',
   },
 ];

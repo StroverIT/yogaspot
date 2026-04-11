@@ -1,90 +1,114 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useSession } from "next-auth/react";
 
-const STORAGE_KEY = "yoga_favorite_studios";
-
-/** Stable empty list for snapshots (React compares by reference). */
+/**
+ * Studio favorites for the signed-in user, loaded from Postgres (Supabase DB)
+ * via `/api/favorites` — not localStorage.
+ */
 const EMPTY_FAVORITES: string[] = [];
-
-function readFavoritesRaw(): string {
-  try {
-    if (typeof window === "undefined") return "[]";
-    return localStorage.getItem(STORAGE_KEY) ?? "[]";
-  } catch {
-    return "[]";
-  }
-}
-
-function parseFavorites(serialized: string): string[] {
-  try {
-    const parsed = JSON.parse(serialized) as unknown;
-    if (!Array.isArray(parsed)) return EMPTY_FAVORITES;
-    const ids = parsed.filter((id): id is string => typeof id === "string");
-    return ids.length === 0 ? EMPTY_FAVORITES : ids;
-  } catch {
-    return EMPTY_FAVORITES;
-  }
-}
-
-let cachedRaw: string | null = null;
-let cachedList: string[] = EMPTY_FAVORITES;
-
-function getSnapshot(): string[] {
-  const raw = readFavoritesRaw();
-  if (raw !== cachedRaw) {
-    cachedRaw = raw;
-    cachedList = parseFavorites(raw);
-  }
-  return cachedList;
-}
-
-function getServerSnapshot(): string[] {
-  return EMPTY_FAVORITES;
-}
 
 const listeners = new Set<() => void>();
 
-function emitChange() {
-  listeners.forEach((fn) => fn());
+let favoriteKey: string | null = null;
+let favoriteIds: string[] = EMPTY_FAVORITES;
+
+function sortedKey(ids: string[]) {
+  return ids.length === 0 ? "" : [...ids].sort().join("\0");
+}
+
+function replaceFavorites(next: string[]) {
+  const key = sortedKey(next);
+  if (key === favoriteKey) return;
+  favoriteKey = key;
+  favoriteIds = next.length === 0 ? EMPTY_FAVORITES : [...next];
+  listeners.forEach((l) => l());
+}
+
+function getSnapshot() {
+  return favoriteIds;
+}
+
+function getServerSnapshot() {
+  return EMPTY_FAVORITES;
 }
 
 function subscribe(onStoreChange: () => void) {
   listeners.add(onStoreChange);
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY || e.key === null) onStoreChange();
-  };
-  if (typeof window !== "undefined") {
-    window.addEventListener("storage", onStorage);
-  }
-  return () => {
-    listeners.delete(onStoreChange);
-    if (typeof window !== "undefined") {
-      window.removeEventListener("storage", onStorage);
-    }
-  };
+  return () => listeners.delete(onStoreChange);
 }
 
-function readFavorites(): string[] {
-  return parseFavorites(readFavoritesRaw());
+async function fetchFavoritesFromApi(signal?: AbortSignal) {
+  const res = await fetch("/api/favorites", { credentials: "same-origin", signal });
+  if (!res.ok) {
+    if (!signal?.aborted) replaceFavorites([]);
+    return;
+  }
+  const data = (await res.json()) as { studioIds?: unknown };
+  if (signal?.aborted) return;
+  const ids = Array.isArray(data.studioIds)
+    ? data.studioIds.filter((id): id is string => typeof id === "string")
+    : [];
+  replaceFavorites(ids);
 }
+
+async function persistFavoritesPut(next: string[]) {
+  try {
+    const res = await fetch("/api/favorites", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ studioIds: next }),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const data = (await res.json()) as { studioIds?: unknown };
+    const ids = Array.isArray(data.studioIds)
+      ? data.studioIds.filter((id): id is string => typeof id === "string")
+      : next;
+    replaceFavorites(ids);
+  } catch {
+    try {
+      await fetchFavoritesFromApi();
+    } catch {
+      /* leave current UI state */
+    }
+  }
+}
+
+type SessionUserWithId = { id?: string };
 
 export function useFavorites() {
-  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const { status, data: session } = useSession();
+  const sessionUserId = (session?.user as SessionUserWithId | undefined)?.id;
+  const favoriteIdsSnapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    if (status === "loading") {
+      return () => ac.abort();
+    }
+    if (status === "unauthenticated") {
+      replaceFavorites([]);
+      return () => ac.abort();
+    }
+    void fetchFavoritesFromApi(ac.signal);
+    return () => ac.abort();
+  }, [status, sessionUserId]);
 
   const toggleFavorite = useCallback((studioId: string) => {
-    const current = readFavorites();
-    const next = current.includes(studioId)
-      ? current.filter((id) => id !== studioId)
-      : [...current, studioId];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    cachedRaw = null;
-    emitChange();
+    if (status !== "authenticated") return false;
+    const prev = favoriteIds === EMPTY_FAVORITES ? [] : [...favoriteIds];
+    const next = prev.includes(studioId)
+      ? prev.filter((id) => id !== studioId)
+      : [...prev, studioId];
+    replaceFavorites(next);
+    void persistFavoritesPut(next);
     return next.includes(studioId);
-  }, []);
+  }, [status]);
 
   const isFavorite = useCallback(
-    (studioId: string) => favoriteIds.includes(studioId),
-    [favoriteIds]
+    (studioId: string) => favoriteIdsSnapshot.includes(studioId),
+    [favoriteIdsSnapshot]
   );
 
-  return { favoriteIds, toggleFavorite, isFavorite };
+  return { favoriteIds: favoriteIdsSnapshot, toggleFavorite, isFavorite };
 }

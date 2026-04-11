@@ -23,7 +23,10 @@ export async function getProfileHistoryPayload(userId: string): Promise<ProfileH
     orderBy: { attendedAt: 'desc' },
     include: {
       yogaClass: {
-        include: { studio: true, instructor: true },
+        include: {
+          studio: { include: { business: { select: { ownerUserId: true } } } },
+          instructor: true,
+        },
       },
     },
   });

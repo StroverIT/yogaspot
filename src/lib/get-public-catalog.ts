@@ -12,6 +12,7 @@ export type PublicCatalog = {
 async function getPublicCatalogImpl(): Promise<PublicCatalog> {
   const studios = await prisma.studio.findMany({
     orderBy: { createdAt: "desc" },
+    include: { business: { select: { ownerUserId: true } } },
   });
   const studioIds = studios.map((s) => s.id);
   const classes =

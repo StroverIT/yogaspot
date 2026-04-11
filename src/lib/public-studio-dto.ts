@@ -6,10 +6,18 @@ import type {
   StudioSubscription,
   YogaClass,
 } from '@/data/mock-data';
-import type { Instructor as PrismaInstructor, Review as PrismaReview, Studio as PrismaStudio } from '@prisma/client';
+import type {
+  Instructor as PrismaInstructor,
+  Review as PrismaReview,
+  Studio as PrismaStudio,
+} from '@prisma/client';
 import type { YogaClass as PrismaYogaClass, ScheduleEntry as PrismaScheduleEntry, StudioSubscription as PrismaSub } from '@prisma/client';
 
-export function studioToDto(s: PrismaStudio): Studio {
+type StudioRowForDto = PrismaStudio & {
+  business?: { ownerUserId: string };
+};
+
+export function studioToDto(s: StudioRowForDto): Studio {
   return {
     id: s.id,
     name: s.name,
@@ -30,6 +38,7 @@ export function studioToDto(s: PrismaStudio): Studio {
     rating: s.rating,
     reviewCount: s.reviewCount,
     businessId: s.businessId,
+    ownerUserId: s.business?.ownerUserId ?? '',
     createdAt: s.createdAt.toISOString().slice(0, 10),
   };
 }
@@ -92,11 +101,17 @@ export function subscriptionToDto(sub: PrismaSub): StudioSubscription {
   };
 }
 
-export function reviewToDto(r: PrismaReview): Review {
+type ReviewRowForDto = PrismaReview & {
+  author?: { image: string | null; name: string | null } | null;
+};
+
+export function reviewToDto(r: ReviewRowForDto): Review {
+  const snapImage = r.author?.image?.trim();
   return {
     id: r.id,
     userId: r.authorUserId ?? 'anon',
     userName: r.authorDisplayName,
+    userImage: snapImage && snapImage.length > 0 ? snapImage : undefined,
     userEmail: r.authorEmail ?? undefined,
     targetId: r.targetId,
     targetType: r.targetType as Review['targetType'],

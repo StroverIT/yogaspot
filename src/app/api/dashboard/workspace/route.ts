@@ -33,6 +33,7 @@ export async function GET() {
     prisma.studio.findMany({
       where: { id: { in: studioIds } },
       orderBy: { createdAt: 'desc' },
+      include: { business: { select: { ownerUserId: true } } },
     }),
     prisma.instructor.findMany({
       where: { studioId: { in: studioIds } },

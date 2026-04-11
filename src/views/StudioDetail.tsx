@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Instructor, Review, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
@@ -40,6 +40,13 @@ const StudioDetail = () => {
 
   const [payload, setPayload] = useState<StudioPayload | null>(undefined);
 
+  const fetchStudioPayload = useCallback(async (): Promise<StudioPayload | null> => {
+    if (!id) return null;
+    const res = await fetch(`/api/public/studios/${encodeURIComponent(id)}`);
+    if (!res.ok) return null;
+    return (await res.json()) as StudioPayload;
+  }, [id]);
+
   useEffect(() => {
     if (!id) {
       setPayload(null);
@@ -47,11 +54,7 @@ const StudioDetail = () => {
     }
     let cancelled = false;
     setPayload(undefined);
-    fetch(`/api/public/studios/${encodeURIComponent(id)}`)
-      .then(async (res) => {
-        if (!res.ok) return null;
-        return (await res.json()) as StudioPayload;
-      })
+    void fetchStudioPayload()
       .then((data) => {
         if (!cancelled) setPayload(data);
       })
@@ -61,7 +64,11 @@ const StudioDetail = () => {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, fetchStudioPayload]);
+
+  const handleReviewSubmitted = useCallback(() => {
+    void fetchStudioPayload().then((data) => setPayload(data));
+  }, [fetchStudioPayload]);
 
   if (payload === undefined) {
     return <StudioDetailPageSkeleton />;
@@ -103,12 +110,15 @@ const StudioDetail = () => {
           <StudioDetailSummary studio={studio} />
           <StudioDetailTabs
             key={studio.id}
+            studioId={studio.id}
+            studioOwnerUserId={studio.ownerUserId}
             studioSchedule={schedule}
             subscription={subscription ?? undefined}
             studioClasses={classes}
             studioInstructors={instructors}
             studioReviews={studioReviews}
             onBookClass={handleBook}
+            onReviewSubmitted={handleReviewSubmitted}
             defaultTab={defaultTab}
           />
         </div>

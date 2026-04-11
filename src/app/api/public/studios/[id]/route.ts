@@ -9,8 +9,6 @@ import {
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
 import { jsonError } from '@/lib/api-auth';
-import type { Studio as PrismaStudioRow } from '@prisma/client';
-
 export const runtime = 'nodejs';
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -19,6 +17,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const studio = await prisma.studio.findUnique({
     where: { id },
     include: {
+      business: { select: { ownerUserId: true } },
       instructors: { orderBy: { name: 'asc' } },
       classes: { orderBy: { date: 'asc' } },
       schedule: { orderBy: [{ day: 'asc' }, { startTime: 'asc' }] },
@@ -33,10 +32,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const studioReviews = await prisma.review.findMany({
     where: { targetType: 'studio', targetId: studio.id },
     orderBy: { date: 'desc' },
+    include: { author: { select: { image: true, name: true } } },
   });
 
   return NextResponse.json({
-    studio: studioToDto(studio as PrismaStudioRow),
+    studio: studioToDto(studio),
     instructors: studio.instructors.map(instructorToDto),
     classes: studio.classes.map(yogaClassToDto),
     schedule: studio.schedule.map(scheduleEntryToDto),

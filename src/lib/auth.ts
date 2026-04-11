@@ -41,6 +41,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name ?? undefined,
           email: user.email ?? undefined,
           role: user.role,
+          image: user.image ?? undefined,
         } as any;
       },
     }),
@@ -57,6 +58,11 @@ export const authOptions: NextAuthOptions = {
         if (typeof u.id === 'string') {
           t.sub = u.id;
         }
+        const profilePic =
+          (typeof u.image === 'string' && u.image) || (typeof u.picture === 'string' && u.picture) || '';
+        if (profilePic.length > 0) {
+          t.picture = profilePic;
+        }
       }
 
       if (!user && (t.sub || t.email)) {
@@ -70,6 +76,9 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           t.role = dbUser.role;
           t.sub = dbUser.id;
+          if (dbUser.image) {
+            t.picture = dbUser.image;
+          }
         }
       }
 
@@ -80,6 +89,10 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = t.sub as string;
         (session.user as any).role = t.role ?? 'client';
+        const pic = typeof t.picture === 'string' ? t.picture : undefined;
+        if (pic) {
+          (session.user as any).image = pic;
+        }
       }
       return session;
     },

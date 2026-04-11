@@ -6,7 +6,6 @@ import { reviewToDto, studioToDto } from '@/lib/public-studio-dto';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
 
 export type AdminStudioRow = Studio & {
-  ownerUserId: string;
   ownerName: string | null;
   ownerEmail: string | null;
 };
@@ -46,7 +45,6 @@ export async function getAdminStudiosForList(): Promise<AdminStudioRow[]> {
   });
   return studios.map((s) => ({
     ...studioToDto(s),
-    ownerUserId: s.business.ownerUserId,
     ownerName: s.business.owner.name,
     ownerEmail: s.business.owner.email,
   }));
@@ -69,6 +67,7 @@ export async function getAdminReviewsForList(): Promise<Review[]> {
   const reviews = await prisma.review.findMany({
     orderBy: { date: 'desc' },
     take: 200,
+    include: { author: { select: { image: true, name: true } } },
   });
   return reviews.map(reviewToDto);
 }

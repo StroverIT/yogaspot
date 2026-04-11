@@ -11,20 +11,26 @@ import { StudioDetailTabBar } from './studio-detail-tab-bar';
 import type { TabKey } from './types';
 
 export function StudioDetailTabs({
+  studioId,
+  studioOwnerUserId,
   studioSchedule,
   subscription,
   studioClasses,
   studioInstructors,
   studioReviews,
   onBookClass,
+  onReviewSubmitted,
   defaultTab,
 }: {
+  studioId: string;
+  studioOwnerUserId: string;
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
   studioClasses: YogaClass[];
   studioInstructors: Instructor[];
   studioReviews: Review[];
   onBookClass: (classId: string) => void;
+  onReviewSubmitted: () => void;
   defaultTab?: TabKey;
 }) {
   const { isAuthenticated } = useAuth();
@@ -61,7 +67,14 @@ export function StudioDetailTabs({
         {activeTab === 'instructors' && (
           <InstructorsTabContent studioInstructors={studioInstructors} />
         )}
-        {activeTab === 'reviews' && <ReviewsTabContent studioReviews={studioReviews} />}
+        {activeTab === 'reviews' && (
+          <ReviewsTabContent
+            studioId={studioId}
+            studioOwnerUserId={studioOwnerUserId}
+            studioReviews={studioReviews}
+            onReviewSubmitted={onReviewSubmitted}
+          />
+        )}
       </div>
     </>
   );
