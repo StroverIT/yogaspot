@@ -10,9 +10,10 @@ type StudioProps = {
   studios: DashboardStudioListItem[];
   onAdd: () => void;
   onEdit: (studio: DashboardStudioListItem) => void;
+  onDelete: (studio: DashboardStudioListItem) => void;
 };
 
-export function StudiosSection({ studios, onAdd, onEdit }: StudioProps) {
+export function StudiosSection({ studios, onAdd, onEdit, onDelete }: StudioProps) {
   const router = useRouter();
 
   const studioCountLabel = useMemo(() => {
@@ -83,7 +84,10 @@ export function StudiosSection({ studios, onAdd, onEdit }: StudioProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(studio);
+                    }}
                   >
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
