@@ -10,43 +10,62 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import type { Instructor } from '@/data/mock-data';
 import { mockStudios, YOGA_TYPES } from '@/data/mock-data';
 import { cn } from '@/lib/utils';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета, изберете ниво на опит, поне един стил йога и студио преди запазване.';
 
+export type InstructorModalPayload = {
+  /** When set, server updates this instructor (PATCH). */
+  id?: string;
+  name: string;
+  bio: string;
+  experienceLevel: string;
+  studioId: string;
+  yogaStyle: string[];
+};
+
 export function InstructorModal({
   open,
   onClose,
   onSave,
   studios,
-  initialYogaStyles,
+  instructorToEdit,
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (payload: InstructorModalPayload) => void | Promise<void>;
   studios: typeof mockStudios;
-  /** When editing an instructor, pass their `yogaStyle` so badges show as selected. */
-  initialYogaStyles?: string[];
+  /** When set, form opens with this instructor’s data. */
+  instructorToEdit?: Instructor | null;
 }) {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('');
   const [studioId, setStudioId] = useState('');
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setSelectedStyles(initialYogaStyles ?? []);
-      setName('');
-      setBio('');
-      setExperienceLevel('');
-      setStudioId('');
+    if (!open) return;
+    if (instructorToEdit) {
+      setName(instructorToEdit.name);
+      setBio(instructorToEdit.bio);
+      setExperienceLevel(instructorToEdit.experienceLevel);
+      setStudioId(instructorToEdit.studioId);
+      setSelectedStyles([...instructorToEdit.yogaStyle]);
+      return;
     }
-  }, [open, initialYogaStyles]);
+    setName('');
+    setBio('');
+    setExperienceLevel('');
+    setStudioId('');
+    setSelectedStyles([]);
+  }, [open, instructorToEdit]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (
       !name.trim()
       || !bio.trim()
@@ -57,15 +76,35 @@ export function InstructorModal({
       toast.error(INCOMPLETE_MSG);
       return;
     }
-    onSave();
+    setSaving(true);
+    try {
+      await Promise.resolve(
+        onSave({
+          id: instructorToEdit?.id,
+          name: name.trim(),
+          bio: bio.trim(),
+          experienceLevel,
+          studioId,
+          yogaStyle: [...selectedStyles],
+        }),
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Инструктор</DialogTitle>
-          <DialogDescription>Добавете или редактирайте данните за инструктора</DialogDescription>
+          <DialogTitle className="font-display text-xl">
+            {instructorToEdit ? 'Редактирай инструктор' : 'Нов инструктор'}
+          </DialogTitle>
+          <DialogDescription>
+            {instructorToEdit
+              ? 'Променете данните и запазете.'
+              : 'Добавете данните за новия инструктор.'}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div>
@@ -157,7 +196,9 @@ export function InstructorModal({
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>
-          <Button onClick={handleSave}>Запази</Button>
+          <Button onClick={() => void handleSave()} disabled={saving}>
+            {saving ? 'Запазване…' : 'Запази'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

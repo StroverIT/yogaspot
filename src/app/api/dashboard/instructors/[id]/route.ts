@@ -23,6 +23,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     yogaStyle: string[];
     experienceLevel: string;
     rating: number;
+    studioId: string;
   }>;
   try {
     body = await request.json();
@@ -37,6 +38,17 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (Array.isArray(body.yogaStyle)) data.yogaStyle = body.yogaStyle.filter((x) => typeof x === 'string');
   if (typeof body.experienceLevel === 'string') data.experienceLevel = body.experienceLevel.trim();
   if (typeof body.rating === 'number' && Number.isFinite(body.rating)) data.rating = body.rating;
+  if (typeof body.studioId === 'string') {
+    const next = body.studioId.trim();
+    if (!next) {
+      return jsonError('Invalid studioId', 400);
+    }
+    if (next !== existing.studioId) {
+      const accessNew = await assertStudioWriteAccess(gate.user, next);
+      if (!accessNew.ok) return accessNew.response;
+    }
+    data.studioId = next;
+  }
 
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
 

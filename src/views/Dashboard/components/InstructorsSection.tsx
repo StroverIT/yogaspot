@@ -15,6 +15,7 @@ export function InstructorsSection({
   studios,
   onAdd,
   onEdit,
+  onDelete,
   addDisabled = false,
   addDisabledHint,
   addDisabledTooltip,
@@ -22,7 +23,8 @@ export function InstructorsSection({
   instructors: Instructor[];
   studios: Studio[];
   onAdd: () => void;
-  onEdit: () => void;
+  onEdit: (instructor: Instructor) => void;
+  onDelete: (instructor: Instructor) => void;
   addDisabled?: boolean;
   addDisabledHint?: ReactNode;
   addDisabledTooltip?: string;
@@ -87,8 +89,17 @@ export function InstructorsSection({
                       </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}><Edit className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(instr)}><Edit className="h-3.5 w-3.5" /></Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => onDelete(instr)}
+                        aria-label={`Изтриване на ${instr.name}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{instr.bio}</p>
