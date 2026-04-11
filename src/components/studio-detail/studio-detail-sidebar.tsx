@@ -1,6 +1,7 @@
 'use client';
 
-import { Globe, Mail, MapPin, Phone } from 'lucide-react';
+import { Globe, Mail, MapPin, Navigation, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import type { Studio } from '@/data/mock-data';
 import { StudioDetailFavoriteButton } from '@/components/studio-detail/studio-detail-favorite-button';
@@ -11,6 +12,12 @@ function hasStudioCoords(studio: Studio) {
   if (lat == null || lng == null) return false;
   if (lat === 0 && lng === 0) return false;
   return true;
+}
+
+/** Opens Google Maps directions from the user’s current location to the destination (origin omitted per Maps URL API). */
+function googleMapsDirectionsUrl(lat: number, lng: number) {
+  const destination = encodeURIComponent(`${lat},${lng}`);
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
 }
 
 export function StudioDetailSidebar({ studio }: { studio: Studio }) {
@@ -83,6 +90,14 @@ export function StudioDetailSidebar({ studio }: { studio: Studio }) {
             </GoogleMap>
           )}
         </div>
+        {coords ? (
+          <Button variant="outline" className="mt-4 w-full" asChild>
+            <a href={googleMapsDirectionsUrl(coords.lat, coords.lng)} target="_blank" rel="noopener noreferrer">
+              <Navigation className="h-4 w-4" />
+              Виж на картата
+            </a>
+          </Button>
+        ) : null}
       </div>
 
       <StudioDetailFavoriteButton studioId={studio.id} />
