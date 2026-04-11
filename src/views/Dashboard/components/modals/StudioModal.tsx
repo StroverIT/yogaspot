@@ -4,7 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { YOGA_TYPES } from '@/data/yoga-types';
+import {
+  YOGA_CATALOG_NAME_SET,
+  YOGA_TYPE_CATEGORY_ORDER,
+  YOGA_TYPES,
+  type YogaTypeCatalogEntry,
+} from '@/data/yoga-types';
 import { useToast } from '@/hooks/use-toast';
 import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 import { cn } from '@/lib/utils';
@@ -48,6 +53,7 @@ export function StudioModal({
     equipmentRental: false,
   });
   const [selectedYogaTypes, setSelectedYogaTypes] = useState<string[]>([]);
+  const [yogaTypesQuery, setYogaTypesQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const [addressPredictions, setAddressPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
@@ -64,8 +70,32 @@ export function StudioModal({
 
   const mapCenter = useMemo(() => coords ?? { lat: 42.6977, lng: 23.3219 }, [coords]);
 
+  const displayedTypesForSearch = useMemo((): YogaTypeCatalogEntry[] | null => {
+    const q = yogaTypesQuery.trim().toLowerCase();
+    if (!q) return null;
+
+    const catLabels = new Map(YOGA_TYPE_CATEGORY_ORDER.map(c => [c.id, c.label.toLowerCase()]));
+    const matches = (t: YogaTypeCatalogEntry) => {
+      const catLower = catLabels.get(t.category) ?? '';
+      return (
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q) ||
+        catLower.includes(q)
+      );
+    };
+
+    return YOGA_TYPES.filter(matches);
+  }, [yogaTypesQuery]);
+
+  const legacySelectedYogaTypes = useMemo(
+    () => selectedYogaTypes.filter(n => !YOGA_CATALOG_NAME_SET.has(n)),
+    [selectedYogaTypes],
+  );
+
   useEffect(() => {
     if (!open) return;
+    setYogaTypesQuery('');
     setAddressError(null);
     setSubmitting(false);
     setAddressDropdownOpen(false);
@@ -423,6 +453,31 @@ export function StudioModal({
     }
   };
 
+  const renderYogaTypePickerButton = (t: YogaTypeCatalogEntry) => {
+    const selected = selectedYogaTypes.includes(t.name);
+    return (
+      <Button
+        key={t.name}
+        type="button"
+        variant="outline"
+        className={cn(
+          'justify-start w-full h-auto py-2 px-3',
+          selected ? 'border-accent bg-accent/10 text-accent hover:bg-accent/10' : '',
+        )}
+        onClick={() => {
+          setSelectedYogaTypes(prev =>
+            selected ? prev.filter(x => x !== t.name) : [...prev, t.name],
+          );
+        }}
+      >
+        <div className="min-w-0 text-left">
+          <div className="truncate text-sm font-medium">{t.name}</div>
+          <div className="text-xs text-muted-foreground line-clamp-2">{t.description}</div>
+        </div>
+      </Button>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
@@ -704,34 +759,63 @@ export function StudioModal({
             <p className="text-xs text-muted-foreground -mt-1 mb-3">
               Изберете всички стилове които практикувате
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {YOGA_TYPES.map((t) => {
-                const selected = selectedYogaTypes.includes(t.name);
-                return (
-                  <Button
-                    key={t.name}
-                    type="button"
-                    variant="outline"
-                    className={cn(
-                      'justify-start w-full h-auto py-2 px-3',
-                      selected
-                        ? 'border-accent bg-accent/10 text-accent hover:bg-accent/10'
-                        : '',
-                    )}
-                    onClick={() => {
-                      setSelectedYogaTypes((prev) =>
-                        selected ? prev.filter((x) => x !== t.name) : [...prev, t.name],
-                      );
-                    }}
-                  >
-                    <div className="min-w-0 text-left">
-                      <div className="truncate text-sm font-medium">{t.name}</div>
-                      <div className="text-xs text-muted-foreground line-clamp-2">{t.description}</div>
+            {legacySelectedYogaTypes.length > 0 ? (
+              <div className="mb-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Записани стилове извън каталога (можете да ги премахнете)
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {legacySelectedYogaTypes.map(name => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 py-1 pl-2.5 pr-1 text-left text-xs font-medium transition-colors hover:bg-muted"
+                      onClick={() => {
+                        setSelectedYogaTypes(prev => prev.filter(x => x !== name));
+                      }}
+                    >
+                      <span className="min-w-0 truncate">{name}</span>
+                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full hover:bg-background">
+                        <X className="h-3.5 w-3.5" aria-hidden />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <Input
+              value={yogaTypesQuery}
+              onChange={e => setYogaTypesQuery(e.target.value)}
+              placeholder="Търси по име, описание или категория…"
+              className="mb-3"
+              aria-label="Филтър за типове йога"
+            />
+            {displayedTypesForSearch ? (
+              displayedTypesForSearch.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Няма съвпадения</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {displayedTypesForSearch.map(t => renderYogaTypePickerButton(t))}
+                </div>
+              )
+            ) : (
+              <div className="space-y-6">
+                {YOGA_TYPE_CATEGORY_ORDER.map(section => {
+                  const inSection = YOGA_TYPES.filter(t => t.category === section.id);
+                  if (inSection.length === 0) return null;
+                  return (
+                    <div key={section.id}>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {section.label}
+                      </p>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {inSection.map(t => renderYogaTypePickerButton(t))}
+                      </div>
                     </div>
-                  </Button>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
         <DialogFooter className="mt-4">
