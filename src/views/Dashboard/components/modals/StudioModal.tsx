@@ -313,6 +313,48 @@ export function StudioModal({
 
   const handleSave = async () => {
     if (submitting) return;
+
+    if (!name.trim()) {
+      toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете име на студио.' });
+      return;
+    }
+    if (!address.trim()) {
+      toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете адрес.' });
+      return;
+    }
+    if (!coords) {
+      toast({
+        variant: 'destructive',
+        title: 'Непълни данни',
+        description: 'Моля, потвърдете адреса на картата (изберете предложение или поставете маркер).',
+      });
+      return;
+    }
+    if (addressError) {
+      toast({ variant: 'destructive', title: 'Непълни данни', description: addressError });
+      return;
+    }
+    if (!description.trim()) {
+      toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете описание.' });
+      return;
+    }
+    if (!phone.trim()) {
+      toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете телефон.' });
+      return;
+    }
+    if (!email.trim()) {
+      toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете имейл.' });
+      return;
+    }
+    if (selectedYogaTypes.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Непълни данни',
+        description: 'Моля, изберете поне един тип йога.',
+      });
+      return;
+    }
+
     setSubmitting(true);
 
     try {
