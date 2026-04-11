@@ -54,14 +54,22 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         const u: any = user;
         t.role = u.role ?? t.role ?? 'client';
+        if (typeof u.id === 'string') {
+          t.sub = u.id;
+        }
       }
 
       if (!user && (t.sub || t.email)) {
-        const dbUser = await prisma.user.findUnique({
-          where: t.sub ? { id: t.sub as string } : { email: t.email as string },
-        });
+        let dbUser =
+          typeof t.sub === 'string'
+            ? await prisma.user.findUnique({ where: { id: t.sub } })
+            : null;
+        if (!dbUser && typeof t.email === 'string') {
+          dbUser = await prisma.user.findUnique({ where: { email: t.email } });
+        }
         if (dbUser) {
           t.role = dbUser.role;
+          t.sub = dbUser.id;
         }
       }
 

@@ -72,6 +72,13 @@ export async function POST(request: Request) {
   }
 
   const ownerUserId = gate.user.id;
+  const owner = await prisma.user.findUnique({ where: { id: ownerUserId } });
+  if (!owner) {
+    return NextResponse.json(
+      { error: 'Профилът не е намерен в базата. Моля, излезте и влезте отново.' },
+      { status: 401 },
+    );
+  }
 
   const business =
     (await prisma.business.findUnique({ where: { ownerUserId } })) ??

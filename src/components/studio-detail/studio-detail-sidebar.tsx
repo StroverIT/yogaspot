@@ -3,6 +3,7 @@
 import { Globe, Mail, MapPin, Navigation, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
+import { GOOGLE_MAPS_LIBRARIES } from '@/lib/google-maps-config';
 import type { Studio } from '@/data/mock-data';
 import { StudioDetailFavoriteButton } from '@/components/studio-detail/studio-detail-favorite-button';
 import { useMemo } from 'react';
@@ -25,8 +26,7 @@ export function StudioDetailSidebar({ studio }: { studio: Studio }) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
-    // Keep in sync with StudioModal so one script load satisfies both.
-    libraries: ['places'],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   const coords = useMemo(() => {
