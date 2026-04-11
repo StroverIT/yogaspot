@@ -1,9 +1,32 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
 import { AlertCircle, Building2, Clock, Edit, GraduationCap, Plus, Trash2 } from 'lucide-react';
+
+import { dashboardCardClass } from '../dashboardUi';
+import { DashboardPageHeader } from './DashboardPageHeader';
 import { DifficultyBadge } from './DifficultyBadge';
+
+function ClassOccupancyBar({ enrolled, maxCapacity }: { enrolled: number; maxCapacity: number }) {
+  const filledPct =
+    maxCapacity > 0 ? Math.min(100, Math.max(0, Math.round((enrolled / maxCapacity) * 100))) : 0;
+
+  return (
+    <div
+      className="relative h-2.5 w-full overflow-hidden rounded-full border border-border/50 bg-white shadow-[inset_0_1px_2px_rgba(45,42,79,0.06)]"
+      role="progressbar"
+      aria-valuenow={enrolled}
+      aria-valuemin={0}
+      aria-valuemax={maxCapacity}
+      aria-label={`Заетост: ${enrolled} от ${maxCapacity} места`}
+    >
+      <div
+        className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+        style={{ width: `${filledPct}%` }}
+      />
+    </div>
+  );
+}
 
 export function ClassesSection({
   classes,
@@ -16,72 +39,113 @@ export function ClassesSection({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Класове</h1>
-          <p className="text-muted-foreground text-sm mt-1">{classes.length} класа</p>
-        </div>
-        <Button onClick={onAdd} className="gap-2"><Plus className="h-4 w-4" /> Добави клас</Button>
-      </div>
+      <DashboardPageHeader
+        title="Класове"
+        description={`${classes.length} класа — цени, ниво и заетост на един екран.`}
+        actions={
+          <Button onClick={onAdd} className="gap-2 shadow-sm shadow-primary/20">
+            <Plus className="h-4 w-4" /> Добави клас
+          </Button>
+        }
+      />
       <div className="space-y-4">
         {classes.map((cls) => {
           const instr = mockInstructors.find(ins => ins.id === cls.instructorId);
           const studio = mockStudios.find(s => s.id === cls.studioId);
-          const fill = Math.round((cls.enrolled / cls.maxCapacity) * 100);
           const isFull = cls.enrolled >= cls.maxCapacity;
 
           return (
-            <div
-              key={cls.id}
-              className="group rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-all"
-            >
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {/* Date block */}
-                <div className="hidden md:flex flex-col items-center justify-center min-w-[64px] rounded-xl bg-primary/10 p-3">
-                  <span className="text-xs font-medium text-primary uppercase">
+            <div key={cls.id} className={`group ${dashboardCardClass} p-5`}>
+              <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
+                {/* Date block — desktop sidebar */}
+                <div className="hidden min-w-[72px] shrink-0 flex-col items-center justify-center self-start rounded-xl border border-primary/15 bg-linear-to-b from-primary/12 to-primary/5 p-3 md:flex">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-yoga-secondary-deep">
                     {new Date(cls.date).toLocaleDateString('bg-BG', { month: 'short' })}
                   </span>
-                  <span className="text-xl font-bold text-primary leading-tight">
+                  <span className="text-xl font-bold leading-tight text-primary">
                     {new Date(cls.date).getDate()}
                   </span>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-display text-lg font-semibold text-foreground">{cls.name}</h3>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{cls.startTime} – {cls.endTime}</span>
-                        {instr && <span className="flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" />{instr.name}</span>}
-                        {studio && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" />{studio.name}</span>}
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                  {/* Mobile: date + actions row */}
+                  <div className="mb-3 flex items-center justify-between gap-3 md:hidden">
+                    <div className="flex items-center gap-2 rounded-xl border border-primary/15 bg-linear-to-b from-primary/12 to-primary/5 px-3 py-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-yoga-secondary-deep">
+                        {new Date(cls.date).toLocaleDateString('bg-BG', { month: 'short' })}
+                      </span>
+                      <span className="text-lg font-bold tabular-nums leading-none text-primary">
+                        {new Date(cls.date).getDate()}
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={onEdit}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex flex-col gap-3 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between md:gap-4">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display text-lg font-semibold leading-snug text-foreground">{cls.name}</h3>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 shrink-0" />
+                            {cls.startTime} – {cls.endTime}
+                          </span>
+                          {instr && (
+                            <span className="flex min-w-0 items-center gap-1">
+                              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{instr.name}</span>
+                            </span>
+                          )}
+                          {studio && (
+                            <span className="flex min-w-0 items-center gap-1">
+                              <Building2 className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{studio.name}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="shrink-0 min-[480px]:text-right">
+                        <span className="font-display text-lg font-bold tabular-nums text-primary md:text-xl">
+                          {cls.price} лв.
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="font-display text-lg font-bold text-foreground">{cls.price} лв.</span>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <Badge variant="secondary" className="text-xs">{cls.yogaType}</Badge>
-                    <DifficultyBadge difficulty={cls.difficulty} />
-                    {isFull && (
-                      <Badge variant="destructive" className="text-xs gap-1">
-                        <AlertCircle className="h-3 w-3" /> Пълен
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {cls.yogaType}
                       </Badge>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-3">
-                    <div className="flex-1 max-w-[200px]">
-                      <Progress value={fill} className="h-2" />
+                      <DifficultyBadge difficulty={cls.difficulty} />
+                      {isFull && (
+                        <Badge variant="destructive" className="gap-1 text-xs">
+                          <AlertCircle className="h-3 w-3" /> Пълен
+                        </Badge>
+                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground">{cls.enrolled}/{cls.maxCapacity}</span>
+
+                    <div className="mt-auto flex items-center gap-3 border-t border-border/40 pt-3">
+                      <ClassOccupancyBar enrolled={cls.enrolled} maxCapacity={cls.maxCapacity} />
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {cls.enrolled}/{cls.maxCapacity}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex md:flex-col gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}><Edit className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                <div className="hidden shrink-0 flex-col gap-1 self-start border-l border-border/50 pl-4 pt-0.5 md:flex">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
                 </div>
               </div>
             </div>

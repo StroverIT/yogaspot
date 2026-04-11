@@ -17,7 +17,7 @@ export default function DashboardClassesPage() {
   };
 
   return (
-    <>
+    <div>
       <ClassesSection
         classes={myClasses}
         onAdd={() => setClassModalOpen(true)}
@@ -30,6 +30,6 @@ export default function DashboardClassesPage() {
         studios={myStudios}
         instructors={myInstructors}
       />
-    </>
+    </div>
   );
 }

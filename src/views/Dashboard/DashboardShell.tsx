@@ -21,7 +21,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <DashboardMobileNav activeSection={activeSection} />
 
-      <main className="flex-1 p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-linear-to-br from-background via-card/40 to-muted/15 p-6 pb-24 lg:p-8 lg:pb-8">
+        {children}
+      </main>
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { DifficultyBadge } from '@/components/studio-detail/difficulty-badge';
+import { DashboardPageHeader } from '@/views/Dashboard/components/DashboardPageHeader';
+import { dashboardCardClass } from '@/views/Dashboard/dashboardUi';
 import {
   mockInstructors,
   mockSchedule,
@@ -72,11 +74,11 @@ function WeeklyScheduleList({
         const entries = scheduleByDay[day];
         if (entries.length === 0) return null;
         return (
-          <div key={day} className="rounded-2xl border border-border bg-card overflow-hidden">
-            <div className="px-5 py-3 bg-muted/50 border-b border-border">
-              <h3 className="font-semibold text-foreground text-sm">{day}</h3>
+          <div key={day} className={`${dashboardCardClass} overflow-hidden`}>
+            <div className="border-b border-border/80 bg-linear-to-r from-primary/8 via-muted/40 to-transparent px-5 py-3">
+              <h3 className="text-sm font-semibold text-foreground">{day}</h3>
             </div>
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border/70">
               {entries
                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
                 .map(entry => {
@@ -84,11 +86,11 @@ function WeeklyScheduleList({
                   return (
                     <div
                       key={entry.id}
-                      className="px-5 py-4 flex items-center justify-between gap-4 hover:bg-muted/20 transition-colors"
+                      className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/25"
                     >
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className="text-center min-w-[56px] shrink-0">
-                          <p className="text-sm font-bold text-foreground">{entry.startTime}</p>
+                        <div className="min-w-[56px] shrink-0 rounded-lg bg-primary/8 px-2 py-1 text-center">
+                          <p className="text-sm font-bold tabular-nums text-primary">{entry.startTime}</p>
                           <p className="text-xs text-muted-foreground">{entry.endTime}</p>
                         </div>
                         <Separator orientation="vertical" className="h-10 shrink-0" />
@@ -144,19 +146,19 @@ function AdminScheduleContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Разписание</h1>
-          <p className="text-muted-foreground text-sm mt-1">Управлявайте седмичното разписание на вашите студиа</p>
-        </div>
-        <Button onClick={onAdd} className="gap-2">
-          <Plus className="h-4 w-4" /> Добави час
-        </Button>
-      </div>
+      <DashboardPageHeader
+        title="Разписание"
+        description="Управлявайте седмичното разписание на вашите студиа и абонаментите към тях."
+        actions={
+          <Button onClick={onAdd} className="gap-2 shadow-sm shadow-primary/20">
+            <Plus className="h-4 w-4" /> Добави час
+          </Button>
+        }
+      />
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <Select value={selectedStudio} onValueChange={setSelectedStudio}>
-          <SelectTrigger className="w-[250px] rounded-xl">
+          <SelectTrigger className="w-full rounded-xl border-border/80 bg-card sm:w-[250px]">
             <SelectValue placeholder="Изберете студио" />
           </SelectTrigger>
           <SelectContent>
@@ -167,14 +169,16 @@ function AdminScheduleContent({
             ))}
           </SelectContent>
         </Select>
-        <div className="flex rounded-lg bg-muted p-1">
+        <div className="flex rounded-xl border border-border/60 bg-muted/40 p-1">
           {(['weekly', 'monthly'] as const).map(mode => (
             <button
               key={mode}
               type="button"
               onClick={() => setViewMode(mode)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                viewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground/70'
+              className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+                viewMode === mode
+                  ? 'bg-card text-primary shadow-sm ring-1 ring-primary/15'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <span>{mode === 'weekly' ? 'Седмично' : 'Месечно'}</span>
@@ -183,28 +187,30 @@ function AdminScheduleContent({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className={`${dashboardCardClass} p-5`}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <CreditCard className="h-5 w-5 text-primary" />
+            <div className="rounded-xl bg-secondary/15 p-2.5 ring-1 ring-secondary/25">
+              <CreditCard className="h-5 w-5 text-secondary" />
             </div>
             <div>
               <h3 className="font-semibold text-foreground">Месечен абонамент</h3>
               {subscription?.hasMonthlySubscription ? (
                 <>
-                  <p className="text-sm text-muted-foreground mt-0.5">{subscription.subscriptionNote}</p>
-                  <p className="text-lg font-bold text-primary mt-1">{subscription.monthlyPrice} лв./мес.</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{subscription.subscriptionNote}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums text-primary">
+                    {subscription.monthlyPrice} лв./мес.
+                  </p>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground mt-0.5">Не е активиран за това студио</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">Не е активиран за това студио</p>
               )}
             </div>
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 rounded-lg shrink-0"
+            className="shrink-0 gap-2 rounded-xl border-primary/20 hover:bg-primary/5"
             onClick={() => toast.info('За активиране на абонамент, моля свържете се с нас на admin@Zenno.bg')}
           >
             <MessageSquare className="h-4 w-4" />
@@ -240,22 +246,22 @@ function AdminScheduleContent({
       )}
 
       {viewMode === 'monthly' && (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="grid grid-cols-7 bg-muted/50 border-b border-border">
+        <div className={`${dashboardCardClass} overflow-hidden`}>
+          <div className="grid grid-cols-7 border-b border-border/80 bg-linear-to-r from-primary/7 via-muted/35 to-transparent">
             {WEEKDAYS.map(day => (
               <div
                 key={day}
-                className="p-3 text-center text-xs font-semibold text-muted-foreground border-r border-border last:border-r-0"
+                className="border-r border-border/70 p-3 text-center text-xs font-semibold text-yoga-secondary-deep last:border-r-0"
               >
                 {day.slice(0, 3)}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 min-h-[200px]">
+          <div className="grid min-h-[200px] grid-cols-7">
             {WEEKDAYS.map(day => {
               const entries = scheduleByDay[day];
               return (
-                <div key={day} className="border-r border-border last:border-r-0 p-2 min-h-[120px]">
+                <div key={day} className="min-h-[120px] border-r border-border/60 p-2 last:border-r-0">
                   {entries
                     .sort((a, b) => a.startTime.localeCompare(b.startTime))
                     .map(entry => (
@@ -263,10 +269,10 @@ function AdminScheduleContent({
                         key={entry.id}
                         type="button"
                         onClick={() => onEdit(entry)}
-                        className="w-full text-left mb-1.5 p-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
+                        className="mb-1.5 w-full rounded-lg border border-primary/10 bg-primary/6 p-2 text-left transition-colors hover:border-primary/25 hover:bg-primary/11"
                       >
-                        <p className="text-xs font-semibold text-primary">{entry.startTime}</p>
-                        <p className="text-xs text-foreground truncate">{entry.className}</p>
+                        <p className="text-xs font-semibold tabular-nums text-primary">{entry.startTime}</p>
+                        <p className="truncate text-xs text-foreground">{entry.className}</p>
                       </button>
                     ))}
                 </div>
