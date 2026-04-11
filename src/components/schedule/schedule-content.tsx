@@ -26,6 +26,7 @@ import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn'
 import { SubscriptionRequestDetailsModal } from '@/views/Dashboard/components/modals/SubscriptionRequestDetailsModal';
 import { SubscriptionRequestFormModal } from '@/views/Dashboard/components/modals/SubscriptionRequestFormModal';
 import { SubscriptionRequestStatusModal } from '@/views/Dashboard/components/modals/SubscriptionRequestStatusModal';
+import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 
 export type AdminProps = {
   variant: 'admin';
@@ -142,11 +143,7 @@ function WeeklyScheduleList({
         );
       })}
       {totalEntries === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <CalendarDays className="h-10 w-10 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">{emptyState.title}</p>
-          {emptyState.subtitle ? <p className="text-sm mt-1">{emptyState.subtitle}</p> : null}
-        </div>
+        <StudioTabEmptyState icon={CalendarDays} title={emptyState.title} subtitle={emptyState.subtitle} />
       )}
     </div>
   );

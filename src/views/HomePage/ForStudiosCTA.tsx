@@ -1,9 +1,13 @@
 "use client";
 
 import { AddStudioCtaButton } from "@/components/home/add-studio-cta-button";
+import { useShowAddStudioMarketing } from "@/hooks/useShowAddStudioMarketing";
 import { ArrowRight } from "lucide-react";
 
 export default function ForStudiosCTA() {
+  const showAddStudioMarketing = useShowAddStudioMarketing();
+  if (!showAddStudioMarketing) return null;
+
   return (
     <section className="py-16 bg-gradient-to-r from-primary/10 via-primary/5 to-sage/15 border-t border-border">
       <div className="container mx-auto px-4">

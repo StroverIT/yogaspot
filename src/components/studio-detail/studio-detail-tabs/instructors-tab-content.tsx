@@ -1,8 +1,19 @@
-import { Star } from 'lucide-react';
+import { Star, UsersRound } from 'lucide-react';
 import type { Instructor } from '@/data/mock-data';
 import { Badge } from '@/components/ui/badge';
+import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 
 export function InstructorsTabContent({ studioInstructors }: { studioInstructors: Instructor[] }) {
+  if (studioInstructors.length === 0) {
+    return (
+      <StudioTabEmptyState
+        icon={UsersRound}
+        title="Няма добавени инструктори"
+        subtitle="Информацията за екипа ще се покаже тук, когато бъде попълнена."
+      />
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {studioInstructors.map((instr) => (

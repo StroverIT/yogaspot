@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AddStudioCtaButton } from "@/components/home/add-studio-cta-button";
+import { useShowAddStudioMarketing } from "@/hooks/useShowAddStudioMarketing";
 import { Button } from "@/components/ui/button";
 import {
   Star,
@@ -31,6 +32,7 @@ export default function HeroSection({
   totalReviews: number;
   yogaStylesCount: number;
 }) {
+  const showAddStudioMarketing = useShowAddStudioMarketing();
   const fmt = (n: number) => n.toLocaleString("bg-BG");
 
   const stats: { value: string; label: string; icon: ReactNode; hint?: string }[] = [
@@ -80,13 +82,15 @@ export default function HeroSection({
                   <Search className="h-4 w-4" /> Разгледай студиа
                 </Link>
               </Button>
-              <AddStudioCtaButton
-                variant="outline"
-                size="lg"
-                className="text-base px-8 py-6 rounded-xl border-2 border-yoga-accent bg-background/90 focus-visible:ring-yoga-accent"
-              >
-                Добави своето студио <ArrowRight className="ml-1 h-4 w-4" />
-              </AddStudioCtaButton>
+              {showAddStudioMarketing ? (
+                <AddStudioCtaButton
+                  variant="outline"
+                  size="lg"
+                  className="text-base px-8 py-6 rounded-xl border-2 border-yoga-accent bg-background/90 focus-visible:ring-yoga-accent"
+                >
+                  Добави своето студио <ArrowRight className="ml-1 h-4 w-4" />
+                </AddStudioCtaButton>
+              ) : null}
             </div>
           </div>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Star } from 'lucide-react';
+import { MessageSquareText, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Review } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 
 function displayInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -153,7 +154,11 @@ export function ReviewsTabContent({
 
       <div className="space-y-4">
         {studioReviews.length === 0 && (
-          <p className="text-muted-foreground">Все още няма ревюта.</p>
+          <StudioTabEmptyState
+            icon={MessageSquareText}
+            title="Все още няма ревюта"
+            subtitle="Бъдете първият, който споделя впечатления от посещение."
+          />
         )}
         {studioReviews.map((review) => (
           <div key={review.id} className="rounded-xl border border-border bg-card p-5">

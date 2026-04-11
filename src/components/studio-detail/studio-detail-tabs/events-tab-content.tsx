@@ -1,9 +1,10 @@
-import { Clock, Users } from 'lucide-react';
+import { CalendarRange, Clock, Users } from 'lucide-react';
 import { mockInstructors } from '@/data/mock-data';
 import type { YogaClass } from '@/data/mock-data';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 
 export function EventsTabContent({
   studioClasses,
@@ -15,7 +16,11 @@ export function EventsTabContent({
   return (
     <div className="space-y-4">
       {studioClasses.length === 0 && (
-        <p className="text-muted-foreground">Няма предстоящи събития.</p>
+        <StudioTabEmptyState
+          icon={CalendarRange}
+          title="Няма предстоящи събития"
+          subtitle="Когато студиото публикува класове, те ще се появят тук."
+        />
       )}
       {studioClasses.map((cls) => {
         const instructor = mockInstructors.find((i) => i.id === cls.instructorId);
