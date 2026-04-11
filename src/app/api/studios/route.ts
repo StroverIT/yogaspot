@@ -3,50 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { randomUUID } from 'crypto';
 import { requireRole } from '@/lib/api-auth';
+import { getDashboardStudiosListForUser, mapStudioResponse } from '@/lib/dashboard-studios-data';
 
 export const runtime = 'nodejs';
-
-function mapStudioResponse(s: {
-  id: string;
-  name: string;
-  address: string;
-  lat: number | null;
-  lng: number | null;
-  images: string[];
-  description: string;
-  phone: string;
-  email: string;
-  rating: number;
-  reviewCount: number;
-  businessId: string;
-  amenitiesParking: boolean;
-  amenitiesShower: boolean;
-  amenitiesChangingRoom: boolean;
-  amenitiesEquipmentRental: boolean;
-  yogaTypes: string[];
-}) {
-  return {
-    id: s.id,
-    name: s.name,
-    address: s.address,
-    lat: s.lat ?? 0,
-    lng: s.lng ?? 0,
-    images: s.images ?? [],
-    description: s.description,
-    phone: s.phone,
-    email: s.email,
-    rating: s.rating ?? 0,
-    reviewCount: s.reviewCount ?? 0,
-    businessId: s.businessId,
-    amenities: {
-      parking: s.amenitiesParking,
-      shower: s.amenitiesShower,
-      changingRoom: s.amenitiesChangingRoom,
-      equipmentRental: s.amenitiesEquipmentRental,
-    },
-    yogaTypes: s.yogaTypes ?? [],
-  };
-}
 
 function toBoolean(value: FormDataEntryValue | null): boolean {
   if (value == null) return false;
@@ -66,24 +25,8 @@ export async function GET() {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
 
-  if (gate.user.role === 'admin') {
-    const studios = await prisma.studio.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    return NextResponse.json({ studios: studios.map(mapStudioResponse) });
-  }
-
-  const business = await prisma.business.findUnique({ where: { ownerUserId: gate.user.id } });
-  if (!business) {
-    return NextResponse.json({ studios: [] });
-  }
-
-  const studios = await prisma.studio.findMany({
-    where: { businessId: business.id },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  return NextResponse.json({ studios: studios.map(mapStudioResponse) });
+  const studios = await getDashboardStudiosListForUser(gate.user);
+  return NextResponse.json({ studios });
 }
 
 export async function POST(request: Request) {

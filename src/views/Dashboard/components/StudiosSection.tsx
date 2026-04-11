@@ -1,70 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Edit, MapPin, Plus, Star, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-type StudioListItem = {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  images: string[];
-  description: string;
-  phone: string;
-  email: string;
-  amenities: {
-    parking: boolean;
-    shower: boolean;
-    changingRoom: boolean;
-    equipmentRental: boolean;
-  };
-  rating: number;
-  reviewCount: number;
-  businessId: string;
-};
+import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 
 type StudioProps = {
-  refreshKey: number;
+  studios: DashboardStudioListItem[];
   onAdd: () => void;
   onEdit: () => void;
 };
 
-export function StudiosSection({
-  refreshKey,
-  onAdd,
-  onEdit,
-}: StudioProps) {
+export function StudiosSection({ studios, onAdd, onEdit }: StudioProps) {
   const router = useRouter();
-  const [studios, setStudios] = useState<StudioListItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadStudios = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch('/api/studios');
-        if (!res.ok) throw new Error(`Failed to load studios (${res.status})`);
-        const data = await res.json();
-
-        if (!cancelled) setStudios((data?.studios ?? []) as StudioListItem[]);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load studios');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    void loadStudios();
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey]);
 
   const studioCountLabel = useMemo(() => {
     return `${studios.length} студиа`;
@@ -75,22 +24,10 @@ export function StudiosSection({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Моите студиа</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {loading ? 'Зареждане...' : studioCountLabel}
-          </p>
+          <p className="text-muted-foreground text-sm mt-1">{studioCountLabel}</p>
         </div>
         <Button onClick={onAdd} className="gap-2"><Plus className="h-4 w-4" /> Добави студио</Button>
       </div>
-
-      {error ? (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-          {error}
-        </div>
-      ) : null}
-
-      {loading ? (
-        <div className="text-muted-foreground text-sm">Моля изчакайте…</div>
-      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {studios.map((studio) => (
