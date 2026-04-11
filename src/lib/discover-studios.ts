@@ -1,4 +1,3 @@
-import { mockStudios, mockClasses } from "@/data/mock-data";
 import type { Studio, YogaClass } from "@/data/mock-data";
 import type { DiscoverStudio, YogaLevel, YogaType } from "@/types/studio-discovery";
 
@@ -51,11 +50,26 @@ function amenitiesFromStudio(studio: Studio): DiscoverStudio["amenities"] {
   return out;
 }
 
+/** YYYY-MM-DD in Europe/Sofia — matches stored class dates for “next upcoming” on the server. */
+function todayYmdEuropeSofia(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Sofia",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 function nextClassForStudio(studioId: string, classes: YogaClass[]): string | undefined {
-  const list = classes.filter((c) => c.studioId === studioId);
+  const todayStr = todayYmdEuropeSofia();
+  const list = classes
+    .filter((c) => c.studioId === studioId && c.date >= todayStr)
+    .sort((a, b) =>
+      a.date !== b.date ? a.date.localeCompare(b.date) : a.startTime.localeCompare(b.startTime),
+    );
   if (list.length === 0) return undefined;
   const c = list[0];
-  return `${c.startTime} - ${c.name}`;
+  return `${c.startTime} – ${c.name}`;
 }
 
 function stylesForStudio(studioId: string, classes: YogaClass[]): YogaType[] {
@@ -74,7 +88,7 @@ function firstUsableImageUrl(images: string[] | undefined, index: number): strin
   return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
 }
 
-/** Build discover cards from API payload (`GET /api/public/studios`). */
+/** Build discover cards from catalog DTOs (DB-backed via `getPublicCatalog`). */
 export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: YogaClass[]): DiscoverStudio[] {
   return studios.map((s, index) => ({
     id: s.id,
@@ -87,8 +101,6 @@ export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: Yoga
     styles: stylesForStudio(s.id, classes),
     level: studioLevelFromClasses(s.id, classes),
     amenities: amenitiesFromStudio(s),
-    views: 1000 + index * 120,
-    bookings: 200 + index * 40,
     isHidden: false,
     createdAt: new Date(s.createdAt),
     lat: s.lat,
@@ -96,9 +108,3 @@ export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: Yoga
     nextClass: nextClassForStudio(s.id, classes),
   }));
 }
-
-export function buildDiscoverStudios(): DiscoverStudio[] {
-  return buildDiscoverStudiosFromPayload(mockStudios, mockClasses);
-}
-
-export const allDiscoverStudios: DiscoverStudio[] = buildDiscoverStudios();

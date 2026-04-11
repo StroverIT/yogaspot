@@ -45,8 +45,6 @@ export interface DiscoverStudio {
   styles: YogaType[];
   level: YogaLevel;
   amenities: Amenity[];
-  views: number;
-  bookings: number;
   isHidden: boolean;
   createdAt: Date;
   lat: number;

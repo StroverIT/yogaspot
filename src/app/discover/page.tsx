@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { DiscoverCatalogGridSection } from "@/components/discover/discover-catalog-grid-section";
 import { DiscoverAsideMenu } from "@/components/discover/DiscoverAsideMenu";
 import { DiscoverPageAsideColumn } from "@/components/discover/discover-page-aside-column";
-import { DiscoverGridSkeleton } from "@/components/discover/discover-grid-skeleton";
+import { DiscoverMainContent } from "@/components/discover/discover-main-content";
 
 export const metadata: Metadata = {
   title: "Открий студио | Zenno",
@@ -30,9 +28,7 @@ export default function DiscoverPage() {
           <div className="min-w-0 flex-1">
             <DiscoverAsideMenu variant="mobile-toolbar" />
 
-            <Suspense fallback={<DiscoverGridSkeleton />}>
-              <DiscoverCatalogGridSection />
-            </Suspense>
+            <DiscoverMainContent />
           </div>
         </div>
       </main>

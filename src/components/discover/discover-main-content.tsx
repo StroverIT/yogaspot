@@ -5,6 +5,8 @@ import { DiscoverGridSkeleton } from "@/components/discover/discover-grid-skelet
 /** SSR catalog + grid — only this region suspends (grid skeleton, not aside). */
 export function DiscoverMainContent() {
   return (
- 
+    <Suspense fallback={<DiscoverGridSkeleton />}>
+      <DiscoverCatalogGridSection />
+    </Suspense>
   );
 }
