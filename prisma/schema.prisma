@@ -33,6 +33,8 @@ model User {
   passwordHash  String?
   role          Role      @default(client)
   image         String?
+  /// Set when the business user dismisses the dashboard onboarding modal (shown once).
+  dashboardOnboardingDismissedAt DateTime?
 
   accounts       Account[]
   sessions       Session[]
