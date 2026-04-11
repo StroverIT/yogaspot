@@ -1,1 +1,1 @@
-export type TabKey = 'schedule' | 'classes' | 'instructors' | 'reviews';
+export type TabKey = 'schedule' | 'events' | 'instructors' | 'reviews';

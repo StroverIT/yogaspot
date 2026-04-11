@@ -4,7 +4,7 @@ import type { YogaClass } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-export function ClassesTabContent({
+export function EventsTabContent({
   studioClasses,
   onBookClass,
 }: {
@@ -14,7 +14,7 @@ export function ClassesTabContent({
   return (
     <div className="space-y-4">
       {studioClasses.length === 0 && (
-        <p className="text-muted-foreground">Няма предстоящи класове.</p>
+        <p className="text-muted-foreground">Няма предстоящи събития.</p>
       )}
       {studioClasses.map((cls) => {
         const instructor = mockInstructors.find((i) => i.id === cls.instructorId);

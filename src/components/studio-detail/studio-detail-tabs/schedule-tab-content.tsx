@@ -19,7 +19,7 @@ export function ScheduleTabContent({
   return (
     <div className="space-y-6">
       {subscription?.hasMonthlySubscription && (
-        <div className="rounded-xl border-2 border-primary bg-primary/5 p-5">
+        <div id="studio-subscription" className="scroll-mt-24 rounded-xl border-2 border-primary bg-primary/5 p-5">
           <div className="flex items-start gap-4">
             <div className="shrink-0 rounded-xl bg-primary/10 p-2.5">
               <CreditCard className="h-6 w-6 text-primary" />

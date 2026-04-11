@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Instructor, Review, ScheduleEntry, StudioSubscription, YogaClass } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
-import { ClassesTabContent } from './classes-tab-content';
+import { EventsTabContent } from './events-tab-content';
 import { InstructorsTabContent } from './instructors-tab-content';
 import { ReviewsTabContent } from './reviews-tab-content';
 import { ScheduleTabContent } from './schedule-tab-content';
@@ -17,6 +17,7 @@ export function StudioDetailTabs({
   studioInstructors,
   studioReviews,
   onBookClass,
+  defaultTab,
 }: {
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
@@ -24,13 +25,18 @@ export function StudioDetailTabs({
   studioInstructors: Instructor[];
   studioReviews: Review[];
   onBookClass: (classId: string) => void;
+  defaultTab?: TabKey;
 }) {
   const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabKey>('schedule');
+  const [activeTab, setActiveTab] = useState<TabKey>(defaultTab ?? 'schedule');
+
+  useEffect(() => {
+    if (defaultTab) setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   const tabs = [
     { key: 'schedule' as const, label: 'Разписание', count: studioSchedule.length },
-    { key: 'classes' as const, label: 'Класове', count: studioClasses.length },
+    { key: 'events' as const, label: 'Събития', count: studioClasses.length },
     { key: 'instructors' as const, label: 'Инструктори', count: studioInstructors.length },
     { key: 'reviews' as const, label: 'Ревюта', count: studioReviews.length },
   ];
@@ -47,8 +53,8 @@ export function StudioDetailTabs({
             isAuthenticated={isAuthenticated}
           />
         )}
-        {activeTab === 'classes' && (
-          <ClassesTabContent studioClasses={studioClasses} onBookClass={onBookClass} />
+        {activeTab === 'events' && (
+          <EventsTabContent studioClasses={studioClasses} onBookClass={onBookClass} />
         )}
         {activeTab === 'instructors' && (
           <InstructorsTabContent studioInstructors={studioInstructors} />
