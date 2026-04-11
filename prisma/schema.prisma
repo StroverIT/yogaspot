@@ -45,6 +45,20 @@ model User {
   businesses     Business[]
   reviewsWritten Review[]  @relation("ReviewAuthor")
   favorites      Favorite[]
+  classAttendances UserClassAttendance[]
+}
+
+/// A client user’s completed visit to a scheduled class (used for profile history and spend summary).
+model UserClassAttendance {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  yogaClassId String
+  yogaClass   YogaClass @relation(fields: [yogaClassId], references: [id], onDelete: Cascade)
+  attendedAt  DateTime  @default(now())
+
+  @@unique([userId, yogaClassId])
+  @@index([userId, attendedAt(sort: Desc)])
 }
 
 model Account {
@@ -157,6 +171,8 @@ model YogaClass {
   difficulty          String
   cancellationPolicy  String
   waitingList         String[] @default([])
+
+  attendances UserClassAttendance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

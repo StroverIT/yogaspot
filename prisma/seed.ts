@@ -13,6 +13,7 @@ import {
   mockSubscriptions,
   mockRecentEnrollments,
 } from '../src/data/mock-data';
+import { mockAttendedClasses } from '../src/components/profile/profile-mock-data';
 
 const prisma = new PrismaClient();
 
@@ -46,6 +47,9 @@ async function main() {
   const passwordHash = await bcrypt.hash('password123', 10);
 
   await prisma.favorite.deleteMany({
+    where: { user: { email: { in: [...SEED_EMAILS] } } },
+  });
+  await prisma.userClassAttendance.deleteMany({
     where: { user: { email: { in: [...SEED_EMAILS] } } },
   });
   await prisma.review.deleteMany({});
@@ -166,11 +170,13 @@ async function main() {
     instructorIdMap[ins.id] = row.id;
   }
 
+  const classIdMap: Record<string, string> = {};
+
   for (const c of mockClasses) {
     const sid = studioIdMap[c.studioId];
     const iid = instructorIdMap[c.instructorId];
     if (!sid || !iid) continue;
-    await prisma.yogaClass.create({
+    const createdClass = await prisma.yogaClass.create({
       data: {
         studioId: sid,
         instructorId: iid,
@@ -187,6 +193,7 @@ async function main() {
         waitingList: c.waitingList,
       },
     });
+    classIdMap[c.id] = createdClass.id;
   }
 
   for (const sch of mockSchedule) {
@@ -256,6 +263,18 @@ async function main() {
   for (const studioId of favStudioIds) {
     await prisma.favorite.create({
       data: { userId: client.id, studioId },
+    });
+  }
+
+  for (const a of mockAttendedClasses) {
+    const yogaClassId = classIdMap[a.classId];
+    if (!yogaClassId) continue;
+    await prisma.userClassAttendance.create({
+      data: {
+        userId: client.id,
+        yogaClassId,
+        attendedAt: new Date(a.attendedDate),
+      },
     });
   }
 

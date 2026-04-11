@@ -1,62 +1,106 @@
 'use client';
 
-import { useState } from 'react';
-import { mockStudios, mockClasses, mockInstructors, mockSubscriptions } from '@/data/mock-data';
+import { useMemo, useState } from 'react';
 import { ProfileHistoryTab } from '@/components/profile/profile-history-tab';
 import { ProfileClassDetailDialog } from '@/components/profile/profile-class-detail-dialog';
-import { mockAttendedClasses } from '@/components/profile/profile-mock-data';
 import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount } from '@/lib/payments';
+import { useProfileHistory } from '@/hooks/useProfileHistory';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+
+type SpendingRow = {
+  id: string;
+  date: string;
+  reason: string;
+  studioName: string;
+  baseAmount: number;
+  finalPaid: number;
+};
 
 export default function ProfileHistoryPage() {
+  const { data, isPending, isError, error, refetch } = useProfileHistory();
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [showEmptyHistory, setShowEmptyHistory] = useState(false);
 
-  const selected = selectedClass ? mockClasses.find((c) => c.id === selectedClass) ?? null : null;
-  const selectedInstructor = selected ? mockInstructors.find((i) => i.id === selected.instructorId) : undefined;
-  const selectedStudio = selected ? mockStudios.find((s) => s.id === selected.studioId) : undefined;
-  const attendedDate = selectedClass
-    ? mockAttendedClasses.find((a) => a.classId === selectedClass)?.attendedDate
-    : null;
+  const selected = useMemo(() => {
+    if (!selectedClass || !data) return null;
+    return data.classes.find((c) => c.id === selectedClass) ?? null;
+  }, [data, selectedClass]);
 
-  const attendedClasses = showEmptyHistory ? [] : mockAttendedClasses;
-  const totalClasses = attendedClasses.length;
-  const spendingHistory = attendedClasses
-    .map((attended) => {
-      const cls = mockClasses.find((c) => c.id === attended.classId);
-      if (!cls) return null;
-      const studio = mockStudios.find((s) => s.id === cls.studioId);
-      const finalPaid = calculateFinalCustomerAmount(cls.price);
-      return {
-        id: attended.classId,
-        date: attended.attendedDate,
-        reason: `Клас: ${cls.name}`,
-        studioName: studio?.name ?? 'Неизвестно студио',
-        baseAmount: cls.price,
-        finalPaid,
-      };
-    })
-    .filter(Boolean)
-    .sort((a, b) => (a!.date > b!.date ? -1 : 1)) as {
-    id: string;
-    date: string;
-    reason: string;
-    studioName: string;
-    baseAmount: number;
-    finalPaid: number;
-  }[];
+  const selectedInstructor = useMemo(() => {
+    if (!selected) return undefined;
+    return data?.instructors.find((i) => i.id === selected.instructorId);
+  }, [data?.instructors, selected]);
+
+  const selectedStudio = useMemo(() => {
+    if (!selected) return undefined;
+    return data?.studios.find((s) => s.id === selected.studioId);
+  }, [data?.studios, selected]);
+
+  const attendedDate = useMemo(() => {
+    if (!selectedClass || !data) return null;
+    return data.attendedClasses.find((a) => a.classId === selectedClass)?.attendedDate ?? null;
+  }, [data, selectedClass]);
+
+  const spendingHistory = useMemo((): SpendingRow[] => {
+    if (!data) return [];
+    const classById = new Map(data.classes.map((c) => [c.id, c]));
+    const studioById = new Map(data.studios.map((s) => [s.id, s]));
+    return data.attendedClasses
+      .map((attended) => {
+        const cls = classById.get(attended.classId);
+        if (!cls) return null;
+        const studio = studioById.get(cls.studioId);
+        const finalPaid = calculateFinalCustomerAmount(cls.price);
+        return {
+          id: attended.classId + attended.attendedDate,
+          date: attended.attendedDate,
+          reason: `Клас: ${cls.name}`,
+          studioName: studio?.name ?? 'Неизвестно студио',
+          baseAmount: cls.price,
+          finalPaid,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a!.date > b!.date ? -1 : 1)) as SpendingRow[];
+  }, [data]);
+
   const totalSpent = spendingHistory.reduce((sum, row) => sum + row.finalPaid, 0);
-  const activeSubscriptions = mockSubscriptions
-    .filter((sub) => sub.hasMonthlySubscription)
-    .map((sub) => {
-      const studio = mockStudios.find((s) => s.id === sub.studioId);
-      return {
-        studioId: sub.studioId,
-        studioName: studio?.name ?? 'Неизвестно студио',
-        monthlyPrice: sub.monthlyPrice ?? 0,
-        note: sub.subscriptionNote ?? '',
-      };
-    });
+  const activeSubscriptions = data?.activeSubscriptions ?? [];
+  const attendedClasses = data?.attendedClasses ?? [];
+  const totalClasses = attendedClasses.length;
+
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-3">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-full max-w-sm" />
+              <Skeleton className="h-10 w-48 mt-4" />
+              <Skeleton className="h-12 w-full rounded-lg" />
+              <Skeleton className="h-12 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
+        <p className="text-sm text-destructive font-medium">Неуспешно зареждане на историята.</p>
+        <p className="text-xs text-muted-foreground mt-1">{error?.message}</p>
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
+          Опитай отново
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -73,7 +117,9 @@ export default function ProfileHistoryPage() {
                 <div key={row.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-foreground">{row.reason}</p>
-                    <p className="truncate text-muted-foreground">{row.studioName} · {row.date}</p>
+                    <p className="truncate text-muted-foreground">
+                      {row.studioName} · {row.date}
+                    </p>
                   </div>
                   <p className="font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.finalPaid)}</p>
                 </div>
@@ -83,16 +129,18 @@ export default function ProfileHistoryPage() {
         </div>
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-display text-lg font-semibold text-foreground">Моите абонаменти</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Активни месечни планове и какво включват.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Месечни планове при любими студиа с активен абонамент.</p>
           <div className="mt-4 space-y-2">
             {activeSubscriptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Нямате активни абонаменти.</p>
+              <p className="text-sm text-muted-foreground">Нямате любими студиа с активен месечен план.</p>
             ) : (
               activeSubscriptions.map((sub) => (
                 <div key={sub.studioId} className="rounded-lg bg-muted/40 px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">{sub.studioName}</p>
-                    <p className="text-sm font-semibold text-foreground leading-snug">{formatMonthlyDualFromBgn(sub.monthlyPrice)}</p>
+                    <p className="text-sm font-semibold text-foreground leading-snug">
+                      {formatMonthlyDualFromBgn(sub.monthlyPrice)}
+                    </p>
                   </div>
                   {sub.note ? <p className="mt-1 text-xs text-muted-foreground">{sub.note}</p> : null}
                 </div>
@@ -104,13 +152,14 @@ export default function ProfileHistoryPage() {
       <ProfileHistoryTab
         attendedClasses={attendedClasses}
         totalClasses={totalClasses}
-        showEmptyHistory={showEmptyHistory}
-        onToggleEmptyHistory={() => setShowEmptyHistory(!showEmptyHistory)}
+        classes={data.classes}
+        instructors={data.instructors}
+        studios={data.studios}
         onSelectClass={setSelectedClass}
       />
 
       <ProfileClassDetailDialog
-        open={!!selectedClass}
+        open={!!selected}
         onOpenChange={(open) => !open && setSelectedClass(null)}
         selected={selected}
         selectedInstructor={selectedInstructor}

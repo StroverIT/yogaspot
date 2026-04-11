@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMemo } from 'react';
 import { Calendar, Heart, User } from 'lucide-react';
-import { mockClasses } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useProfileHistory } from '@/hooks/useProfileHistory';
 import { ProfileHero } from '@/components/profile/profile-hero';
-import { mockAttendedClasses } from '@/components/profile/profile-mock-data';
 import type { NavUser } from '@/lib/nav-user';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +28,7 @@ export default function ProfileShell({
   const pathname = usePathname();
   const { user } = useAuth();
   const { favoriteIds } = useFavorites();
+  const { data: historyData, isPending: historyPending, isError: historyError } = useProfileHistory();
 
   const displayName = user?.name?.trim() || serverUser.name || 'Гост потребител';
   const displayEmail = user?.email?.trim() || serverUser.email || 'guest@Zenno.bg';
@@ -37,16 +38,19 @@ export default function ProfileShell({
     .join('')
     .slice(0, 2);
 
-  const attendedClasses = mockAttendedClasses;
-  const totalClasses = attendedClasses.length;
-  const uniqueStudios = new Set(
-    attendedClasses
-      .map((a) => {
-        const cls = mockClasses.find((c) => c.id === a.classId);
-        return cls?.studioId;
-      })
-      .filter(Boolean),
-  ).size;
+  const totalClasses = useMemo(() => {
+    if (historyPending || historyError) return undefined;
+    return historyData?.attendedClasses.length ?? 0;
+  }, [historyData?.attendedClasses.length, historyError, historyPending]);
+
+  const uniqueStudios = useMemo(() => {
+    if (historyPending || historyError || !historyData) return undefined;
+    const classById = new Map(historyData.classes.map((c) => [c.id, c]));
+    const studioIds = historyData.attendedClasses
+      .map((a) => classById.get(a.classId)?.studioId)
+      .filter(Boolean) as string[];
+    return new Set(studioIds).size;
+  }, [historyData, historyError, historyPending]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
