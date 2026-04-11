@@ -15,17 +15,34 @@ type DashboardStudiosPageClientProps = {
 export default function DashboardStudiosPageClient({ studios }: DashboardStudiosPageClientProps) {
   const router = useRouter();
   const [studioModalOpen, setStudioModalOpen] = useState(false);
+  const [editingStudio, setEditingStudio] = useState<DashboardStudioListItem | null>(null);
 
   const handleSave = () => {
     toastDashboardSaved('studio');
     setStudioModalOpen(false);
+    setEditingStudio(null);
     router.refresh();
+  };
+
+  const closeModal = () => {
+    setStudioModalOpen(false);
+    setEditingStudio(null);
   };
 
   return (
     <>
-      <StudiosSection studios={studios} onAdd={() => setStudioModalOpen(true)} onEdit={() => setStudioModalOpen(true)} />
-      <StudioModal open={studioModalOpen} onClose={() => setStudioModalOpen(false)} onSave={handleSave} />
+      <StudiosSection
+        studios={studios}
+        onAdd={() => {
+          setEditingStudio(null);
+          setStudioModalOpen(true);
+        }}
+        onEdit={(studio) => {
+          setEditingStudio(studio);
+          setStudioModalOpen(true);
+        }}
+      />
+      <StudioModal open={studioModalOpen} onClose={closeModal} onSave={handleSave} initialStudio={editingStudio} />
     </>
   );
 }

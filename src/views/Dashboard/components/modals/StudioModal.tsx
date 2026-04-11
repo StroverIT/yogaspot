@@ -6,25 +6,37 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { YOGA_TYPES } from '@/data/yoga-types';
 import { useToast } from '@/hooks/use-toast';
+import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 import { cn } from '@/lib/utils';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
+import { ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
 
 type StudioModalProps = {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
-}
+  /** When set, the form opens in edit mode with these values (and saves via PATCH). */
+  initialStudio?: DashboardStudioListItem | null;
+};
+
+type StudioImageUrlSlot = { kind: 'url'; id: string; url: string };
+type StudioImageFileSlot = { kind: 'file'; id: string; file: File; previewUrl: string };
+type StudioImageSlot = StudioImageUrlSlot | StudioImageFileSlot;
+
+const NEW_IMAGE_SLOT_MARKER = '__NEW__';
+const DRAG_MIME = 'application/x-zenno-studio-image-index';
 
 export function StudioModal({
   open,
   onClose,
   onSave,
+  initialStudio = null,
 }: StudioModalProps) {
   const [address, setAddress] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
-  const [images, setImages] = useState<File[]>([]);
+  const [imageSlots, setImageSlots] = useState<StudioImageSlot[]>([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [phone, setPhone] = useState('');
@@ -51,21 +63,52 @@ export function StudioModal({
   });
 
   const mapCenter = useMemo(() => coords ?? { lat: 42.6977, lng: 23.3219 }, [coords]);
-  const imagePreviews = useMemo(
-    () =>
-      images.map((file) => ({
-        key: `${file.name}-${file.lastModified}`,
-        name: file.name,
-        url: URL.createObjectURL(file),
-      })),
-    [images],
-  );
 
   useEffect(() => {
     if (!open) return;
-    // Reset transient errors when reopening.
     setAddressError(null);
     setSubmitting(false);
+    setAddressDropdownOpen(false);
+    setAddressPredictions([]);
+
+    setImageSlots(prev => {
+      prev.forEach(s => {
+        if (s.kind === 'file') URL.revokeObjectURL(s.previewUrl);
+      });
+      if (initialStudio) {
+        return (initialStudio.images ?? []).map(url => ({
+          kind: 'url' as const,
+          id: crypto.randomUUID(),
+          url,
+        }));
+      }
+      return [];
+    });
+
+    if (initialStudio) {
+      skipNextAddressGeocodeRef.current = true;
+      suppressAutocompleteRef.current = true;
+      setName(initialStudio.name);
+      setDescription(initialStudio.description);
+      setPhone(initialStudio.phone);
+      setEmail(initialStudio.email);
+      setAmenities({
+        parking: initialStudio.amenities.parking,
+        shower: initialStudio.amenities.shower,
+        changingRoom: initialStudio.amenities.changingRoom,
+        equipmentRental: initialStudio.amenities.equipmentRental,
+      });
+      setSelectedYogaTypes([...(initialStudio.yogaTypes ?? [])]);
+      setAddress(initialStudio.address);
+      const { lat, lng } = initialStudio;
+      if (lat != null && lng != null && (lat !== 0 || lng !== 0)) {
+        setCoords({ lat, lng });
+      } else {
+        setCoords(null);
+      }
+      return;
+    }
+
     setName('');
     setDescription('');
     setPhone('');
@@ -74,10 +117,7 @@ export function StudioModal({
     setSelectedYogaTypes([]);
     setCoords(null);
     setAddress('');
-    setAddressDropdownOpen(false);
-    setAddressPredictions([]);
-    setImages([]);
-  }, [open]);
+  }, [open, initialStudio]);
 
   useEffect(() => {
     if (skipNextAddressGeocodeRef.current) {
@@ -222,11 +262,54 @@ export function StudioModal({
     return () => window.clearTimeout(handle);
   }, [address, apiKey, isLoaded, open]);
 
-  useEffect(() => {
-    return () => {
-      imagePreviews.forEach(p => URL.revokeObjectURL(p.url));
-    };
-  }, [imagePreviews]);
+  const removeImageSlot = useCallback((slotId: string) => {
+    setImageSlots(prev => {
+      const slot = prev.find(s => s.id === slotId);
+      if (slot?.kind === 'file') {
+        URL.revokeObjectURL(slot.previewUrl);
+      }
+      return prev.filter(s => s.id !== slotId);
+    });
+  }, []);
+
+  const moveImageSlot = useCallback((index: number, delta: -1 | 1) => {
+    setImageSlots(prev => {
+      const j = index + delta;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[j]] = [next[j], next[index]];
+      return next;
+    });
+  }, []);
+
+  const onSlotDragStart = useCallback(
+    (index: number) => (e: React.DragEvent) => {
+      e.dataTransfer.setData(DRAG_MIME, String(index));
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    [],
+  );
+
+  const onSlotDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onSlotDrop = useCallback(
+    (targetIndex: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      const raw = e.dataTransfer.getData(DRAG_MIME);
+      const from = Number(raw);
+      if (Number.isNaN(from) || from === targetIndex) return;
+      setImageSlots(prev => {
+        const next = [...prev];
+        const [item] = next.splice(from, 1);
+        next.splice(targetIndex, 0, item);
+        return next;
+      });
+    },
+    [],
+  );
 
   const handleSave = async () => {
     if (submitting) return;
@@ -253,11 +336,29 @@ export function StudioModal({
         formData.append('yogaTypes', t);
       }
 
-      for (const file of images) {
-        formData.append('images', file);
+      const isEdit = Boolean(initialStudio?.id);
+      if (isEdit) {
+        formData.append('imageOrderMode', 'slots');
+        for (const slot of imageSlots) {
+          if (slot.kind === 'url') {
+            formData.append('imageSlot', slot.url);
+          } else {
+            formData.append('imageSlot', NEW_IMAGE_SLOT_MARKER);
+            formData.append('images', slot.file);
+          }
+        }
+      } else {
+        for (const slot of imageSlots) {
+          if (slot.kind === 'file') {
+            formData.append('images', slot.file);
+          }
+        }
       }
 
-      const res = await fetch('/api/studios', { method: 'POST', body: formData });
+      const res = isEdit
+        ? await fetch(`/api/studios/${initialStudio!.id}`, { method: 'PATCH', body: formData })
+        : await fetch('/api/studios', { method: 'POST', body: formData });
+
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error || `Failed to save studio (${res.status})`);
@@ -413,22 +514,100 @@ export function StudioModal({
           </div>
           <div className="space-y-2">
             <Label>Снимки</Label>
+            <p className="text-xs text-muted-foreground">
+              Първата снимка е корицата в списъците. Подредете със стрелките или плъзнете картата. Можете да премахвате снимки.
+            </p>
             <Input
               type="file"
               multiple
               accept="image/*"
               onChange={e => {
-                const next = Array.from(e.target.files ?? []);
-                setImages(next);
+                const files = Array.from(e.target.files ?? []);
+                if (!files.length) return;
+                setImageSlots(prev => [
+                  ...prev,
+                  ...files.map(file => ({
+                    kind: 'file' as const,
+                    id: crypto.randomUUID(),
+                    file,
+                    previewUrl: URL.createObjectURL(file),
+                  })),
+                ]);
+                e.target.value = '';
               }}
             />
-            {images.length ? (
+            {imageSlots.length ? (
               <div className="grid grid-cols-3 gap-2">
-                {imagePreviews.map((p) => (
-                  <div key={p.key} className="relative overflow-hidden rounded-lg border border-border bg-muted/20">
-                    <img src={p.url} alt={p.name} className="h-24 w-full object-cover" />
-                  </div>
-                ))}
+                {imageSlots.map((slot, idx) => {
+                  const src = slot.kind === 'url' ? slot.url : slot.previewUrl;
+                  const canReorder = imageSlots.length > 1;
+                  return (
+                    <div
+                      key={slot.id}
+                      draggable={canReorder}
+                      onDragStart={canReorder ? onSlotDragStart(idx) : undefined}
+                      onDragOver={canReorder ? onSlotDragOver : undefined}
+                      onDrop={canReorder ? onSlotDrop(idx) : undefined}
+                      className="group/slot relative overflow-hidden rounded-lg border border-border bg-muted/20"
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        draggable={false}
+                        className="pointer-events-none h-28 w-full select-none object-cover"
+                      />
+                      {idx === 0 ? (
+                        <span className="absolute bottom-10 left-1 rounded bg-background/95 px-1.5 py-0.5 text-[10px] font-medium text-foreground shadow-sm">
+                          Главна
+                        </span>
+                      ) : null}
+                      {canReorder ? (
+                        <div
+                          className="absolute left-1 top-1 flex h-7 w-7 cursor-grab items-center justify-center rounded-md bg-background/95 text-muted-foreground shadow-sm active:cursor-grabbing"
+                          title="Плъзнете за пренареждане"
+                        >
+                          <GripVertical className="h-4 w-4" />
+                        </div>
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        className="absolute right-1 top-1 h-7 w-7 opacity-90 shadow-sm group-hover/slot:opacity-100"
+                        onClick={() => removeImageSlot(slot.id)}
+                        aria-label="Премахни снимката"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                      {canReorder ? (
+                        <div className="absolute inset-x-0 bottom-0 flex justify-center gap-0.5 bg-black/55 py-1">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            className="h-7 w-7"
+                            disabled={idx === 0}
+                            onClick={() => moveImageSlot(idx, -1)}
+                            aria-label="Премести наляво"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="secondary"
+                            className="h-7 w-7"
+                            disabled={idx === imageSlots.length - 1}
+                            onClick={() => moveImageSlot(idx, 1)}
+                            aria-label="Премести надясно"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Можете да изберете повече от 1 снимка.</p>

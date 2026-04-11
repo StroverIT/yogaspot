@@ -9,7 +9,7 @@ import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 type StudioProps = {
   studios: DashboardStudioListItem[];
   onAdd: () => void;
-  onEdit: () => void;
+  onEdit: (studio: DashboardStudioListItem) => void;
 };
 
 export function StudiosSection({ studios, onAdd, onEdit }: StudioProps) {
@@ -74,7 +74,7 @@ export function StudiosSection({ studios, onAdd, onEdit }: StudioProps) {
                     className="h-8 w-8"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEdit();
+                      onEdit(studio);
                     }}
                   >
                     <Edit className="h-3.5 w-3.5" />
