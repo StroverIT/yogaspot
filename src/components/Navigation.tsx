@@ -3,9 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession } from "next-auth/react";
+import { useAuth, type User } from "@/contexts/AuthContext";
+import type { NavUser } from "@/lib/nav-user";
 import { Button } from "@/components/ui/button";
-import { Heart, User, LogOut } from "lucide-react";
+import { Heart, User as UserIcon, LogOut } from "lucide-react";
 import Hamburger from "hamburger-react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
@@ -31,8 +33,26 @@ const AUTH_PRIMARY_BUTTON_CLASS =
 const MOBILE_ITEM_CLASS =
   "block w-full rounded-md px-3 py-2 text-left transition-all duration-300 ease-out hover:bg-primary/10 hover:text-primary hover:translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
-const Navigation: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+function navUserToUser(n: NavUser): User {
+  return {
+    id: n.id,
+    name: n.name,
+    email: n.email,
+    role: n.role,
+    favorites: [],
+  };
+}
+
+type NavigationProps = { initialUser?: NavUser | null };
+
+const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
+  const { status } = useSession();
+  const { user: authUser, logout, isAuthenticated } = useAuth();
+  const supplementUser =
+    status === "loading" && initialUser ? navUserToUser(initialUser) : null;
+  const user = authUser ?? supplementUser;
+  const isAuthenticatedNav =
+    status === "loading" ? !!initialUser : isAuthenticated;
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   /** Keeps the panel mounted until the GSAP close timeline finishes. */
@@ -212,7 +232,7 @@ const Navigation: React.FC = () => {
   }, [mobileOpen, mobileMenuMounted]);
 
   const handleFavoritesClick = (e: React.MouseEvent) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticatedNav) {
       e.preventDefault();
       setAuthModalOpen(true);
     }
@@ -261,7 +281,7 @@ const Navigation: React.FC = () => {
             >
               Открий студио
             </Link>
-            {isAuthenticated && user?.role === 'business' && (
+            {isAuthenticatedNav && user?.role === 'business' && (
               <Link
                 href="/dashboard"
                 className={DESKTOP_NAV_LINK_CLASS}
@@ -269,7 +289,7 @@ const Navigation: React.FC = () => {
                 Табло
               </Link>
             )}
-            {isAuthenticated && user?.role === 'admin' && (
+            {isAuthenticatedNav && user?.role === 'admin' && (
               <Link
                 href="/admin"
                 className={DESKTOP_NAV_LINK_CLASS}
@@ -290,16 +310,16 @@ const Navigation: React.FC = () => {
                 <Heart className="h-5 w-5" />
               </Button>
             </Link>
-            {isAuthenticated ? (
+            {isAuthenticatedNav ? (
               <>
-                <Link href="/profile">
+                <Link href="/profile/history">
                   <Button
                     variant="ghost"
                     size="icon"
                     hoverType="softGlowEnergy"
                     className={`${ICON_BUTTON_CLASS} ${PROFILE_ICON_BUTTON_CLASS}`}
                   >
-                    <User className="h-5 w-5" />
+                    <UserIcon className="h-5 w-5" />
                   </Button>
                 </Link>
                 <Button
@@ -364,7 +384,7 @@ const Navigation: React.FC = () => {
                 data-mobile-nav-item
                 onClick={() => {
                   closeMobileMenu();
-                  if (!isAuthenticated) {
+                  if (!isAuthenticatedNav) {
                     setAuthModalOpen(true);
                   } else {
                     router.push("/favorites");
@@ -373,10 +393,10 @@ const Navigation: React.FC = () => {
               >
                 Любими
               </button>
-              {isAuthenticated ? (
+              {isAuthenticatedNav ? (
                 <>
                   <Link
-                    href="/profile"
+                    href="/profile/history"
                     className={MOBILE_ITEM_CLASS}
                     data-mobile-nav-item
                     onClick={closeMobileMenu}

@@ -3,7 +3,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { TabsContent } from '@/components/ui/tabs';
 
 interface ProfileSettingsTabProps {
   displayName: string;
@@ -11,7 +10,7 @@ interface ProfileSettingsTabProps {
 }
 
 export const ProfileSettingsTab = ({ displayName, displayEmail }: ProfileSettingsTabProps) => (
-  <TabsContent value="settings">
+  <div>
     <Card>
       <CardContent className="p-6 space-y-6">
         <div>
@@ -48,5 +47,5 @@ export const ProfileSettingsTab = ({ displayName, displayEmail }: ProfileSetting
         </div>
       </CardContent>
     </Card>
-  </TabsContent>
+  </div>
 );

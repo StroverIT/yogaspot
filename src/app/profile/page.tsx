@@ -1,8 +1,5 @@
-"use client";
+import { redirect } from 'next/navigation';
 
-import Profile from "@/views/Profile";
-
-export default function ProfilePage() {
-  return <Profile />;
+export default function ProfileIndexPage() {
+  redirect('/profile/history');
 }
-

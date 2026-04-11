@@ -8,12 +8,19 @@ import { DashboardSidebar } from './components/DashboardSidebar';
 import { DashboardMobileNav } from './components/DashboardMobileNav';
 import { getDashboardMockData } from './dashboardMockData';
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({
+  children,
+  serverDisplayName,
+}: {
+  children: React.ReactNode;
+  /** From server layout; avoids empty label before client session hydrates. */
+  serverDisplayName?: string;
+}) {
   const pathname = usePathname();
   const { user } = useAuth();
   const { revenue } = getDashboardMockData();
   const activeSection = getActiveSection(pathname);
-  const displayName = user?.name || 'Бизнес потребител';
+  const displayName = user?.name?.trim() || serverDisplayName || 'Бизнес потребител';
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex">

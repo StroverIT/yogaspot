@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TabsContent } from '@/components/ui/tabs';
 import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
 import type { AttendedClass } from '@/components/profile/profile-mock-data';
 import { ProfileAttendedClassCard } from '@/components/profile/profile-attended-class-card';
@@ -21,7 +20,7 @@ export const ProfileHistoryTab = ({
   onToggleEmptyHistory,
   onSelectClass,
 }: ProfileHistoryTabProps) => (
-  <TabsContent value="history" className="space-y-4">
+  <div className="space-y-4">
     <div className="flex items-center justify-between mb-2">
       <p className="text-sm text-muted-foreground">{totalClasses} посетени класа</p>
       <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={onToggleEmptyHistory}>
@@ -57,5 +56,5 @@ export const ProfileHistoryTab = ({
         );
       })
     )}
-  </TabsContent>
+  </div>
 );

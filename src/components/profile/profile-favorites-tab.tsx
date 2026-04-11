@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { TabsContent } from '@/components/ui/tabs';
 import type { Studio } from '@/data/mock-data';
 import { ProfileFavoriteStudioCard } from '@/components/profile/profile-favorite-studio-card';
 
@@ -18,7 +17,7 @@ export const ProfileFavoritesTab = ({
   onToggleEmptyFavorites,
   onRemoveFavorite,
 }: ProfileFavoritesTabProps) => (
-  <TabsContent value="favorites" className="space-y-4">
+  <div className="space-y-4">
     <div className="flex items-center justify-between mb-2">
       <p className="text-sm text-muted-foreground">{favoriteStudios.length} любими студиа</p>
       <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={onToggleEmptyFavorites}>
@@ -44,5 +43,5 @@ export const ProfileFavoritesTab = ({
         ))}
       </div>
     )}
-  </TabsContent>
+  </div>
 );
