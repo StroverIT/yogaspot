@@ -10,10 +10,10 @@ export default withAuth(
       authorized: ({ req, token }) => {
         const pathname = req.nextUrl.pathname;
 
-        // if (pathname.startsWith('/admin')) {
-        //   if (!token) return false;
-        //   return (token as { role?: string }).role === 'admin';
-        // }
+        if (pathname.startsWith('/admin')) {
+          if (!token) return false;
+          return (token as { role?: string }).role === 'admin';
+        }
 
         return true;
       },
@@ -21,7 +21,7 @@ export default withAuth(
   },
 );
 
-// export const config = {
-//   matcher: ['/admin', '/admin/:path*', '/dashboard', '/dashboard/:path*', '/profile', '/profile/:path*'],
-// };
+export const config = {
+  matcher: ['/admin', '/admin/:path*', '/dashboard', '/dashboard/:path*', '/profile', '/profile/:path*'],
+};
 
