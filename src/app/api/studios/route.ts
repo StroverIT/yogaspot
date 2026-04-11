@@ -1,16 +1,52 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { randomUUID } from 'crypto';
+import { requireRole } from '@/lib/api-auth';
 
 export const runtime = 'nodejs';
 
-type SessionUser = {
-  id?: string;
-  role?: 'client' | 'business' | 'admin';
-};
+function mapStudioResponse(s: {
+  id: string;
+  name: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  images: string[];
+  description: string;
+  phone: string;
+  email: string;
+  rating: number;
+  reviewCount: number;
+  businessId: string;
+  amenitiesParking: boolean;
+  amenitiesShower: boolean;
+  amenitiesChangingRoom: boolean;
+  amenitiesEquipmentRental: boolean;
+  yogaTypes: string[];
+}) {
+  return {
+    id: s.id,
+    name: s.name,
+    address: s.address,
+    lat: s.lat ?? 0,
+    lng: s.lng ?? 0,
+    images: s.images ?? [],
+    description: s.description,
+    phone: s.phone,
+    email: s.email,
+    rating: s.rating ?? 0,
+    reviewCount: s.reviewCount ?? 0,
+    businessId: s.businessId,
+    amenities: {
+      parking: s.amenitiesParking,
+      shower: s.amenitiesShower,
+      changingRoom: s.amenitiesChangingRoom,
+      equipmentRental: s.amenitiesEquipmentRental,
+    },
+    yogaTypes: s.yogaTypes ?? [],
+  };
+}
 
 function toBoolean(value: FormDataEntryValue | null): boolean {
   if (value == null) return false;
@@ -27,23 +63,17 @@ function parseNumberOrNull(value: FormDataEntryValue | null): number | null {
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as SessionUser | undefined;
+  const gate = await requireRole(['business', 'admin']);
+  if (!gate.ok) return gate.response;
 
-  if (!sessionUser?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (gate.user.role === 'admin') {
+    const studios = await prisma.studio.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json({ studios: studios.map(mapStudioResponse) });
   }
 
-  if (sessionUser.role !== 'business' && sessionUser.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const business =
-    (await prisma.business.findUnique({ where: { ownerUserId: sessionUser.id } })) ??
-    (sessionUser.role === 'admin'
-      ? await prisma.business.findFirst()
-      : null);
-
+  const business = await prisma.business.findUnique({ where: { ownerUserId: gate.user.id } });
   if (!business) {
     return NextResponse.json({ studios: [] });
   }
@@ -53,43 +83,12 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Keep API response compatible with existing UI expectations.
-  return NextResponse.json({
-    studios: studios.map((s) => ({
-      id: s.id,
-      name: s.name,
-      address: s.address,
-      lat: s.lat ?? 0,
-      lng: s.lng ?? 0,
-      images: s.images ?? [],
-      description: s.description,
-      phone: s.phone,
-      email: s.email,
-      rating: s.rating ?? 0,
-      reviewCount: s.reviewCount ?? 0,
-      businessId: s.businessId,
-      amenities: {
-        parking: s.amenitiesParking,
-        shower: s.amenitiesShower,
-        changingRoom: s.amenitiesChangingRoom,
-        equipmentRental: s.amenitiesEquipmentRental,
-      },
-      yogaTypes: s.yogaTypes ?? [],
-    })),
-  });
+  return NextResponse.json({ studios: studios.map(mapStudioResponse) });
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as SessionUser | undefined;
-
-  if (!sessionUser?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (sessionUser.role !== 'business' && sessionUser.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const gate = await requireRole(['business', 'admin']);
+  if (!gate.ok) return gate.response;
 
   const bucket = process.env.SUPABASE_STORAGE_BUCKET_STUDIO_IMAGES;
   if (!bucket) {
@@ -129,7 +128,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error }, { status: 400 });
   }
 
-  const ownerUserId = sessionUser.id as string;
+  const ownerUserId = gate.user.id;
 
   const business =
     (await prisma.business.findUnique({ where: { ownerUserId } })) ??
@@ -194,27 +193,7 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({
-    studio: {
-      id: created.id,
-      name: created.name,
-      address: created.address,
-      lat: created.lat ?? 0,
-      lng: created.lng ?? 0,
-      images: created.images ?? [],
-      description: created.description,
-      phone: created.phone,
-      email: created.email,
-      rating: created.rating ?? 0,
-      reviewCount: created.reviewCount ?? 0,
-      businessId: created.businessId,
-      amenities: {
-        parking: created.amenitiesParking,
-        shower: created.amenitiesShower,
-        changingRoom: created.amenitiesChangingRoom,
-        equipmentRental: created.amenitiesEquipmentRental,
-      },
-      yogaTypes: created.yogaTypes ?? [],
-    },
+    studio: mapStudioResponse(created),
   });
 }
 

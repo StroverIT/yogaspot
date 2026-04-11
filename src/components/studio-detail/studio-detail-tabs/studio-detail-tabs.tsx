@@ -51,6 +51,7 @@ export function StudioDetailTabs({
             variant="user"
             studioSchedule={studioSchedule}
             subscription={subscription}
+            instructors={studioInstructors}
             isAuthenticated={isAuthenticated}
           />
         )}

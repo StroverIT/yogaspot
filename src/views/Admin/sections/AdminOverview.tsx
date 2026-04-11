@@ -1,6 +1,8 @@
-import { mockStudios, mockClasses, mockReviews, mockRecentEnrollments } from '@/data/mock-data';
+'use client';
+
 import { Building2, Calendar, Star, Users } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { Review, Studio, YogaClass } from '@/data/mock-data';
 import { StatCard } from '../components/StatCard';
 
 const LIST_LIMIT = 5;
@@ -13,29 +15,59 @@ function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('bg-BG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
+type EnrollmentRow = {
+  id: string;
+  userName: string;
+  className: string;
+  studioName: string;
+  enrolledAt: string;
+};
+
 export function AdminOverview() {
-  const totalEnrollments = mockClasses.reduce((s, c) => s + c.enrolled, 0);
+  const [studios, setStudios] = useState<Studio[]>([]);
+  const [classes, setClasses] = useState<YogaClass[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
+  const [userCount, setUserCount] = useState(0);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/admin/studios').then((r) => (r.ok ? r.json() : { studios: [] })),
+      fetch('/api/public/studios').then((r) => (r.ok ? r.json() : { classes: [] })),
+      fetch('/api/admin/reviews').then((r) => (r.ok ? r.json() : { reviews: [] })),
+      fetch('/api/admin/recent-enrollments').then((r) => (r.ok ? r.json() : { enrollments: [] })),
+      fetch('/api/admin/users').then((r) => (r.ok ? r.json() : { users: [] })),
+    ]).then(([stRes, pubRes, revRes, enrRes, usersRes]) => {
+      setStudios(stRes.studios ?? []);
+      setClasses(pubRes.classes ?? []);
+      setReviews(revRes.reviews ?? []);
+      setEnrollments(enrRes.enrollments ?? []);
+      setUserCount((usersRes.users as unknown[] | undefined)?.length ?? 0);
+    });
+  }, []);
+
+  const totalEnrollments = classes.reduce((s, c) => s + c.enrolled, 0);
 
   const recentStudios = useMemo(
-    () => [...mockStudios].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, LIST_LIMIT),
-    [],
+    () => [...studios].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, LIST_LIMIT),
+    [studios],
   );
   const recentEnrollments = useMemo(
-    () => [...mockRecentEnrollments].sort((a, b) => b.enrolledAt.localeCompare(a.enrolledAt)).slice(0, LIST_LIMIT),
-    [],
+    () => [...enrollments].sort((a, b) => b.enrolledAt.localeCompare(a.enrolledAt)).slice(0, LIST_LIMIT),
+    [enrollments],
   );
   const recentReviews = useMemo(
-    () => [...mockReviews].sort((a, b) => b.date.localeCompare(a.date)).slice(0, LIST_LIMIT),
-    [],
+    () => [...reviews].sort((a, b) => b.date.localeCompare(a.date)).slice(0, LIST_LIMIT),
+    [reviews],
   );
 
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        <StatCard icon={<Users className="h-5 w-5 text-primary" />} label="Потребители" value="1,245" trend="+12% този месец" tint="primary" />
-        <StatCard icon={<Building2 className="h-5 w-5 text-accent" />} label="Студиа" value={mockStudios.length} trend="+2 нови" tint="accent" />
+        <StatCard icon={<Users className="h-5 w-5 text-primary" />} label="Потребители" value={String(userCount)} trend="от базата" tint="primary" />
+        <StatCard icon={<Building2 className="h-5 w-5 text-accent" />} label="Студиа" value={studios.length} trend="+2 нови" tint="accent" />
         <StatCard icon={<Calendar className="h-5 w-5 text-sage-foreground" />} label="Записвания" value={totalEnrollments} trend="+8% тази седмица" tint="sage" />
-        <StatCard icon={<Star className="h-5 w-5 text-accent" />} label="Ревюта" value={mockReviews.length} tint="accent" />
+        <StatCard icon={<Star className="h-5 w-5 text-accent" />} label="Ревюта" value={reviews.length} tint="accent" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

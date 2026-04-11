@@ -1,4 +1,5 @@
 import { mockStudios, mockClasses } from "@/data/mock-data";
+import type { Studio, YogaClass } from "@/data/mock-data";
 import type { DiscoverStudio, YogaLevel, YogaType } from "@/types/studio-discovery";
 
 const PLACEHOLDER_IMAGES = [
@@ -8,7 +9,7 @@ const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1603988363607-e1e4a66962c6?w=800&auto=format&fit=crop&q=80",
 ] as const;
 
-/** Map mock class yoga types to discover filter union */
+/** Map class yoga types to discover filter union */
 const CLASS_TYPE_TO_DISCOVER: Partial<Record<string, YogaType>> = {
   Хатха: "Хата",
   Виняса: "Виняса",
@@ -22,8 +23,8 @@ const CLASS_TYPE_TO_DISCOVER: Partial<Record<string, YogaType>> = {
   "Аеро йога": "Виняса",
 };
 
-function studioLevelFromClasses(studioId: string): YogaLevel {
-  const diffs = mockClasses.filter((c) => c.studioId === studioId).map((c) => c.difficulty);
+function studioLevelFromClasses(studioId: string, classes: YogaClass[]): YogaLevel {
+  const diffs = classes.filter((c) => c.studioId === studioId).map((c) => c.difficulty);
   if (diffs.length === 0) return "all";
   const set = new Set(diffs);
   if (set.size === 1) {
@@ -40,7 +41,7 @@ function locationFromAddress(address: string): string {
   return address;
 }
 
-function amenitiesFromMock(studio: (typeof mockStudios)[0]): DiscoverStudio["amenities"] {
+function amenitiesFromStudio(studio: Studio): DiscoverStudio["amenities"] {
   const a = studio.amenities;
   const out: DiscoverStudio["amenities"] = [];
   if (a.parking) out.push("Паркинг");
@@ -50,16 +51,16 @@ function amenitiesFromMock(studio: (typeof mockStudios)[0]): DiscoverStudio["ame
   return out;
 }
 
-function nextClassForStudio(studioId: string): string | undefined {
-  const classes = mockClasses.filter((c) => c.studioId === studioId);
-  if (classes.length === 0) return undefined;
-  const c = classes[0];
+function nextClassForStudio(studioId: string, classes: YogaClass[]): string | undefined {
+  const list = classes.filter((c) => c.studioId === studioId);
+  if (list.length === 0) return undefined;
+  const c = list[0];
   return `${c.startTime} - ${c.name}`;
 }
 
-function stylesForStudio(studioId: string): YogaType[] {
+function stylesForStudio(studioId: string, classes: YogaClass[]): YogaType[] {
   const types = new Set<YogaType>();
-  for (const c of mockClasses) {
+  for (const c of classes) {
     if (c.studioId !== studioId) continue;
     const mapped = CLASS_TYPE_TO_DISCOVER[c.yogaType];
     if (mapped) types.add(mapped);
@@ -67,8 +68,9 @@ function stylesForStudio(studioId: string): YogaType[] {
   return Array.from(types);
 }
 
-export function buildDiscoverStudios(): DiscoverStudio[] {
-  return mockStudios.map((s, index) => ({
+/** Build discover cards from API payload (`GET /api/public/studios`). */
+export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: YogaClass[]): DiscoverStudio[] {
+  return studios.map((s, index) => ({
     id: s.id,
     name: s.name,
     image: s.images[0] ?? PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
@@ -76,17 +78,21 @@ export function buildDiscoverStudios(): DiscoverStudio[] {
     reviewCount: s.reviewCount,
     location: locationFromAddress(s.address),
     address: s.address,
-    styles: stylesForStudio(s.id),
-    level: studioLevelFromClasses(s.id),
-    amenities: amenitiesFromMock(s),
+    styles: stylesForStudio(s.id, classes),
+    level: studioLevelFromClasses(s.id, classes),
+    amenities: amenitiesFromStudio(s),
     views: 1000 + index * 120,
     bookings: 200 + index * 40,
     isHidden: false,
     createdAt: new Date(s.createdAt),
     lat: s.lat,
     lng: s.lng,
-    nextClass: nextClassForStudio(s.id),
+    nextClass: nextClassForStudio(s.id, classes),
   }));
+}
+
+export function buildDiscoverStudios(): DiscoverStudio[] {
+  return buildDiscoverStudiosFromPayload(mockStudios, mockClasses);
 }
 
 export const allDiscoverStudios: DiscoverStudio[] = buildDiscoverStudios();

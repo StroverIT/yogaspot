@@ -7,7 +7,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { SlidersHorizontal } from "lucide-react";
 import { DiscoverFilters, type DiscoverFiltersState } from "@/components/discover/discover-filters";
 import { DiscoverGrid } from "@/components/discover/discover-grid";
-import { allDiscoverStudios } from "@/lib/discover-studios";
+import { buildDiscoverStudiosFromPayload } from "@/lib/discover-studios";
+import type { Studio, YogaClass } from "@/data/mock-data";
 import type { DiscoverStudio, YogaLevel } from "@/types/studio-discovery";
 
 const ITEMS_PER_PAGE = 6;
@@ -56,6 +57,30 @@ export function DiscoverPageContent() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const skipNextFilterReset = useRef(true);
+
+  const [catalogStudios, setCatalogStudios] = useState<Studio[]>([]);
+  const [catalogClasses, setCatalogClasses] = useState<YogaClass[]>([]);
+
+  useEffect(() => {
+    fetch("/api/public/studios")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("catalog"))))
+      .then((j: { studios: Studio[]; classes: YogaClass[] }) => {
+        setCatalogStudios(j.studios ?? []);
+        setCatalogClasses(j.classes ?? []);
+      })
+      .catch(() => {
+        setCatalogStudios([]);
+        setCatalogClasses([]);
+      });
+  }, []);
+
+  const allDiscoverStudios = useMemo(
+    () =>
+      catalogStudios.length
+        ? buildDiscoverStudiosFromPayload(catalogStudios, catalogClasses)
+        : [],
+    [catalogStudios, catalogClasses],
+  );
 
   const filteredStudios = useMemo(() => {
     let result = allDiscoverStudios.filter((s) => !s.isHidden);
@@ -117,7 +142,7 @@ export function DiscoverPageContent() {
     }
 
     return result;
-  }, [filters, userLocation]);
+  }, [filters, userLocation, allDiscoverStudios]);
 
   useEffect(() => {
     const params = new URLSearchParams();

@@ -1,25 +1,42 @@
-import { useMemo, useState } from 'react';
+'use client';
+
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import type { Role } from '@prisma/client';
 
-const mockUsers = [
-  { name: 'Анна Кирилова', email: 'anna@mail.bg', role: 'client' as const, active: true },
-  { name: 'Студио Лотос', email: 'lotos@biz.bg', role: 'business' as const, active: true },
-  { name: 'Петър Димов', email: 'petar@mail.bg', role: 'client' as const, active: false },
-];
+type AdminUserRow = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  role: Role;
+};
 
 export function AdminUsersSection() {
   const [search, setSearch] = useState('');
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/users')
+      .then((r) => (r.ok ? r.json() : { users: [] }))
+      .then((j: { users: AdminUserRow[] }) => setUsers(j.users ?? []));
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return mockUsers;
-    return mockUsers.filter(
-      u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    if (!q) return users;
+    return users.filter(
+      u => (u.name ?? '').toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q),
     );
-  }, [search]);
+  }, [search, users]);
+
+  const roleLabel = (role: Role) => {
+    if (role === 'admin') return 'Админ';
+    if (role === 'business') return 'Бизнес';
+    return 'Потребител';
+  };
 
   return (
     <div>
@@ -55,32 +72,32 @@ export function AdminUsersSection() {
               </tr>
             ) : (
               filteredUsers.map(u => (
-              <tr key={u.email} className="border-t border-border hover:bg-muted/30 transition-colors">
+              <tr key={u.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                      {u.name[0]}
+                      {(u.name ?? u.email ?? '?')[0]}
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{u.name}</p>
+                      <p className="font-medium text-foreground">{u.name ?? '—'}</p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
                     </div>
                   </div>
                 </td>
                 <td className="p-4">
                   <Badge variant={u.role === 'business' ? 'default' : 'secondary'} className="rounded-full">
-                    {u.role === 'client' ? 'Потребител' : 'Бизнес'}
+                    {roleLabel(u.role)}
                   </Badge>
                 </td>
                 <td className="p-4 hidden sm:table-cell">
                   <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${u.active ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
-                    <span className="text-sm text-muted-foreground">{u.active ? 'Активен' : 'Неактивен'}</span>
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-sm text-muted-foreground">Активен</span>
                   </div>
                 </td>
                 <td className="p-4 text-right">
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive rounded-lg">
-                    Спри достъп
+                  <Button variant="outline" size="sm" className="rounded-lg" disabled>
+                    Управление
                   </Button>
                 </td>
               </tr>

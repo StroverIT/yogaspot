@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { mockStudios, mockInstructors } from '@/data/mock-data';
+import type { Instructor, Studio } from '@/data/mock-data';
 import { Building2, Edit, Plus, Star, Trash2 } from 'lucide-react';
 
 import { dashboardCardClass } from '../dashboardUi';
@@ -9,10 +9,12 @@ import { DashboardPageHeader } from './DashboardPageHeader';
 
 export function InstructorsSection({
   instructors,
+  studios,
   onAdd,
   onEdit,
 }: {
-  instructors: typeof mockInstructors;
+  instructors: Instructor[];
+  studios: Studio[];
   onAdd: () => void;
   onEdit: () => void;
 }) {
@@ -29,7 +31,7 @@ export function InstructorsSection({
       />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {instructors.map((instr) => {
-          const studio = mockStudios.find(s => s.id === instr.studioId);
+          const studio = studios.find(s => s.id === instr.studioId);
           return (
             <div key={instr.id} className={`group ${dashboardCardClass} p-5`}>
               <div className="flex items-start gap-4">

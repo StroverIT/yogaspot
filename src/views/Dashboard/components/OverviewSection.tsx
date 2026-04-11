@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
+import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
 import { BarChart3, Calendar, MapPin, Star, TrendingUp, Users } from 'lucide-react';
 
 import { dashboardCardClass, dashboardInsetClass } from '../dashboardUi';
@@ -20,9 +20,9 @@ export function OverviewSection({
   totalEnrolled: number;
   totalCapacity: number;
   occupancyRate: number;
-  myStudios: typeof mockStudios;
-  myClasses: typeof mockClasses;
-  myInstructors: typeof mockInstructors;
+  myStudios: Studio[];
+  myClasses: YogaClass[];
+  myInstructors: Instructor[];
   revenue: number;
 }) {
   return (

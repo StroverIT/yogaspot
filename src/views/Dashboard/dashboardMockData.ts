@@ -1,9 +1,10 @@
-import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
+import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
 
-export function getDashboardMockData() {
-  const myStudios = mockStudios.filter(s => s.businessId === 'b1');
-  const myClasses = mockClasses.filter(c => myStudios.some(s => s.id === c.studioId));
-  const myInstructors = mockInstructors.filter(i => myStudios.some(s => s.id === i.studioId));
+export function deriveDashboardMetrics(
+  myStudios: Studio[],
+  myClasses: YogaClass[],
+  myInstructors: Instructor[],
+) {
   const totalEnrolled = myClasses.reduce((sum, c) => sum + c.enrolled, 0);
   const totalCapacity = myClasses.reduce((sum, c) => sum + c.maxCapacity, 0);
   const avgRating = myStudios.length

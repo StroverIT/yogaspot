@@ -9,10 +9,8 @@ import { DifficultyBadge } from '@/components/studio-detail/difficulty-badge';
 import { DashboardPageHeader } from '@/views/Dashboard/components/DashboardPageHeader';
 import { dashboardCardClass } from '@/views/Dashboard/dashboardUi';
 import {
-  mockInstructors,
-  mockSchedule,
-  mockSubscriptions,
   WEEKDAYS,
+  type Instructor,
   type ScheduleEntry,
   type Studio,
   type StudioSubscription,
@@ -24,6 +22,9 @@ import { toast } from 'sonner';
 type AdminProps = {
   variant: 'admin';
   studios: Studio[];
+  schedule: ScheduleEntry[];
+  subscriptions: StudioSubscription[];
+  instructors: Instructor[];
   onAdd: () => void;
   onEdit: (entry: ScheduleEntry) => void;
 };
@@ -32,6 +33,7 @@ type UserProps = {
   variant: 'user';
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
+  instructors: Instructor[];
   isAuthenticated: boolean;
 };
 
@@ -39,12 +41,22 @@ export type ScheduleContentProps = AdminProps | UserProps;
 
 export function ScheduleContent(props: ScheduleContentProps) {
   if (props.variant === 'admin') {
-    return <AdminScheduleContent studios={props.studios} onAdd={props.onAdd} onEdit={props.onEdit} />;
+    return (
+      <AdminScheduleContent
+        studios={props.studios}
+        schedule={props.schedule}
+        subscriptions={props.subscriptions}
+        instructors={props.instructors}
+        onAdd={props.onAdd}
+        onEdit={props.onEdit}
+      />
+    );
   }
   return (
     <UserScheduleContent
       studioSchedule={props.studioSchedule}
       subscription={props.subscription}
+      instructors={props.instructors}
       isAuthenticated={props.isAuthenticated}
     />
   );
@@ -59,10 +71,12 @@ function buildScheduleByDay(studioSchedule: ScheduleEntry[]) {
 
 function WeeklyScheduleList({
   scheduleByDay,
+  instructors,
   renderTrailing,
   emptyState,
 }: {
   scheduleByDay: Record<Weekday, ScheduleEntry[]>;
+  instructors: Instructor[];
   renderTrailing: (entry: ScheduleEntry) => ReactNode;
   emptyState: { title: string; subtitle?: string };
 }) {
@@ -82,7 +96,7 @@ function WeeklyScheduleList({
               {entries
                 .sort((a, b) => a.startTime.localeCompare(b.startTime))
                 .map(entry => {
-                  const instructor = mockInstructors.find(i => i.id === entry.instructorId);
+                  const instructor = instructors.find(i => i.id === entry.instructorId);
                   return (
                     <div
                       key={entry.id}
@@ -126,18 +140,24 @@ function WeeklyScheduleList({
 
 function AdminScheduleContent({
   studios,
+  schedule,
+  subscriptions,
+  instructors,
   onAdd,
   onEdit,
 }: {
   studios: Studio[];
+  schedule: ScheduleEntry[];
+  subscriptions: StudioSubscription[];
+  instructors: Instructor[];
   onAdd: () => void;
   onEdit: (entry: ScheduleEntry) => void;
 }) {
   const [selectedStudio, setSelectedStudio] = useState<string>(studios[0]?.id || '');
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
 
-  const studioSchedule = mockSchedule.filter(s => s.studioId === selectedStudio);
-  const subscription = mockSubscriptions.find(s => s.studioId === selectedStudio);
+  const studioSchedule = schedule.filter(s => s.studioId === selectedStudio);
+  const subscription = subscriptions.find(s => s.studioId === selectedStudio);
   const scheduleByDay = buildScheduleByDay(studioSchedule);
 
   const handleDelete = (entry: ScheduleEntry) => {
@@ -222,6 +242,7 @@ function AdminScheduleContent({
       {viewMode === 'weekly' && (
         <WeeklyScheduleList
           scheduleByDay={scheduleByDay}
+          instructors={instructors}
           renderTrailing={entry => (
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right hidden sm:block">
@@ -288,10 +309,12 @@ function AdminScheduleContent({
 function UserScheduleContent({
   studioSchedule,
   subscription,
+  instructors,
   isAuthenticated,
 }: {
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
+  instructors: Instructor[];
   isAuthenticated: boolean;
 }) {
   const scheduleByDay = buildScheduleByDay(studioSchedule);
@@ -315,6 +338,7 @@ function UserScheduleContent({
 
       <WeeklyScheduleList
         scheduleByDay={scheduleByDay}
+        instructors={instructors}
         renderTrailing={entry => (
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right hidden sm:block">

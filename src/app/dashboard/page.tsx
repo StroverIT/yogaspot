@@ -1,7 +1,11 @@
+'use client';
+
 import { OverviewSection } from '@/views/Dashboard/components/OverviewSection';
-import { getDashboardMockData } from '@/views/Dashboard/dashboardMockData';
+import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
+import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
 
 export default function DashboardOverviewPage() {
+  const ws = useDashboardWorkspace();
   const {
     avgRating,
     totalEnrolled,
@@ -11,7 +15,14 @@ export default function DashboardOverviewPage() {
     myClasses,
     myInstructors,
     revenue,
-  } = getDashboardMockData();
+  } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
+
+  if (ws.loading) {
+    return <div className="text-muted-foreground">Зареждане…</div>;
+  }
+  if (ws.error) {
+    return <div className="text-destructive">{ws.error}</div>;
+  }
 
   return (
     <OverviewSection

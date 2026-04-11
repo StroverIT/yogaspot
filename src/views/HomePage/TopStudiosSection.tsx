@@ -4,8 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockClasses } from "@/data/mock-data";
-import type { Studio } from "@/data/mock-data";
+import type { Studio, YogaClass } from "@/data/mock-data";
 import { Star, MapPin, ArrowRight, Heart, Users } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
@@ -17,11 +16,12 @@ const getStudioImageSrc = (studioId: string) => `/homepage/studio-${studioId.sli
 
 interface TopStudiosSectionProps {
   studios: Studio[];
+  classes: YogaClass[];
   isFavorite: (studioId: string) => boolean;
   onFavorite: (e: React.MouseEvent, studioId: string) => void;
 }
 
-export default function TopStudiosSection({ studios, isFavorite, onFavorite }: TopStudiosSectionProps) {
+export default function TopStudiosSection({ studios, classes, isFavorite, onFavorite }: TopStudiosSectionProps) {
   return (
     <section className="py-20 bg-card">
       <div className="container mx-auto px-4">
@@ -94,7 +94,7 @@ export default function TopStudiosSection({ studios, isFavorite, onFavorite }: T
           className="studios-swiper !pb-14"
         >
           {studios.map((studio) => {
-            const classes = mockClasses.filter((c) => c.studioId === studio.id);
+            const studioClasses = classes.filter((c) => c.studioId === studio.id);
             const fav = isFavorite(studio.id);
             return (
               <SwiperSlide key={studio.id} className="h-auto">
@@ -119,7 +119,7 @@ export default function TopStudiosSection({ studios, isFavorite, onFavorite }: T
                         />
                         <div className="absolute bottom-3 left-3 flex gap-2">
                           <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-sm text-xs font-medium">
-                            <Users className="h-3 w-3 text-primary" /> {classes.length} класа
+                            <Users className="h-3 w-3 text-primary" /> {studioClasses.length} класа
                           </span>
                         </div>
                         <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/90 text-xs font-bold text-accent-foreground">

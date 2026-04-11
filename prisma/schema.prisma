@@ -13,18 +13,26 @@ enum Role {
   admin
 }
 
+enum ReviewTargetType {
+  studio
+  instructor
+  class
+}
+
 model User {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?  @unique
+  email         String?   @unique
   emailVerified DateTime?
   passwordHash  String?
-  role          Role     @default(client)
+  role          Role      @default(client)
   image         String?
 
-  accounts      Account[]
-  sessions      Session[]
-  businesses    Business[]
+  accounts       Account[]
+  sessions       Session[]
+  businesses     Business[]
+  reviewsWritten Review[]  @relation("ReviewAuthor")
+  favorites      Favorite[]
 }
 
 model Account {
@@ -56,12 +64,12 @@ model Session {
 }
 
 model Business {
-  id           String   @id @default(cuid())
+  id          String   @id @default(cuid())
   ownerUserId String   @unique
-  owner        User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
-  name         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  name        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   studios Studio[]
 }
@@ -78,6 +86,7 @@ model Studio {
   description String
   phone       String
   email       String
+  website     String?
 
   // Supabase Storage public URLs
   images String[]
@@ -87,13 +96,120 @@ model Studio {
   amenitiesChangingRoom    Boolean @default(false)
   amenitiesEquipmentRental Boolean @default(false)
 
-  // Placeholder fields for now (computed from reviews later)
   rating      Float @default(0)
   reviewCount Int   @default(0)
 
-  // Yoga styles practiced by the studio
   yogaTypes String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  instructors   Instructor[]
+  classes       YogaClass[]
+  schedule      ScheduleEntry[]
+  subscription  StudioSubscription?
+  favorites     Favorite[]
+}
+
+model Instructor {
+  id               String   @id @default(cuid())
+  studioId         String
+  studio           Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name             String
+  photo            String   @default("")
+  bio              String
+  yogaStyle        String[] @default([])
+  experienceLevel  String
+  rating           Float    @default(0)
+
+  classes  YogaClass[]
+  schedule ScheduleEntry[]
+}
+
+model YogaClass {
+  id                  String   @id @default(cuid())
+  studioId            String
+  studio              Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  instructorId        String
+  instructor          Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  name                String
+  date                DateTime @db.Date
+  startTime           String
+  endTime             String
+  maxCapacity         Int
+  enrolled            Int      @default(0)
+  price               Int
+  yogaType            String
+  difficulty          String
+  cancellationPolicy  String
+  waitingList         String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScheduleEntry {
+  id           String   @id @default(cuid())
+  studioId     String
+  studio       Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  instructorId String
+  instructor   Instructor @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  className   String
+  yogaType    String
+  difficulty  String
+  day         String
+  startTime   String
+  endTime     String
+  maxCapacity Int
+  price       Int
+  isRecurring Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id                String           @id @default(cuid())
+  targetType        ReviewTargetType
+  targetId          String
+  rating            Int
+  text              String
+  date              DateTime         @db.Date
+
+  authorUserId      String?
+  author            User?            @relation("ReviewAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  authorDisplayName String
+  authorEmail       String?
+
+  createdAt DateTime @default(now())
+}
+
+model StudioSubscription {
+  id                     String  @id @default(cuid())
+  studioId               String  @unique
+  studio                 Studio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  hasMonthlySubscription Boolean @default(false)
+  monthlyPrice           Float?
+  subscriptionNote       String?
+}
+
+model RecentEnrollment {
+  id              String   @id @default(cuid())
+  userDisplayName String
+  className       String
+  studioName      String
+  enrolledAt      DateTime
+}
+
+model Favorite {
+  userId   String
+  studioId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, studioId])
 }

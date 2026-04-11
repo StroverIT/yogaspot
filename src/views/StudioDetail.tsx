@@ -2,16 +2,10 @@
 
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  mockStudios,
-  mockInstructors,
-  mockClasses,
-  mockReviews,
-  mockSchedule,
-  mockSubscriptions,
-} from '@/data/mock-data';
+import type { Instructor, Review, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { StudioNotFound } from '@/components/studio-detail/studio-not-found';
 import { StudioDetailGallery } from '@/components/studio-detail/studio-detail-gallery';
@@ -27,6 +21,15 @@ function tabFromSearchParam(tab: string | null): TabKey | undefined {
   return undefined;
 }
 
+type StudioPayload = {
+  studio: Studio;
+  instructors: Instructor[];
+  classes: YogaClass[];
+  schedule: ScheduleEntry[];
+  subscription: StudioSubscription | null;
+  reviews: Review[];
+};
+
 const StudioDetail = () => {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -34,21 +37,50 @@ const StudioDetail = () => {
   const defaultTab = tabFromSearchParam(searchParams.get('tab'));
   const { isAuthenticated } = useAuth();
 
-  const studio = mockStudios.find((s) => s.id === id);
-  if (!studio) return <StudioNotFound />;
+  const [payload, setPayload] = useState<StudioPayload | null>(undefined);
 
-  const studioInstructors = mockInstructors.filter((i) => i.studioId === id);
-  const studioClasses = mockClasses.filter((c) => c.studioId === id);
-  const studioReviews = mockReviews.filter((r) => r.targetId === id && r.targetType === 'studio');
-  const studioSchedule = mockSchedule.filter((s) => s.studioId === id);
-  const subscription = mockSubscriptions.find((s) => s.studioId === id);
+  useEffect(() => {
+    if (!id) {
+      setPayload(null);
+      return;
+    }
+    let cancelled = false;
+    setPayload(undefined);
+    fetch(`/api/public/studios/${encodeURIComponent(id)}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as StudioPayload;
+      })
+      .then((data) => {
+        if (!cancelled) setPayload(data);
+      })
+      .catch(() => {
+        if (!cancelled) setPayload(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (payload === undefined) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center text-muted-foreground">Зареждане…</div>
+    );
+  }
+
+  if (!payload?.studio) {
+    return <StudioNotFound />;
+  }
+
+  const { studio, instructors, classes, schedule, subscription, reviews } = payload;
+  const studioReviews = reviews.filter((r) => r.targetId === studio.id && r.targetType === 'studio');
 
   const handleBook = (classId: string) => {
     if (!isAuthenticated) {
       toast.error('Моля, влезте в акаунта си, за да се запишете.');
       return;
     }
-    const cls = studioClasses.find((c) => c.id === classId);
+    const cls = classes.find((c) => c.id === classId);
     if (!cls) return;
     if (cls.enrolled >= cls.maxCapacity) {
       toast.info('Класът е пълен. Добавени сте в списъка на изчакване.');
@@ -71,11 +103,11 @@ const StudioDetail = () => {
           <StudioDetailGallery images={studio.images} />
           <StudioDetailSummary studio={studio} />
           <StudioDetailTabs
-            key={id}
-            studioSchedule={studioSchedule}
-            subscription={subscription}
-            studioClasses={studioClasses}
-            studioInstructors={studioInstructors}
+            key={studio.id}
+            studioSchedule={schedule}
+            subscription={subscription ?? undefined}
+            studioClasses={classes}
+            studioInstructors={instructors}
             studioReviews={studioReviews}
             onBookClass={handleBook}
             defaultTab={defaultTab}

@@ -3,17 +3,24 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { mockStudios, mockClasses } from "@/data/mock-data";
 import { Star, MapPin, ArrowRight, Users, Clock, Search } from "lucide-react";
 
-const totalEnrolled = mockClasses.reduce((s, c) => s + c.enrolled, 0);
-
-export default function HeroSection() {
+export default function HeroSection({
+  studioCount,
+  classCount,
+  totalEnrolled,
+  avgRating,
+}: {
+  studioCount: number;
+  classCount: number;
+  totalEnrolled: number;
+  avgRating: string;
+}) {
   const stats = [
-    { value: `${mockStudios.length}+`, label: "Партньорски студиа", icon: <MapPin className="h-5 w-5" /> },
-    { value: `${mockClasses.length}+`, label: "Седмични класове", icon: <Clock className="h-5 w-5" /> },
+    { value: `${studioCount}+`, label: "Партньорски студиа", icon: <MapPin className="h-5 w-5" /> },
+    { value: `${classCount}+`, label: "Седмични класове", icon: <Clock className="h-5 w-5" /> },
     { value: `${totalEnrolled}+`, label: "Доволни практикуващи", icon: <Users className="h-5 w-5" /> },
-    { value: "4.7", label: "Средна оценка", icon: <Star className="h-5 w-5" /> },
+    { value: avgRating, label: "Средна оценка", icon: <Star className="h-5 w-5" /> },
   ];
 
   return (

@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { mockStudios, mockClasses, mockInstructors } from '@/data/mock-data';
+import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
 import { AlertCircle, Building2, Clock, Edit, GraduationCap, Plus, Trash2 } from 'lucide-react';
 
 import { dashboardCardClass } from '../dashboardUi';
@@ -10,10 +10,14 @@ import { DifficultyBadge } from './DifficultyBadge';
 
 export function ClassesSection({
   classes,
+  studios,
+  instructors,
   onAdd,
   onEdit,
 }: {
-  classes: typeof mockClasses;
+  classes: YogaClass[];
+  studios: Studio[];
+  instructors: Instructor[];
   onAdd: () => void;
   onEdit: () => void;
 }) {
@@ -30,8 +34,8 @@ export function ClassesSection({
       />
       <div className="space-y-4">
         {classes.map((cls) => {
-          const instr = mockInstructors.find(ins => ins.id === cls.instructorId);
-          const studio = mockStudios.find(s => s.id === cls.studioId);
+          const instr = instructors.find(ins => ins.id === cls.instructorId);
+          const studio = studios.find(s => s.id === cls.studioId);
           const isFull = cls.enrolled >= cls.maxCapacity;
 
           return (

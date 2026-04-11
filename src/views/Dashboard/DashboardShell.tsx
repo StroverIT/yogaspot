@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { getActiveSection } from './dashboardTypes';
 import { DashboardSidebar } from './components/DashboardSidebar';
 import { DashboardMobileNav } from './components/DashboardMobileNav';
-import { getDashboardMockData } from './dashboardMockData';
+import { deriveDashboardMetrics } from './dashboardMockData';
+import { useDashboardWorkspace } from '@/hooks/useDashboardWorkspace';
 
 export function DashboardShell({
   children,
@@ -18,7 +19,8 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const { revenue } = getDashboardMockData();
+  const ws = useDashboardWorkspace();
+  const { revenue } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
   const activeSection = getActiveSection(pathname);
   const displayName = user?.name?.trim() || serverDisplayName || 'Бизнес потребител';
 

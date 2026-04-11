@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { mockStudios, mockClasses } from "@/data/mock-data";
+import { useState, useMemo, useEffect } from "react";
+import type { Studio, YogaClass } from "@/data/mock-data";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/AuthModal";
 import HeroSection from "./HeroSection";
-// import YogaTypeCategories from "./YogaTypeCategories";
-// import ValuePropositions from "./ValuePropositions";
 import TopStudiosSection from "./TopStudiosSection";
-// import UpcomingClassesSection from "./UpcomingClassesSection";
 import HowItWorksSection from "./HowItWorksSection";
 import ForStudiosCTA from "./ForStudiosCTA";
 import NearbyStudiosSection from "./NearbyStudiosSection";
@@ -20,15 +17,34 @@ export default function HomePage() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { isAuthenticated } = useAuth();
 
+  const [studios, setStudios] = useState<Studio[]>([]);
+  const [classes, setClasses] = useState<YogaClass[]>([]);
+
+  useEffect(() => {
+    fetch("/api/public/studios")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("catalog"))))
+      .then((j: { studios: Studio[]; classes: YogaClass[] }) => {
+        setStudios(j.studios ?? []);
+        setClasses(j.classes ?? []);
+      })
+      .catch(() => {
+        setStudios([]);
+        setClasses([]);
+      });
+  }, []);
+
   const topStudios = useMemo(
-    () => [...mockStudios].sort((a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount).slice(0, 6),
-    []
+    () => [...studios].sort((a, b) => b.rating * b.reviewCount - a.rating * a.reviewCount).slice(0, 6),
+    [studios],
   );
 
-  // const upcomingClasses = useMemo(
-  //   () => [...mockClasses].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4),
-  //   []
-  // );
+  const totalEnrolled = useMemo(() => classes.reduce((s, c) => s + c.enrolled, 0), [classes]);
+
+  const avgRating = useMemo(() => {
+    if (!studios.length) return "4.7";
+    const v = studios.reduce((s, st) => s + st.rating, 0) / studios.length;
+    return v.toFixed(1);
+  }, [studios]);
 
   const handleFavorite = (e: React.MouseEvent, studioId: string) => {
     e.preventDefault();
@@ -41,32 +57,27 @@ export default function HomePage() {
     toast.success(added ? "Добавено в любими" : "Премахнато от любими");
   };
 
-  // const getStudio = (id: string) => mockStudios.find((s) => s.id === id);
-  // const getInstructor = (id: string) => mockInstructors.find((i) => i.id === id);
-
   return (
     <div className="font-body">
-      <HeroSection />
+      <HeroSection
+        studioCount={studios.length}
+        classCount={classes.length}
+        totalEnrolled={totalEnrolled}
+        avgRating={avgRating}
+      />
       <HowItWorksSection />
-      {/* <ValuePropositions /> */}
-      {/* <div className="w-full h-px bg-border" /> */}
-
-      {/* <YogaTypeCategories /> */}
       <NearbyStudiosSection
-        studios={mockStudios}
+        studios={studios}
+        classes={classes}
         isFavorite={isFavorite}
         onFavorite={handleFavorite}
       />
       <TopStudiosSection
         studios={topStudios}
+        classes={classes}
         isFavorite={isFavorite}
         onFavorite={handleFavorite}
       />
-      {/* <UpcomingClassesSection
-        classes={upcomingClasses}
-        getStudio={getStudio}
-        getInstructor={getInstructor}
-      /> */}
       <ForStudiosCTA />
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>

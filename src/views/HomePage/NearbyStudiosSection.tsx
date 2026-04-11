@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockClasses, type Studio } from "@/data/mock-data";
+import type { Studio, YogaClass } from "@/data/mock-data";
 import { Star, MapPin, ArrowRight, Heart, Users, LocateFixed } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -17,6 +17,7 @@ const getStudioImageSrc = (studioId: string) => `/homepage/studio-${studioId.sli
 
 interface NearbyStudiosSectionProps {
   studios: Studio[];
+  classes: YogaClass[];
   isFavorite: (studioId: string) => boolean;
   onFavorite: (e: React.MouseEvent, studioId: string) => void;
 }
@@ -41,7 +42,7 @@ const haversineDistanceKm = (a: Coordinates, b: Coordinates) => {
   return R * c;
 };
 
-export default function NearbyStudiosSection({ studios, isFavorite, onFavorite }: NearbyStudiosSectionProps) {
+export default function NearbyStudiosSection({ studios, classes, isFavorite, onFavorite }: NearbyStudiosSectionProps) {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
@@ -171,7 +172,7 @@ export default function NearbyStudiosSection({ studios, isFavorite, onFavorite }
           className="studios-swiper !pb-14"
         >
           {studiosWithDistance.map(({ studio, distanceKm }) => {
-            const classes = mockClasses.filter((c) => c.studioId === studio.id);
+            const studioClasses = classes.filter((c) => c.studioId === studio.id);
             const fav = isFavorite(studio.id);
             const distanceLabel = (() => {
               if (distanceKm == null) return null;
@@ -215,7 +216,7 @@ export default function NearbyStudiosSection({ studios, isFavorite, onFavorite }
                         />
                         <div className="absolute bottom-3 left-3 flex gap-2">
                           <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-sm text-xs font-medium">
-                            <Users className="h-3 w-3 text-primary" /> {classes.length} класа
+                            <Users className="h-3 w-3 text-primary" /> {studioClasses.length} класа
                           </span>
                         </div>
                         <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/90 text-xs font-bold text-accent-foreground">

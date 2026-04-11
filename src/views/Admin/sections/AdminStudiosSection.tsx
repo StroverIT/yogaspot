@@ -1,11 +1,29 @@
-import { mockStudios } from '@/data/mock-data';
+'use client';
+
+import type { Studio } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EyeOff, Search, Star, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+type AdminStudioRow = Studio & { ownerEmail?: string | null; ownerName?: string | null };
 
 export function AdminStudiosSection() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [studios, setStudios] = useState<AdminStudioRow[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/studios')
+      .then((r) => (r.ok ? r.json() : { studios: [] }))
+      .then((j: { studios: AdminStudioRow[] }) => setStudios(j.studios ?? []));
+  }, []);
+
+  const filtered = studios.filter(
+    (s) =>
+      !searchQuery ||
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (s.ownerEmail ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <div>
@@ -16,7 +34,7 @@ export function AdminStudiosSection() {
         </div>
       </div>
       <div className="space-y-3">
-        {mockStudios.filter(s => !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase())).map(studio => (
+        {filtered.map(studio => (
           <div
             key={studio.id}
             className="rounded-xl border border-border bg-white p-5 flex items-center justify-between hover:shadow-md transition-shadow shadow-md"
@@ -26,6 +44,9 @@ export function AdminStudiosSection() {
               <div>
                 <h3 className="font-semibold text-foreground">{studio.name}</h3>
                 <p className="text-sm text-muted-foreground">{studio.address}</p>
+                {studio.ownerEmail && (
+                  <p className="text-xs text-muted-foreground mt-0.5">Собственик: {studio.ownerEmail}</p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">

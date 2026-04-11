@@ -1,20 +1,29 @@
-import { useMemo, useState } from 'react';
-import { mockReviews } from '@/data/mock-data';
+'use client';
+
+import { useMemo, useState, useEffect } from 'react';
+import type { Review } from '@/data/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Star, Trash2 } from 'lucide-react';
 
 export function AdminReviewsSection() {
   const [search, setSearch] = useState('');
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/reviews')
+      .then((r) => (r.ok ? r.json() : { reviews: [] }))
+      .then((j: { reviews: Review[] }) => setReviews(j.reviews ?? []));
+  }, []);
 
   const filteredReviews = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return mockReviews;
-    return mockReviews.filter(r => {
+    if (!q) return reviews;
+    return reviews.filter(r => {
       const email = (r.userEmail ?? '').toLowerCase();
       return r.userName.toLowerCase().includes(q) || email.includes(q);
     });
-  }, [search]);
+  }, [search, reviews]);
 
   return (
     <div>
