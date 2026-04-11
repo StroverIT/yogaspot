@@ -56,9 +56,9 @@ export const authOptions: NextAuthOptions = {
         t.role = u.role ?? t.role ?? 'client';
       }
 
-      if (!user && t.email) {
+      if (!user && (t.sub || t.email)) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: t.email as string },
+          where: t.sub ? { id: t.sub as string } : { email: t.email as string },
         });
         if (dbUser) {
           t.role = dbUser.role;

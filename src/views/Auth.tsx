@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from 'next-auth/react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { GoogleGIcon } from '@/components/icons/brand-icons';
+import { Spinner } from '@/components/ui/spinner';
 
 const Auth = () => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -15,6 +17,7 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
   const { login, loginWithGoogle, register } = useAuth();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -25,12 +28,26 @@ const Auth = () => {
   };
 
   useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/');
+    }
+  }, [status, router]);
+
+  useEffect(() => {
     const typeParam = searchParams?.get('type');
     const nextMode: 'login' | 'register' =
       typeParam === 'register' ? 'register' : 'login';
     setMode(nextMode);
     reset();
   }, [searchParams]);
+
+  if (status === 'loading' || status === 'authenticated') {
+    return (
+      <div className="flex min-h-[85vh] items-center justify-center">
+        <Spinner className="h-8 w-8 text-primary" />
+      </div>
+    );
+  }
 
   const switchMode = (newMode: 'login' | 'register') => {
     reset();
@@ -191,7 +208,7 @@ const Auth = () => {
                   className="w-full h-12 gap-3 text-base rounded-xl"
                   onClick={async () => {
                     try {
-                      await loginWithGoogle();
+                      await loginWithGoogle({ registrationRole: role });
                     } catch (err) {
                       console.error(err);
                       toast.error('Грешка при регистрация с Google.');

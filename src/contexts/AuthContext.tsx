@@ -11,10 +11,17 @@ export interface User {
   favorites: string[];
 }
 
+export type LoginWithGoogleOptions = {
+  /** Final destination after Google sign-in (and after role sync, if used). */
+  callbackUrl?: string;
+  /** From the register flow: persist `business` after OAuth (DB default is client). */
+  registrationRole?: UserRole;
+};
+
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: (callbackUrl?: string) => Promise<void>;
+  loginWithGoogle: (options?: LoginWithGoogleOptions) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -37,12 +44,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const loginWithGoogle = useCallback(async (callbackUrl?: string) => {
-    let url = callbackUrl;
-    if (!url && typeof window !== 'undefined') {
-      url = `${window.location.pathname}${window.location.search}`;
+  const loginWithGoogle = useCallback(async (options?: LoginWithGoogleOptions) => {
+    let next = options?.callbackUrl;
+    if (!next && typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const qs = window.location.search;
+      next = path.startsWith('/auth') ? '/' : `${path}${qs}`;
     }
-    await signIn('google', { callbackUrl: url || '/' });
+    if (!next) next = '/';
+
+    const registrationRole = options?.registrationRole;
+    const oauthCallback =
+      registrationRole === 'business'
+        ? `/api/auth/complete-google?role=business&next=${encodeURIComponent(next)}`
+        : next;
+
+    await signIn('google', { callbackUrl: oauthCallback });
   }, []);
 
   const register = useCallback(
