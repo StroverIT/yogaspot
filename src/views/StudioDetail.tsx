@@ -4,18 +4,24 @@ import { mockStudios, mockInstructors, mockClasses, mockReviews, mockSchedule, m
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Star, MapPin, Phone, Mail, Globe, Clock, Users, ArrowLeft, Heart, CalendarDays, CreditCard, MessageSquare } from 'lucide-react';
+import { Star, MapPin, Phone, Mail, Globe, Clock, Users, ArrowLeft, ChevronLeft, ChevronRight, Heart, CalendarDays, CreditCard, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
+import type { Swiper as SwiperType } from "swiper";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import AuthModal from '@/components/AuthModal';
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Keyboard, Pagination, A11y } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 const StudioDetail = () => {
   const params = useParams();
   const id = params?.id as string | undefined;
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'schedule' | 'classes' | 'instructors' | 'reviews'>('schedule');
+  const [gallerySwiper, setGallerySwiper] = useState<SwiperType | null>(null);
 
   const studio = mockStudios.find(s => s.id === id);
   if (!studio) return (
@@ -59,6 +65,30 @@ const StudioDetail = () => {
     { key: 'reviews' as const, label: 'Ревюта', count: studioReviews.length },
   ];
 
+  const gallerySlides = studio.images.length > 0
+    ? studio.images.map((src, index) => ({
+      id: `image-${index}`,
+      src,
+      caption: `Снимка ${index + 1} от ${studio.images.length}`,
+    }))
+    : [
+      { id: 'placeholder-1', src: null, caption: 'Практика' },
+      { id: 'placeholder-2', src: null, caption: 'Спокойствие' },
+      { id: 'placeholder-3', src: null, caption: 'Баланс' },
+    ];
+
+  const placeholderGradients = [
+    'from-sage/45 via-primary/15 to-primary/25',
+    'from-primary/20 via-sage/30 to-muted/80',
+    'from-muted/60 via-sage/35 to-primary/20',
+  ] as const;
+
+  const galleryNavBtnClass =
+    "group absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white shadow-lg backdrop-blur-md transition-[transform,background-color,border-color,box-shadow] duration-200 hover:scale-[1.06] hover:border-white/45 hover:bg-black/55 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent md:h-12 md:w-12";
+
+  const galleryCaptionBottom =
+    gallerySlides.length > 1 ? "bottom-14 md:bottom-16" : "bottom-11 md:bottom-12";
+
   const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
     const colors: Record<string, string> = {
       'начинаещ': 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
@@ -77,8 +107,114 @@ const StudioDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main */}
         <div className="lg:col-span-2">
-          <div className="aspect-[16/9] rounded-2xl bg-gradient-to-br from-sage/40 to-primary/20 flex items-center justify-center mb-6">
-            <span className="text-8xl">🧘</span>
+          <div
+            className="relative mb-6 aspect-video overflow-hidden rounded-2xl border border-border bg-muted shadow-sm
+              [&_.swiper]:absolute [&_.swiper]:inset-0 [&_.swiper]:h-full [&_.swiper]:w-full
+              [&_.swiper-wrapper]:h-full
+              [&_.swiper-slide]:h-full
+              [&_.swiper-pagination]:pointer-events-auto [&_.swiper-pagination]:z-10
+              [&_.swiper-pagination]:!bottom-4 [&_.swiper-pagination]:!left-0 [&_.swiper-pagination]:!right-0 [&_.swiper-pagination]:!mx-auto [&_.swiper-pagination]:!w-max
+              [&_.swiper-pagination]:flex [&_.swiper-pagination]:items-center [&_.swiper-pagination]:justify-center [&_.swiper-pagination]:gap-1.5
+              [&_.swiper-pagination]:rounded-full [&_.swiper-pagination]:border [&_.swiper-pagination]:border-primary/25 [&_.swiper-pagination]:bg-black/35
+              [&_.swiper-pagination]:px-3.5 [&_.swiper-pagination]:py-2.5 [&_.swiper-pagination]:shadow-lg [&_.swiper-pagination]:backdrop-blur-md
+              [&_.swiper-pagination-bullet]:!m-0 [&_.swiper-pagination-bullet]:box-border [&_.swiper-pagination-bullet]:inline-flex
+              [&_.swiper-pagination-bullet]:!h-2 [&_.swiper-pagination-bullet]:!w-2 [&_.swiper-pagination-bullet]:!min-h-0 [&_.swiper-pagination-bullet]:!min-w-0
+              [&_.swiper-pagination-bullet]:shrink-0 [&_.swiper-pagination-bullet]:cursor-pointer [&_.swiper-pagination-bullet]:!rounded-full [&_.swiper-pagination-bullet]:border-0
+              [&_.swiper-pagination-bullet]:!bg-primary [&_.swiper-pagination-bullet]:!opacity-100
+              [&_.swiper-pagination-bullet]:transition-all [&_.swiper-pagination-bullet]:duration-300 [&_.swiper-pagination-bullet]:ease-out
+              [&_.swiper-pagination-bullet]:hover:bg-primary/70
+              [&_.swiper-pagination-bullet]:focus-visible:outline-none [&_.swiper-pagination-bullet]:focus-visible:ring-2 [&_.swiper-pagination-bullet]:focus-visible:ring-primary/55 [&_.swiper-pagination-bullet]:focus-visible:ring-offset-2 [&_.swiper-pagination-bullet]:focus-visible:ring-offset-transparent
+              [&_.swiper-pagination-bullet-active]:!h-4 [&_.swiper-pagination-bullet-active]:!w-4 [&_.swiper-pagination-bullet-active]:!rounded-full
+              [&_.swiper-pagination-bullet-active]:!bg-primary [&_.swiper-pagination-bullet-active]:shadow-[0_0_12px_-2px_color-mix(in_srgb,var(--primary)_55%,transparent)]
+              [&_.swiper-pagination-bullet-active]:hover:bg-primary"
+          >
+            {gallerySlides.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className={`${galleryNavBtnClass} left-2.5 md:left-4`}
+                  aria-label="Предишна снимка"
+                  onClick={() => gallerySwiper?.slidePrev()}
+                >
+                  <ChevronLeft
+                    className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-px md:h-6 md:w-6"
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
+                </button>
+                <button
+                  type="button"
+                  className={`${galleryNavBtnClass} right-2.5 md:right-4`}
+                  aria-label="Следваща снимка"
+                  onClick={() => gallerySwiper?.slideNext()}
+                >
+                  <ChevronRight
+                    className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-px md:h-6 md:w-6"
+                    strokeWidth={2.25}
+                    aria-hidden
+                  />
+                </button>
+              </>
+            )}
+            <Swiper
+              modules={[Autoplay, Keyboard, Pagination, A11y]}
+              loop={gallerySlides.length > 1}
+              speed={480}
+              grabCursor
+              keyboard={{ enabled: true }}
+              autoplay={
+                gallerySlides.length > 1
+                  ? { delay: 5200, disableOnInteraction: true, pauseOnMouseEnter: true }
+                  : false
+              }
+              pagination={
+                gallerySlides.length > 1
+                  ? { clickable: true, dynamicBullets: gallerySlides.length > 6 }
+                  : false
+              }
+              a11y={{
+                enabled: true,
+                prevSlideMessage: 'Предишна снимка',
+                nextSlideMessage: 'Следваща снимка',
+                paginationBulletMessage: 'Отиди към снимка {{index}}',
+              }}
+              onSwiper={setGallerySwiper}
+              className="h-full w-full"
+            >
+              {gallerySlides.map((slide, index) => (
+                <SwiperSlide key={slide.id} className="relative overflow-hidden">
+                  {slide.src ? (
+                    <>
+                      <img
+                        src={slide.src}
+                        alt={slide.caption}
+                        className="h-full w-full object-cover"
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                      />
+                      <div
+                        className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 via-black/10 to-transparent"
+                        aria-hidden
+                      />
+                      <p className={`pointer-events-none absolute left-3 right-3 max-w-[85%] text-sm font-medium tracking-tight text-white drop-shadow-md md:text-base ${galleryCaptionBottom}`}>
+                        {slide.caption}
+                      </p>
+                    </>
+                  ) : (
+                    <div
+                      className={`flex h-full w-full items-center justify-center bg-linear-to-br ${placeholderGradients[index % placeholderGradients.length]} relative`}
+                    >
+                      <span className="text-8xl drop-shadow-sm" aria-hidden>
+                        🧘
+                      </span>
+                      <p className={`pointer-events-none absolute left-3 text-sm font-medium text-foreground/90 drop-shadow-sm md:text-base ${galleryCaptionBottom}`}>
+                        {slide.caption}
+                      </p>
+                    </div>
+                  )}
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
 
           <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">{studio.name}</h1>
@@ -94,7 +230,7 @@ const StudioDetail = () => {
 
           <div className="flex flex-wrap gap-2 mt-6">
             {Object.entries(studio.amenities).filter(([, v]) => v).map(([key]) => (
-              <Badge key={key} variant="secondary" className="rounded-full px-3 py-1 text-sm">
+              <Badge key={key} variant="default" className="rounded-full px-3 py-1 text-sm">
                 {amenityLabels[key]}
               </Badge>
             ))}
@@ -106,11 +242,10 @@ const StudioDetail = () => {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.key
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
+                className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.key
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 {tab.label} ({tab.count})
               </button>
