@@ -1,8 +1,28 @@
-"use client";
+import { OverviewSection } from '@/views/Dashboard/components/OverviewSection';
+import { getDashboardMockData } from '@/views/Dashboard/dashboardMockData';
 
-import Dashboard from "@/views/Dashboard/Dashboard";
+export default function DashboardOverviewPage() {
+  const {
+    avgRating,
+    totalEnrolled,
+    totalCapacity,
+    occupancyRate,
+    myStudios,
+    myClasses,
+    myInstructors,
+    revenue,
+  } = getDashboardMockData();
 
-export default function DashboardPage() {
-  return <Dashboard />;
+  return (
+    <OverviewSection
+      avgRating={avgRating}
+      totalEnrolled={totalEnrolled}
+      totalCapacity={totalCapacity}
+      occupancyRate={occupancyRate}
+      myStudios={myStudios}
+      myClasses={myClasses}
+      myInstructors={myInstructors}
+      revenue={revenue}
+    />
+  );
 }
-

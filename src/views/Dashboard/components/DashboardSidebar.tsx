@@ -1,6 +1,7 @@
+import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { BarChart3, Building2, CalendarDays, ChevronRight, GraduationCap, LayoutDashboard, BookOpen } from 'lucide-react';
-import type { Section } from '../dashboardTypes';
+import { DASHBOARD_PATHS, type Section } from '../dashboardTypes';
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: 'overview', label: 'Преглед', icon: LayoutDashboard },
@@ -13,12 +14,10 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
 export function DashboardSidebar({
   displayName,
   activeSection,
-  onSectionChange,
   revenue,
 }: {
   displayName: string;
   activeSection: Section;
-  onSectionChange: (section: Section) => void;
   revenue: number;
 }) {
   return (
@@ -31,9 +30,9 @@ export function DashboardSidebar({
         {sidebarItems.map(item => {
           const active = activeSection === item.key;
           return (
-            <button
+            <Link
               key={item.key}
-              onClick={() => onSectionChange(item.key)}
+              href={DASHBOARD_PATHS[item.key]}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
@@ -42,7 +41,7 @@ export function DashboardSidebar({
               <item.icon className="h-4.5 w-4.5" />
               {item.label}
               {active && <ChevronRight className="h-4 w-4 ml-auto" />}
-            </button>
+            </Link>
           );
         })}
       </nav>

@@ -1,5 +1,6 @@
+import Link from 'next/link';
 import { Building2, CalendarDays, GraduationCap, LayoutDashboard, BookOpen } from 'lucide-react';
-import type { Section } from '../dashboardTypes';
+import { DASHBOARD_PATHS, type Section } from '../dashboardTypes';
 
 const navItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: 'overview', label: 'Преглед', icon: LayoutDashboard },
@@ -9,28 +10,22 @@ const navItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: 'schedule', label: 'Разписание', icon: CalendarDays },
 ];
 
-export function DashboardMobileNav({
-  activeSection,
-  onSectionChange,
-}: {
-  activeSection: Section;
-  onSectionChange: (section: Section) => void;
-}) {
+export function DashboardMobileNav({ activeSection }: { activeSection: Section }) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-2 py-2">
       <div className="flex justify-around">
         {navItems.map(item => {
           const active = activeSection === item.key;
           return (
-            <button
+            <Link
               key={item.key}
-              onClick={() => onSectionChange(item.key)}
+              href={DASHBOARD_PATHS[item.key]}
               className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'
                 }`}
             >
               <item.icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />
               {item.label}
-            </button>
+            </Link>
           );
         })}
       </div>
