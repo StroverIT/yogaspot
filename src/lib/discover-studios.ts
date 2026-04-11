@@ -68,12 +68,18 @@ function stylesForStudio(studioId: string, classes: YogaClass[]): YogaType[] {
   return Array.from(types);
 }
 
+function firstUsableImageUrl(images: string[] | undefined, index: number): string {
+  const url = images?.find((u) => typeof u === "string" && u.trim().length > 0);
+  if (url) return url.trim();
+  return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+}
+
 /** Build discover cards from API payload (`GET /api/public/studios`). */
 export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: YogaClass[]): DiscoverStudio[] {
   return studios.map((s, index) => ({
     id: s.id,
     name: s.name,
-    image: s.images[0] ?? PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
+    image: firstUsableImageUrl(s.images, index),
     rating: s.rating,
     reviewCount: s.reviewCount,
     location: locationFromAddress(s.address),

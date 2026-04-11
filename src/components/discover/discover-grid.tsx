@@ -59,8 +59,8 @@ export function DiscoverGrid({ studios, isLoading, hasMore, onLoadMore }: Discov
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {studios.map((studio) => (
-          <DiscoverStudioCard key={studio.id} studio={studio} />
+        {studios.map((studio, index) => (
+          <DiscoverStudioCard key={studio.id} studio={studio} priority={index < 6} />
         ))}
       </div>
 

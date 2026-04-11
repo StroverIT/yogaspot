@@ -1,25 +1,27 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock } from "lucide-react";
+import { Star, MapPin } from "lucide-react";
 import type { DiscoverStudio } from "@/types/studio-discovery";
 
 interface DiscoverStudioCardProps {
   studio: DiscoverStudio;
+  /** First grid cells: set so LCP image is loaded eagerly (Next.js recommendation). */
+  priority?: boolean;
 }
 
-export function DiscoverStudioCard({ studio }: DiscoverStudioCardProps) {
+export function DiscoverStudioCard({ studio, priority = false }: DiscoverStudioCardProps) {
   return (
     <Link href={`/studio/${studio.id}`}>
       <Card className="group overflow-hidden bg-yoga-surface border-yoga-accent-soft hover:border-yoga-accent hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
         <div className="relative h-48 overflow-hidden">
-          <Image
+          <img
             src={studio.image}
             alt={studio.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            {...(priority ? { fetchPriority: "high" as const } : {})}
           />
           <div className="absolute top-3 right-3">
             <Badge className="bg-yoga-surface/95 text-yoga-text border-none gap-1">
