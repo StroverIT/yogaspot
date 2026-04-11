@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import type { Instructor, Studio, StudioSubscription, SubscriptionRequestDto, YogaClass } from '@/data/mock-data';
+import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateNetPayout, calculatePayoutFee, PAYOUT_MINIMUM_AMOUNT } from '@/lib/payments';
 import { BarChart3, Calendar, MapPin, Star, TrendingUp, Users } from 'lucide-react';
 
@@ -97,7 +98,7 @@ export function OverviewSection({
           {
             icon: BarChart3,
             label: 'Приход',
-            value: `${revenue} лв.`,
+            value: formatPriceDualFromBgn(revenue),
             sub: 'от записвания',
             iconWrap: 'bg-muted text-yoga-secondary-deep',
           },
@@ -206,22 +207,22 @@ export function OverviewSection({
           </div>
           <Badge variant={canRequestPayout ? 'default' : 'secondary'}>
             {canRequestPayout
-              ? `Налични за теглене: ${netPayout.toFixed(2)} лв.`
-              : `Минимум за теглене: ${PAYOUT_MINIMUM_AMOUNT} лв.`}
+              ? `Налични за теглене: ${formatPriceDualFromBgn(netPayout)}`
+              : `Минимум за теглене: ${formatPriceDualFromBgn(PAYOUT_MINIMUM_AMOUNT)}`}
           </Badge>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className={`${dashboardInsetClass} p-4`}>
             <p className="text-xs text-muted-foreground">Общ приход</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{grossRevenue.toFixed(2)} лв.</p>
+            <p className="mt-1 text-2xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(grossRevenue)}</p>
           </div>
           <div className={`${dashboardInsetClass} p-4`}>
             <p className="text-xs text-muted-foreground">Такса за теглене (4%)</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{payoutFee.toFixed(2)} лв.</p>
+            <p className="mt-1 text-2xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(payoutFee)}</p>
           </div>
           <div className={`${dashboardInsetClass} p-4`}>
             <p className="text-xs text-muted-foreground">Нетно след такса</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{netPayout.toFixed(2)} лв.</p>
+            <p className="mt-1 text-2xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(netPayout)}</p>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -230,11 +231,11 @@ export function OverviewSection({
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Записвания</span>
-                <span className="font-medium text-foreground">{classRevenue.toFixed(2)} лв.</span>
+                <span className="font-medium text-foreground">{formatPriceDualFromBgn(classRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Абонаменти</span>
-                <span className="font-medium text-foreground">{subscriptionRevenue.toFixed(2)} лв.</span>
+                <span className="font-medium text-foreground">{formatPriceDualFromBgn(subscriptionRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Чакащи заявки</span>
@@ -245,7 +246,7 @@ export function OverviewSection({
               {perStudioRevenue.map((row) => (
                 <div key={row.studioId} className="flex items-center justify-between text-xs">
                   <span className="truncate pr-2 text-muted-foreground">{row.studioName}</span>
-                  <span className="font-medium text-foreground">{row.total.toFixed(2)} лв.</span>
+                  <span className="font-medium text-foreground">{formatPriceDualFromBgn(row.total)}</span>
                 </div>
               ))}
             </div>
@@ -263,7 +264,7 @@ export function OverviewSection({
                       <p className="text-muted-foreground">{sale.date}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-foreground">{sale.gross.toFixed(2)} лв.</p>
+                      <p className="font-semibold text-foreground">{formatPriceDualFromBgn(sale.gross)}</p>
                       <p className="text-muted-foreground">{sale.enrolled} записвания</p>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
+import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { AlertCircle, Building2, Clock, Edit, GraduationCap, Plus, Trash2 } from 'lucide-react';
 
 import { dashboardCardClass } from '../dashboardUi';
@@ -140,7 +141,7 @@ export function ClassesSection({
                       </div>
                       <div className="shrink-0 min-[480px]:text-right">
                         <span className="font-display text-lg font-bold tabular-nums text-primary md:text-xl">
-                          {cls.price} лв.
+                          {formatPriceDualFromBgn(cls.price)}
                         </span>
                       </div>
                     </div>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
+import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { ProfileInfoItem } from '@/components/profile/profile-info-item';
 import { formatDate, getDifficultyColor } from '@/components/profile/profile-utils';
 
@@ -47,7 +48,9 @@ export const ProfileClassDetailDialog = ({
               <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${getDifficultyColor(selected.difficulty)}`}>
                 {selected.difficulty}
               </span>
-              <Badge variant="secondary">{selected.price} лв.</Badge>
+              <Badge variant="secondary" className="max-w-full whitespace-normal text-left leading-snug">
+                {formatPriceDualFromBgn(selected.price)}
+              </Badge>
               <Badge variant="outline">
                 {selected.enrolled}/{selected.maxCapacity} записани
               </Badge>

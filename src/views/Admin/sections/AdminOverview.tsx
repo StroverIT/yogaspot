@@ -5,6 +5,7 @@ import { Building2, Calendar, CreditCard, Star, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import type { Review, Studio, SubscriptionRequestStatus, YogaClass } from '@/data/mock-data';
 import type { AdminEnrollmentRow, AdminOverviewData, AdminSubscriptionRequestListItem } from '@/lib/admin-queries';
+import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateNetPayout, calculatePayoutFee } from '@/lib/payments';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -96,7 +97,7 @@ export function AdminOverviewClient({
         sourceSummary: [...row.sources.entries()]
           .sort((a, b) => b[1] - a[1])
           .slice(0, 3)
-          .map(([studioName, amount]) => `${studioName}: ${amount.toFixed(2)} лв.`)
+          .map(([studioName, amount]) => `${studioName}: ${formatPriceDualFromBgn(amount)}`)
           .join(' · '),
       }));
   }, [classPriceByStudioAndName, enrollments]);
@@ -166,7 +167,7 @@ export function AdminOverviewClient({
         sourceSummary: [...row.sources.entries()]
           .sort((a, b) => b[1] - a[1])
           .slice(0, 3)
-          .map(([source, amount]) => `${source}: ${amount.toFixed(2)} лв.`)
+          .map(([source, amount]) => `${source}: ${formatPriceDualFromBgn(amount)}`)
           .join(' · '),
       }));
   }, [classes, studios, subscriptionRequests, users]);
@@ -260,7 +261,7 @@ export function AdminOverviewClient({
                     {req.ownerEmail ? ` · ${req.ownerEmail}` : ''}
                   </p>
                   <p className="text-sm font-medium text-foreground mt-1 truncate">{req.name}</p>
-                  <p className="text-xs text-primary font-semibold tabular-nums">{req.monthlyPrice} лв./мес.</p>
+                  <p className="text-xs text-primary font-semibold tabular-nums leading-snug">{formatMonthlyDualFromBgn(req.monthlyPrice)}</p>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{req.includes}</p>
                   <p className="text-[11px] text-muted-foreground/90 mt-1.5">{formatDateTime(req.createdAt)}</p>
                 </div>
@@ -281,7 +282,7 @@ export function AdminOverviewClient({
                 <div key={row.userName} className="rounded-xl bg-muted/50 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-foreground text-sm">{row.userName}</p>
-                    <p className="text-sm font-semibold text-foreground">{row.amount.toFixed(2)} лв.</p>
+                    <p className="text-sm font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.amount)}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{row.count} записвания · Последно плащане {formatDateTime(row.lastDate)}</p>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{row.sourceSummary || 'Няма източник'}</p>
@@ -304,13 +305,14 @@ export function AdminOverviewClient({
                       <p className="text-sm font-medium text-foreground truncate">{row.ownerName}</p>
                       <p className="text-xs text-muted-foreground truncate">{row.ownerEmail || '—'}</p>
                     </div>
-                    <p className="text-sm font-semibold text-foreground">{row.gross.toFixed(2)} лв.</p>
+                    <p className="text-sm font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.gross)}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Записвания: {row.classRevenue.toFixed(2)} лв. · Абонаменти: {row.subscriptionRevenue.toFixed(2)} лв.
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                    Записвания: {formatPriceDualFromBgn(row.classRevenue)} · Абонаменти:{' '}
+                    {formatPriceDualFromBgn(row.subscriptionRevenue)}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Такса теглене: {row.payoutFee.toFixed(2)} лв. · Нетно: {row.payoutNet.toFixed(2)} лв.
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                    Такса теглене: {formatPriceDualFromBgn(row.payoutFee)} · Нетно: {formatPriceDualFromBgn(row.payoutNet)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{row.sourceSummary || 'Няма източник'}</p>
                 </div>

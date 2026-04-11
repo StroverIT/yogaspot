@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { AdminSubscriptionRequestListItem } from '@/lib/admin-queries';
+import { formatMonthlyDualFromBgn } from '@/lib/eur-bgn';
 import { Building2, Check, CreditCard, X } from 'lucide-react';
 
 export type AdminSubscriptionRequestsSectionClientProps = {
@@ -96,7 +97,7 @@ export function AdminSubscriptionRequestsSectionClient({ requests: initialReques
                       <CreditCard className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium text-foreground">{req.name}</p>
-                        <p className="tabular-nums text-primary font-semibold">{req.monthlyPrice} лв./мес.</p>
+                        <p className="tabular-nums text-primary font-semibold leading-snug">{formatMonthlyDualFromBgn(req.monthlyPrice)}</p>
                         <p className="text-muted-foreground mt-1 line-clamp-3 whitespace-pre-wrap">{req.includes}</p>
                         <p className="text-xs text-muted-foreground mt-2">{formatWhen(req.createdAt)}</p>
                       </div>

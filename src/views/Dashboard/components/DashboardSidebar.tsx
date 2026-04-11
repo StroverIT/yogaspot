@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { BarChart3, Building2, CalendarDays, ChevronRight, GraduationCap, LayoutDashboard, BookOpen } from 'lucide-react';
+import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { DASHBOARD_PATHS, type Section } from '../dashboardTypes';
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
@@ -68,7 +69,7 @@ export function DashboardSidebar({
           <BarChart3 className="h-4 w-4 text-primary" />
           <span className="text-xs font-semibold text-foreground">Бърз преглед</span>
         </div>
-        <p className="text-2xl font-bold text-foreground">{revenue} лв.</p>
+        <p className="text-2xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(revenue)}</p>
         <p className="text-xs text-muted-foreground mt-0.5">Приход от записвания</p>
       </div>
     </aside>

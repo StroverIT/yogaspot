@@ -9,6 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, YOGA_TYPES, type YogaClass } from '@/data/mock-data';
+import {
+  classPriceBgnFromEur,
+  formatEurInputFromBgn,
+  formatPriceDualFromBgn,
+  parseEurInput,
+  eurToBgn,
+} from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 
 const INCOMPLETE_MSG =
@@ -57,10 +64,11 @@ export function ClassModal({
   const [price, setPrice] = useState('');
   const [cancellationPolicy, setCancellationPolicy] = useState('');
   const [saving, setSaving] = useState(false);
-  const parsedPrice = Number(price);
-  const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedPrice) && parsedPrice >= 0;
-  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(parsedPrice) : 0;
-  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(parsedPrice) : 0;
+  const parsedEur = parseEurInput(price);
+  const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
+  const baseBgn = hasValidBasePrice ? eurToBgn(parsedEur) : 0;
+  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(baseBgn) : 0;
+  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(baseBgn) : 0;
 
   const instructorsForStudio = useMemo(
     () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
@@ -79,7 +87,7 @@ export function ClassModal({
       setYogaType(classToEdit.yogaType);
       setDifficulty(classToEdit.difficulty);
       setMaxCapacity(String(classToEdit.maxCapacity));
-      setPrice(String(classToEdit.price));
+      setPrice(formatEurInputFromBgn(classToEdit.price));
       setCancellationPolicy(classToEdit.cancellationPolicy);
       return;
     }
@@ -105,7 +113,7 @@ export function ClassModal({
 
   const handleSave = async () => {
     const cap = Number(maxCapacity);
-    const pr = Math.round(Number(price));
+    const pr = classPriceBgnFromEur(parseEurInput(price));
     if (
       !className.trim()
       || !instructorId
@@ -119,8 +127,8 @@ export function ClassModal({
       || !Number.isFinite(cap)
       || cap <= 0
       || !price.trim()
-      || !Number.isFinite(Number(price))
-      || Number(price) < 0
+      || !Number.isFinite(parseEurInput(price))
+      || parseEurInput(price) < 0
       || !cancellationPolicy.trim()
     ) {
       toast.error(INCOMPLETE_MSG);
@@ -266,20 +274,19 @@ export function ClassModal({
               />
             </div>
             <div>
-              <Label>Цена (лв.)</Label>
+              <Label>Цена (€)</Label>
               <Input
-                type="number"
-                min={0}
-                step="1"
-                placeholder="25"
+                type="text"
+                inputMode="decimal"
+                placeholder="12,77"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
                 className="mt-1"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 {hasValidBasePrice
-                  ? `Крайна цена за клиента: ${finalCustomerAmount.toFixed(2)} лв. (такса ${processingFee.toFixed(2)} лв. = 0.70 + 3%)`
-                  : 'Добавяме автоматично онлайн такса 0.70 + 3% при плащане.'}
+                  ? `Крайна цена за клиента: ${formatPriceDualFromBgn(finalCustomerAmount)} (такса ${formatPriceDualFromBgn(processingFee)} = 0,70 лв. + 3%)`
+                  : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
               </p>
             </div>
           </div>

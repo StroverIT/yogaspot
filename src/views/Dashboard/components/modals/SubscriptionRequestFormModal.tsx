@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { parseEurInput, subscriptionPriceBgnFromEur } from '@/lib/eur-bgn';
 
 export function SubscriptionRequestFormModal({
   open,
@@ -46,17 +47,18 @@ export function SubscriptionRequestFormModal({
   const handleSubmit = async () => {
     const n = name.trim();
     const inc = includes.trim();
-    const price = Number(monthlyPrice.replace(',', '.'));
-    if (!n || !inc || !Number.isFinite(price) || price <= 0) {
+    const eur = parseEurInput(monthlyPrice);
+    if (!n || !inc || !Number.isFinite(eur) || eur <= 0) {
       toast.error('Попълнете име, валидна цена и какво включва абонаментът.');
       return;
     }
+    const monthlyPriceBgn = subscriptionPriceBgnFromEur(eur);
     setSubmitting(true);
     try {
       const res = await fetch('/api/dashboard/subscription-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studioId, name: n, monthlyPrice: price, includes: inc }),
+        body: JSON.stringify({ studioId, name: n, monthlyPrice: monthlyPriceBgn, includes: inc }),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
@@ -93,14 +95,14 @@ export function SubscriptionRequestFormModal({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="sub-req-price">Цена (лв./мес.)</Label>
+            <Label htmlFor="sub-req-price">Цена (€/мес.)</Label>
             <Input
               id="sub-req-price"
               type="text"
               inputMode="decimal"
               value={monthlyPrice}
               onChange={e => setMonthlyPrice(e.target.value)}
-              placeholder="напр. 120"
+              placeholder="напр. 29"
               className="rounded-xl"
             />
           </div>

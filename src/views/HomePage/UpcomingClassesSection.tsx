@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Studio, Instructor, YogaClass } from "@/data/mock-data";
+import { formatPriceDualFromBgn } from "@/lib/eur-bgn";
 import { Clock, ArrowRight } from "lucide-react";
 
 interface UpcomingClassesSectionProps {
@@ -75,7 +76,7 @@ export default function UpcomingClassesSection({
                         <span className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" /> {cls.startTime}–{cls.endTime}
                         </span>
-                        <span>{cls.price} лв.</span>
+                        <span className="text-foreground">{formatPriceDualFromBgn(cls.price)}</span>
                         <Badge variant="outline" className="rounded-full text-xs">
                           {cls.yogaType}
                         </Badge>

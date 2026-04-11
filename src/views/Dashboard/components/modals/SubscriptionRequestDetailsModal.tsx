@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { SubscriptionRequestDto, SubscriptionRequestStatus } from '@/data/mock-data';
+import { formatMonthlyDualFromBgn } from '@/lib/eur-bgn';
 
 function statusLabel(status: SubscriptionRequestStatus): string {
   switch (status) {
@@ -61,7 +62,7 @@ export function SubscriptionRequestDetailsModal({
           </div>
           <div>
             <dt className="text-muted-foreground">Цена</dt>
-            <dd className="mt-1 font-medium tabular-nums">{request.monthlyPrice} лв./мес.</dd>
+            <dd className="mt-1 font-medium tabular-nums">{formatMonthlyDualFromBgn(request.monthlyPrice)}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Какво включва</dt>

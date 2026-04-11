@@ -10,6 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, WEEKDAYS, YOGA_TYPES, type ScheduleEntry } from '@/data/mock-data';
+import {
+  classPriceBgnFromEur,
+  formatEurInputFromBgn,
+  formatPriceDualFromBgn,
+  parseEurInput,
+  eurToBgn,
+} from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 
 const INCOMPLETE_MSG =
@@ -57,10 +64,11 @@ export function ScheduleModal({
   const [price, setPrice] = useState('');
   const [isRecurring, setIsRecurring] = useState(true);
   const [saving, setSaving] = useState(false);
-  const parsedPrice = Number(price);
-  const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedPrice) && parsedPrice >= 0;
-  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(parsedPrice) : 0;
-  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(parsedPrice) : 0;
+  const parsedEur = parseEurInput(price);
+  const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
+  const baseBgn = hasValidBasePrice ? eurToBgn(parsedEur) : 0;
+  const processingFee = hasValidBasePrice ? calculateOnlinePaymentFee(baseBgn) : 0;
+  const finalCustomerAmount = hasValidBasePrice ? calculateFinalCustomerAmount(baseBgn) : 0;
 
   const instructorsForStudio = useMemo(
     () => (studioId ? instructors.filter(i => i.studioId === studioId) : []),
@@ -78,7 +86,7 @@ export function ScheduleModal({
     setYogaType(entry?.yogaType ?? '');
     setDifficulty(entry?.difficulty ?? '');
     setMaxCapacity(entry?.maxCapacity != null ? String(entry.maxCapacity) : '');
-    setPrice(entry?.price != null ? String(entry.price) : '');
+    setPrice(entry?.price != null ? formatEurInputFromBgn(entry.price) : '');
     setIsRecurring(entry?.isRecurring ?? true);
   }, [open, entry]);
 
@@ -91,7 +99,7 @@ export function ScheduleModal({
 
   const handleSave = async () => {
     const cap = Number(maxCapacity);
-    const pr = Math.round(Number(price));
+    const pr = classPriceBgnFromEur(parseEurInput(price));
     if (
       !className.trim()
       || !studioId
@@ -105,8 +113,8 @@ export function ScheduleModal({
       || !Number.isFinite(cap)
       || cap <= 0
       || !price.trim()
-      || !Number.isFinite(Number(price))
-      || Number(price) < 0
+      || !Number.isFinite(parseEurInput(price))
+      || parseEurInput(price) < 0
     ) {
       toast.error(INCOMPLETE_MSG);
       return;
@@ -259,20 +267,19 @@ export function ScheduleModal({
               />
             </div>
             <div>
-              <Label>Цена (лв.)</Label>
+              <Label>Цена (€)</Label>
               <Input
-                type="number"
-                min={0}
-                step="1"
-                placeholder="25"
+                type="text"
+                inputMode="decimal"
+                placeholder="12,77"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
                 className="mt-1"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 {hasValidBasePrice
-                  ? `Крайна цена за клиента: ${finalCustomerAmount.toFixed(2)} лв. (такса ${processingFee.toFixed(2)} лв. = 0.70 + 3%)`
-                  : 'Добавяме автоматично онлайн такса 0.70 + 3% при плащане.'}
+                  ? `Крайна цена за клиента: ${formatPriceDualFromBgn(finalCustomerAmount)} (такса ${formatPriceDualFromBgn(processingFee)} = 0,70 лв. + 3%)`
+                  : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
               </p>
             </div>
           </div>

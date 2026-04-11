@@ -15,7 +15,7 @@ import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 import { cn } from '@/lib/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
-import { ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
 
 type StudioModalProps = {
   open: boolean;
@@ -461,7 +461,7 @@ export function StudioModal({
         type="button"
         variant="outline"
         className={cn(
-          'justify-start w-full h-auto py-2 px-3',
+          'flex h-auto w-full items-start justify-between gap-3 px-4 py-3 text-left text-base',
           selected ? 'border-accent bg-accent/10 text-accent hover:bg-accent/10' : '',
         )}
         onClick={() => {
@@ -470,29 +470,40 @@ export function StudioModal({
           );
         }}
       >
-        <div className="min-w-0 text-left">
-          <div className="truncate text-sm font-medium">{t.name}</div>
-          <div className="text-xs text-muted-foreground line-clamp-2">{t.description}</div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-base font-medium">{t.name}</div>
+          <div className="line-clamp-2 text-sm text-muted-foreground">{t.description}</div>
         </div>
+        {selected ? (
+          <Check className="mt-1 size-5 shrink-0 text-accent" strokeWidth={2.5} aria-hidden />
+        ) : null}
       </Button>
     );
   };
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl">Студио</DialogTitle>
-          <DialogDescription>Добавете или редактирайте информацията за вашето студио</DialogDescription>
+      <DialogContent
+        className={cn(
+          'fixed inset-0 z-50 flex h-dvh max-h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 shadow-lg sm:max-w-none sm:rounded-none',
+          'data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100',
+        )}
+      >
+        <DialogHeader className="shrink-0 space-y-2 px-6 pb-2 pt-5 text-left sm:text-left sm:pr-14">
+          <DialogTitle className="font-display text-3xl sm:text-4xl">Студио</DialogTitle>
+          <DialogDescription className="text-base sm:text-lg">
+            Добавете или редактирайте информацията за вашето студио
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 pt-2">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-2 text-base [&_label]:text-base sm:[&_label]:text-lg">
+        <div className="space-y-5 pt-1">
           <div>
             <Label>Име на студио</Label>
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="напр. Лотос Йога Студио"
-              className="mt-1"
+              className="mt-1 h-12 text-lg md:text-lg"
             />
           </div>
           <div className="space-y-2">
@@ -510,6 +521,7 @@ export function StudioModal({
                     window.setTimeout(() => setAddressDropdownOpen(false), 150);
                   }}
                   placeholder="ул. Витоша 45, София"
+                  className="h-12 text-lg md:text-lg"
                 />
 
                 {addressDropdownOpen && addressPredictions.length ? (
@@ -519,7 +531,7 @@ export function StudioModal({
                         <li key={p.place_id}>
                           <button
                             type="button"
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-muted/60"
+                            className="w-full px-4 py-3 text-left text-base hover:bg-muted/60"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
                               suppressAutocompleteRef.current = true;
@@ -539,7 +551,7 @@ export function StudioModal({
                             }}
                           >
                             <div className="font-medium">{p.structured_formatting.main_text}</div>
-                            <div className="text-xs text-muted-foreground">{p.structured_formatting.secondary_text}</div>
+                            <div className="text-sm text-muted-foreground">{p.structured_formatting.secondary_text}</div>
                           </button>
                         </li>
                       ))}
@@ -551,13 +563,13 @@ export function StudioModal({
 
             <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
               {!apiKey ? (
-                <div className="p-3 text-sm text-muted-foreground">
+                <div className="p-4 text-base text-muted-foreground">
                   За да се визуализира карта, добавете `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
                 </div>
               ) : !isLoaded ? (
-                <div className="p-3 text-sm text-muted-foreground">Зареждане на карта…</div>
+                <div className="p-4 text-base text-muted-foreground">Зареждане на карта…</div>
               ) : (
-                <div className="h-56 w-full">
+                <div className="h-72 w-full sm:h-80">
                   <GoogleMap
                     mapContainerStyle={{ width: '100%', height: '100%' }}
                     center={mapCenter}
@@ -597,7 +609,7 @@ export function StudioModal({
               )}
             </div>
 
-            {addressError ? <p className="text-sm text-destructive">{addressError}</p> : null}
+            {addressError ? <p className="text-base text-destructive">{addressError}</p> : null}
           </div>
           <div>
             <Label>Описание</Label>
@@ -605,19 +617,20 @@ export function StudioModal({
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Опишете вашето студио..."
-              className="mt-1"
-              rows={3}
+              className="mt-1 min-h-[120px] text-base md:text-lg"
+              rows={4}
             />
           </div>
           <div className="space-y-2">
             <Label>Снимки</Label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground sm:text-base">
               Първата снимка е корицата в списъците. Подредете със стрелките или плъзнете картата. Можете да премахвате снимки.
             </p>
             <Input
               type="file"
               multiple
               accept="image/*"
+              className="h-auto cursor-pointer py-3 text-base file:text-base file:font-medium"
               onChange={e => {
                 const files = Array.from(e.target.files ?? []);
                 if (!files.length) return;
@@ -651,10 +664,10 @@ export function StudioModal({
                         src={src}
                         alt=""
                         draggable={false}
-                        className="pointer-events-none h-28 w-full select-none object-cover"
+                        className="pointer-events-none h-36 w-full select-none object-cover sm:h-40"
                       />
                       {idx === 0 ? (
-                        <span className="absolute bottom-10 left-1 rounded bg-background/95 px-1.5 py-0.5 text-[10px] font-medium text-foreground shadow-sm">
+                        <span className="absolute bottom-10 left-1 rounded bg-background/95 px-2 py-0.5 text-xs font-medium text-foreground shadow-sm">
                           Главна
                         </span>
                       ) : null}
@@ -707,7 +720,7 @@ export function StudioModal({
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Можете да изберете повече от 1 снимка.</p>
+              <p className="text-base text-muted-foreground">Можете да изберете повече от 1 снимка.</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -717,7 +730,7 @@ export function StudioModal({
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 placeholder="+359 ..."
-                className="mt-1"
+                className="mt-1 h-12 text-lg md:text-lg"
               />
             </div>
             <div>
@@ -727,7 +740,7 @@ export function StudioModal({
                 onChange={e => setEmail(e.target.value)}
                 type="email"
                 placeholder="info@studio.bg"
-                className="mt-1"
+                className="mt-1 h-12 text-lg md:text-lg"
               />
             </div>
           </div>
@@ -740,9 +753,10 @@ export function StudioModal({
                 { key: 'changingRoom', label: '👔 Съблекалня' },
                 { key: 'equipmentRental', label: '🧘 Наем на оборудване' },
               ].map(a => (
-                <div key={a.key} className="flex items-center justify-between rounded-lg border border-border p-3">
-                  <span className="text-sm">{a.label}</span>
+                <div key={a.key} className="flex items-center justify-between gap-3 rounded-lg border border-border p-4">
+                  <span className="text-base sm:text-lg">{a.label}</span>
                   <Switch
+                    className="scale-125"
                     checked={amenities[a.key as keyof typeof amenities]}
                     onCheckedChange={(v) => {
                       const key = a.key as keyof typeof amenities;
@@ -756,12 +770,12 @@ export function StudioModal({
 
           <div>
             <Label className="mb-2 block">Типове йога</Label>
-            <p className="text-xs text-muted-foreground -mt-1 mb-3">
+            <p className="-mt-1 mb-3 text-sm text-muted-foreground sm:text-base">
               Изберете всички стилове които практикувате
             </p>
             {legacySelectedYogaTypes.length > 0 ? (
               <div className="mb-3 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-sm font-medium text-muted-foreground sm:text-base">
                   Записани стилове извън каталога (можете да ги премахнете)
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -769,14 +783,14 @@ export function StudioModal({
                     <button
                       key={name}
                       type="button"
-                      className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 py-1 pl-2.5 pr-1 text-left text-xs font-medium transition-colors hover:bg-muted"
+                      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 py-2 pl-3 pr-1.5 text-left text-sm font-medium transition-colors hover:bg-muted sm:text-base"
                       onClick={() => {
                         setSelectedYogaTypes(prev => prev.filter(x => x !== name));
                       }}
                     >
                       <span className="min-w-0 truncate">{name}</span>
-                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full hover:bg-background">
-                        <X className="h-3.5 w-3.5" aria-hidden />
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full hover:bg-background">
+                        <X className="h-4 w-4" aria-hidden />
                       </span>
                     </button>
                   ))}
@@ -787,14 +801,14 @@ export function StudioModal({
               value={yogaTypesQuery}
               onChange={e => setYogaTypesQuery(e.target.value)}
               placeholder="Търси по име, описание или категория…"
-              className="mb-3"
+              className="mb-3 h-12 text-lg md:text-lg"
               aria-label="Филтър за типове йога"
             />
             {displayedTypesForSearch ? (
               displayedTypesForSearch.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Няма съвпадения</p>
+                <p className="text-base text-muted-foreground">Няма съвпадения</p>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {displayedTypesForSearch.map(t => renderYogaTypePickerButton(t))}
                 </div>
               )
@@ -805,10 +819,10 @@ export function StudioModal({
                   if (inSection.length === 0) return null;
                   return (
                     <div key={section.id}>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground sm:text-base">
                         {section.label}
                       </p>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {inSection.map(t => renderYogaTypePickerButton(t))}
                       </div>
                     </div>
@@ -818,9 +832,12 @@ export function StudioModal({
             )}
           </div>
         </div>
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose}>Отказ</Button>
-          <Button onClick={handleSave} disabled={submitting}>
+        </div>
+        <DialogFooter className="mt-0 shrink-0 gap-3 border-t bg-background px-6 py-5 sm:justify-end">
+          <Button variant="outline" size="lg" className="text-base" onClick={onClose}>
+            Отказ
+          </Button>
+          <Button size="lg" className="text-base" onClick={handleSave} disabled={submitting}>
             {submitting ? 'Запазване...' : 'Запази'}
           </Button>
         </DialogFooter>

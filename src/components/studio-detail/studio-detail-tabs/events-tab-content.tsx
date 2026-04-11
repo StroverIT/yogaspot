@@ -1,6 +1,7 @@
 import { Clock, Users } from 'lucide-react';
 import { mockInstructors } from '@/data/mock-data';
 import type { YogaClass } from '@/data/mock-data';
+import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -43,7 +44,7 @@ export function EventsTabContent({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-xl font-semibold text-foreground">{cls.price} лв.</span>
+              <span className="text-xl font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(cls.price)}</span>
               <Button onClick={() => onBookClass(cls.id)} variant={isFull ? 'outline' : 'default'}>
                 {isFull ? 'Списък за изчакване' : 'Запиши се'}
               </Button>

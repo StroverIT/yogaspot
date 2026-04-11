@@ -1,3 +1,4 @@
+/** Fixed component of online fee, in BGN (same unit as stored class/subscription prices). */
 export const ONLINE_PAYMENT_FIXED_FEE = 0.7;
 export const ONLINE_PAYMENT_PERCENT_FEE = 0.03;
 export const PAYOUT_MINIMUM_AMOUNT = 100;

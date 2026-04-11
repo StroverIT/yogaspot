@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { formatMonthlyDualFromBgn } from '@/lib/eur-bgn';
 
 type StudioDetailBundle = {
   schedule: ScheduleEntry[];
@@ -171,7 +172,7 @@ const Favorites = () => {
                         </Badge>
                         {subscription?.hasMonthlySubscription && (
                           <Badge variant="outline" className="rounded-full gap-1 text-xs text-primary border-primary/30">
-                            <CreditCard className="h-3 w-3" /> {subscription.monthlyPrice} лв./мес.
+                            <CreditCard className="h-3 w-3" /> {formatMonthlyDualFromBgn(subscription.monthlyPrice ?? 0)}
                           </Badge>
                         )}
                         <div className="flex gap-1.5 ml-auto">

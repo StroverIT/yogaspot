@@ -5,6 +5,7 @@ import { mockStudios, mockClasses, mockInstructors, mockSubscriptions } from '@/
 import { ProfileHistoryTab } from '@/components/profile/profile-history-tab';
 import { ProfileClassDetailDialog } from '@/components/profile/profile-class-detail-dialog';
 import { mockAttendedClasses } from '@/components/profile/profile-mock-data';
+import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount } from '@/lib/payments';
 
 export default function ProfileHistoryPage() {
@@ -63,7 +64,7 @@ export default function ProfileHistoryPage() {
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-display text-lg font-semibold text-foreground">Моите разходи</h3>
           <p className="mt-1 text-sm text-muted-foreground">Всичко платено по посещения, с включени онлайн такси.</p>
-          <p className="mt-4 text-3xl font-bold text-foreground">{totalSpent.toFixed(2)} лв.</p>
+          <p className="mt-4 text-3xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(totalSpent)}</p>
           <div className="mt-4 space-y-2">
             {spendingHistory.length === 0 ? (
               <p className="text-sm text-muted-foreground">Няма плащания.</p>
@@ -74,7 +75,7 @@ export default function ProfileHistoryPage() {
                     <p className="truncate font-medium text-foreground">{row.reason}</p>
                     <p className="truncate text-muted-foreground">{row.studioName} · {row.date}</p>
                   </div>
-                  <p className="font-semibold text-foreground">{row.finalPaid.toFixed(2)} лв.</p>
+                  <p className="font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.finalPaid)}</p>
                 </div>
               ))
             )}
@@ -91,7 +92,7 @@ export default function ProfileHistoryPage() {
                 <div key={sub.studioId} className="rounded-lg bg-muted/40 px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">{sub.studioName}</p>
-                    <p className="text-sm font-semibold text-foreground">{sub.monthlyPrice.toFixed(2)} лв./мес.</p>
+                    <p className="text-sm font-semibold text-foreground leading-snug">{formatMonthlyDualFromBgn(sub.monthlyPrice)}</p>
                   </div>
                   {sub.note ? <p className="mt-1 text-xs text-muted-foreground">{sub.note}</p> : null}
                 </div>

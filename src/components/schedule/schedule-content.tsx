@@ -22,6 +22,7 @@ import { CalendarDays, CreditCard, Edit, MessageSquare, Plus, Trash2 } from 'luc
 import { toast } from 'sonner';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { SubscriptionRequestDetailsModal } from '@/views/Dashboard/components/modals/SubscriptionRequestDetailsModal';
 import { SubscriptionRequestFormModal } from '@/views/Dashboard/components/modals/SubscriptionRequestFormModal';
 import { SubscriptionRequestStatusModal } from '@/views/Dashboard/components/modals/SubscriptionRequestStatusModal';
@@ -320,7 +321,7 @@ function AdminScheduleContent({
                 <>
                   <p className="mt-0.5 text-sm text-muted-foreground">{subscription.subscriptionNote}</p>
                   <p className="mt-1 text-lg font-bold tabular-nums text-primary">
-                    {subscription.monthlyPrice} лв./мес.
+                    {formatMonthlyDualFromBgn(subscription.monthlyPrice)}
                   </p>
                 </>
               ) : (
@@ -415,7 +416,7 @@ function AdminScheduleContent({
           renderTrailing={entry => (
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-foreground">{entry.price} лв.</p>
+                <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
                 <p className="text-xs text-muted-foreground">{entry.maxCapacity} места</p>
               </div>
               <div className="flex gap-1">
@@ -506,7 +507,7 @@ function UserScheduleContent({
             <div>
               <h3 className="font-semibold text-foreground">Месечен абонамент</h3>
               <p className="text-sm text-muted-foreground mt-0.5">{subscription.subscriptionNote}</p>
-              <p className="text-lg font-bold text-primary mt-1">{subscription.monthlyPrice} лв./мес.</p>
+              <p className="text-lg font-bold text-primary mt-1">{formatMonthlyDualFromBgn(subscription.monthlyPrice)}</p>
             </div>
           </div>
         </div>
@@ -518,7 +519,7 @@ function UserScheduleContent({
         renderTrailing={entry => (
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-foreground">{entry.price} лв.</p>
+              <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
               <p className="text-xs text-muted-foreground">{entry.maxCapacity} места</p>
             </div>
             <Button

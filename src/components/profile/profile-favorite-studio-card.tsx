@@ -15,6 +15,7 @@ import {
   WEEKDAYS,
   type Studio,
 } from '@/data/mock-data';
+import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 
 interface ProfileFavoriteStudioCardProps {
   studio: Studio;
@@ -108,8 +109,7 @@ export function ProfileFavoriteStudioCard({ studio, onRemoveFavorite }: ProfileF
               </h4>
               {subscription?.hasMonthlySubscription ? (
                 <p className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">{subscription.monthlyPrice} лв.</span>
-                  <span className="text-muted-foreground">/месец</span>
+                  <span className="font-semibold text-foreground leading-snug">{formatMonthlyDualFromBgn(subscription.monthlyPrice ?? 0)}</span>
                   {subscription.subscriptionNote && (
                     <span className="mt-1 block text-muted-foreground">{subscription.subscriptionNote}</span>
                   )}
@@ -154,7 +154,7 @@ export function ProfileFavoriteStudioCard({ studio, onRemoveFavorite }: ProfileF
                               <span className="text-muted-foreground">)</span>
                               {instructor && <span className="text-muted-foreground"> — {instructor.name}</span>}
                               <span className="text-muted-foreground">
-                                , {entry.price} лв., {entry.maxCapacity} места
+                                , {formatPriceDualFromBgn(entry.price)}, {entry.maxCapacity} места
                               </span>
                             </span>
                           );
@@ -201,7 +201,7 @@ export function ProfileFavoriteStudioCard({ studio, onRemoveFavorite }: ProfileF
                         )}
                         <span className="text-muted-foreground">
                           {' '}
-                          · {cls.price} лв. · {cls.enrolled}/{cls.maxCapacity}
+                          · {formatPriceDualFromBgn(cls.price)} · {cls.enrolled}/{cls.maxCapacity}
                         </span>
                       </li>
                     );
