@@ -1,5 +1,6 @@
 "use client";
 
+import { FooterBetaNotice } from "./FooterBetaNotice";
 import { FooterBrand } from "./FooterBrand";
 import { FooterCopyright } from "./FooterCopyright";
 import { FooterForStudios } from "./FooterForStudios";
@@ -14,6 +15,7 @@ const Footer: React.FC = () => (
       <FooterForStudios />
       <FooterSocial />
     </div>
+    <FooterBetaNotice />
     <FooterCopyright />
   </footer>
 );
