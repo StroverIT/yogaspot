@@ -1,6 +1,5 @@
 import { CalendarRange, Clock, Users } from 'lucide-react';
-import { mockInstructors } from '@/data/mock-data';
-import type { YogaClass } from '@/data/mock-data';
+import type { Instructor, YogaClass } from '@/data/mock-data';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +7,13 @@ import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty
 
 export function EventsTabContent({
   studioClasses,
+  instructors,
+  checkoutModalOpen,
   onBookClass,
 }: {
   studioClasses: YogaClass[];
+  instructors: Instructor[];
+  checkoutModalOpen: boolean;
   onBookClass: (classId: string) => void;
 }) {
   return (
@@ -23,8 +26,9 @@ export function EventsTabContent({
         />
       )}
       {studioClasses.map((cls) => {
-        const instructor = mockInstructors.find((i) => i.id === cls.instructorId);
+        const instructor = instructors.find((i) => i.id === cls.instructorId);
         const isFull = cls.enrolled >= cls.maxCapacity;
+        const bookingInFlight = checkoutModalOpen;
         return (
           <div
             key={cls.id}
@@ -50,7 +54,11 @@ export function EventsTabContent({
             </div>
             <div className="flex items-center gap-4">
               <span className="text-xl font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(cls.price)}</span>
-              <Button onClick={() => onBookClass(cls.id)} variant={isFull ? 'outline' : 'default'}>
+              <Button
+                onClick={() => onBookClass(cls.id)}
+                variant={isFull ? 'outline' : 'default'}
+                disabled={bookingInFlight}
+              >
                 {isFull ? 'Списък за изчакване' : 'Запиши се'}
               </Button>
             </div>

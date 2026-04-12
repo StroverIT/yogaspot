@@ -9,6 +9,7 @@ import {
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
+import { getDashboardRecentSignups } from '@/lib/dashboard-recent-signups';
 
 export const runtime = 'nodejs';
 
@@ -26,10 +27,11 @@ export async function GET() {
       schedule: [],
       subscriptions: [],
       subscriptionRequests: [],
+      recentSignups: [],
     });
   }
 
-  const [studios, instructors, classes, schedule, subscriptions, subscriptionRequests] = await Promise.all([
+  const [studios, instructors, classes, schedule, subscriptions, subscriptionRequests, recentSignups] = await Promise.all([
     prisma.studio.findMany({
       where: { id: { in: studioIds } },
       orderBy: { createdAt: 'desc' },
@@ -54,6 +56,7 @@ export async function GET() {
       where: { studioId: { in: studioIds } },
       orderBy: { createdAt: 'desc' },
     }),
+    getDashboardRecentSignups(studioIds, 20),
   ]);
 
   return NextResponse.json({
@@ -63,5 +66,6 @@ export async function GET() {
     schedule: schedule.map(scheduleEntryToDto),
     subscriptions: subscriptions.map(subscriptionToDto),
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
+    recentSignups,
   });
 }

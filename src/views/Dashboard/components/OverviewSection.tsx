@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import type { Instructor, Studio, StudioSubscription, SubscriptionRequestDto, YogaClass } from '@/data/mock-data';
+import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateNetPayout, calculatePayoutFee, PAYOUT_MINIMUM_AMOUNT } from '@/lib/payments';
 import { BarChart3, Calendar, MapPin, Star, TrendingUp, Users } from 'lucide-react';
@@ -19,6 +20,7 @@ export function OverviewSection({
   revenue,
   subscriptions,
   subscriptionRequests,
+  recentSignups,
 }: {
   avgRating: string;
   totalEnrolled: number;
@@ -30,6 +32,7 @@ export function OverviewSection({
   revenue: number;
   subscriptions: StudioSubscription[];
   subscriptionRequests: SubscriptionRequestDto[];
+  recentSignups: DashboardRecentSignup[];
 }) {
   const classRevenue = myClasses.reduce((sum, cls) => sum + cls.enrolled * cls.price, 0);
   const subscriptionRevenue = subscriptions
@@ -198,6 +201,35 @@ export function OverviewSection({
           ))}
         </div>
       </div>
+
+      {recentSignups.length > 0 ? (
+        <div className={`${dashboardCardClass} p-6`}>
+          <h3 className="font-display mb-2 font-semibold text-foreground">Последни записвания</h3>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Платени през Stripe и офлайн записвания към вашите студиа — събития и разписание.
+          </p>
+          <div className="space-y-2">
+            {recentSignups.map((row) => (
+              <div
+                key={row.id}
+                className={`flex flex-col gap-1 rounded-xl border border-border/60 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between ${dashboardInsetClass}`}
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">{row.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {row.customerName} · {row.studioName}
+                    {row.source === 'schedule' ? ' · разписание' : ''}
+                    {row.paymentOrigin === 'offline' ? ' · без онлайн плащане' : ''}
+                  </p>
+                </div>
+                <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                  {new Date(row.paidAt).toLocaleString('bg-BG')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className={`${dashboardCardClass} p-6`}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

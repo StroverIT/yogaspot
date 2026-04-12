@@ -12,10 +12,16 @@ function isDelegateReady(client: PrismaClient): boolean {
   const c = client as unknown as {
     yogaClass?: { findMany: unknown };
     subscriptionRequest?: { findMany: unknown };
+    booking?: { findMany: unknown };
+    payment?: { findMany: unknown };
+    scheduleEntryBooking?: { findMany: unknown };
   };
   return (
     typeof c.yogaClass?.findMany === 'function' &&
-    typeof c.subscriptionRequest?.findMany === 'function'
+    typeof c.subscriptionRequest?.findMany === 'function' &&
+    typeof c.booking?.findMany === 'function' &&
+    typeof c.payment?.findMany === 'function' &&
+    typeof c.scheduleEntryBooking?.findMany === 'function'
   );
 }
 

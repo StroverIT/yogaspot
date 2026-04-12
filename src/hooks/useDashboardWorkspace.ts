@@ -9,6 +9,7 @@ import type {
   SubscriptionRequestDto,
   YogaClass,
 } from '@/data/mock-data';
+import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 
 type WorkspacePayload = {
   studios: Studio[];
@@ -17,6 +18,7 @@ type WorkspacePayload = {
   schedule: ScheduleEntry[];
   subscriptions: StudioSubscription[];
   subscriptionRequests: SubscriptionRequestDto[];
+  recentSignups: DashboardRecentSignup[];
 };
 
 export function useDashboardWorkspace() {
@@ -59,6 +61,7 @@ export function useDashboardWorkspace() {
     schedule: data?.schedule ?? [],
     subscriptions: data?.subscriptions ?? [],
     subscriptionRequests: data?.subscriptionRequests ?? [],
+    recentSignups: data?.recentSignups ?? [],
     loading,
     error,
     reload,

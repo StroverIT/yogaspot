@@ -25,6 +25,12 @@ enum SubscriptionRequestStatus {
   DECLINED
 }
 
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -46,6 +52,8 @@ model User {
   reviewsWritten Review[]  @relation("ReviewAuthor")
   favorites      Favorite[]
   classAttendances UserClassAttendance[]
+  bookings       Booking[]
+  scheduleEntryBookings ScheduleEntryBooking[]
 }
 
 /// A client user’s completed visit to a scheduled class (used for profile history and spend summary).
@@ -173,9 +181,39 @@ model YogaClass {
   waitingList         String[] @default([])
 
   attendances UserClassAttendance[]
+  bookings    Booking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  yogaClassId String
+  yogaClass   YogaClass @relation(fields: [yogaClassId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  payment Payment?
+
+  @@unique([userId, yogaClassId])
+  @@index([yogaClassId])
+}
+
+model Payment {
+  id                      String        @id @default(cuid())
+  bookingId               String?       @unique
+  booking                 Booking?      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  scheduleEntryBookingId  String?       @unique
+  scheduleEntryBooking    ScheduleEntryBooking? @relation(fields: [scheduleEntryBookingId], references: [id], onDelete: Cascade)
+  status                  PaymentStatus @default(pending)
+  amount                  Int
+  currency                String        @default("eur")
+  stripeCheckoutSessionId String        @unique
+  stripePaymentIntentId   String?       @unique
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 }
 
 model ScheduleEntry {
@@ -192,11 +230,28 @@ model ScheduleEntry {
   startTime   String
   endTime     String
   maxCapacity Int
+  enrolled    Int      @default(0)
   price       Int
   isRecurring Boolean  @default(true)
 
+  bookings ScheduleEntryBooking[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ScheduleEntryBooking {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scheduleEntryId String
+  scheduleEntry   ScheduleEntry @relation(fields: [scheduleEntryId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+
+  payment Payment?
+
+  @@unique([userId, scheduleEntryId])
+  @@index([scheduleEntryId])
 }
 
 model Review {

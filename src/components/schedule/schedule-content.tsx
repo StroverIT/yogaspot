@@ -47,6 +47,8 @@ type UserProps = {
   subscription: StudioSubscription | undefined;
   instructors: Instructor[];
   isAuthenticated: boolean;
+  checkoutModalOpen: boolean;
+  onRequestScheduleBook: (entry: ScheduleEntry) => void;
 };
 
 export type ScheduleContentProps = AdminProps | UserProps;
@@ -73,6 +75,8 @@ export function ScheduleContent(props: ScheduleContentProps) {
       subscription={props.subscription}
       instructors={props.instructors}
       isAuthenticated={props.isAuthenticated}
+      checkoutModalOpen={props.checkoutModalOpen}
+      onRequestScheduleBook={props.onRequestScheduleBook}
     />
   );
 }
@@ -485,11 +489,15 @@ function UserScheduleContent({
   subscription,
   instructors,
   isAuthenticated,
+  checkoutModalOpen,
+  onRequestScheduleBook,
 }: {
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
   instructors: Instructor[];
   isAuthenticated: boolean;
+  checkoutModalOpen: boolean;
+  onRequestScheduleBook: (entry: ScheduleEntry) => void;
 }) {
   const scheduleByDay = buildScheduleByDay(studioSchedule);
 
@@ -517,20 +525,27 @@ function UserScheduleContent({
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
-              <p className="text-xs text-muted-foreground">{entry.maxCapacity} места</p>
+              <p className="text-xs text-muted-foreground">
+                {entry.enrolled}/{entry.maxCapacity} места
+              </p>
             </div>
             <Button
               size="sm"
               className="rounded-lg shrink-0"
+              disabled={checkoutModalOpen || entry.enrolled >= entry.maxCapacity}
               onClick={() => {
                 if (!isAuthenticated) {
                   toast.error('Моля, влезте, за да се запишете.');
                   return;
                 }
-                toast.success(`Записахте се за ${entry.className}!`);
+                if (entry.enrolled >= entry.maxCapacity) {
+                  toast.info('Този час е пълен.');
+                  return;
+                }
+                onRequestScheduleBook(entry);
               }}
             >
-              Запиши се
+              {entry.enrolled >= entry.maxCapacity ? 'Пълен' : 'Запиши се'}
             </Button>
           </div>
         )}

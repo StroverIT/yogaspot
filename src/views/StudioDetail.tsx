@@ -14,6 +14,7 @@ import { StudioDetailTabs } from '@/components/studio-detail/studio-detail-tabs'
 import type { TabKey } from '@/components/studio-detail/studio-detail-tabs/types';
 import { StudioDetailSidebar } from '@/components/studio-detail/studio-detail-sidebar';
 import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
+import { BookingCheckoutModal, type CheckoutModalTarget } from '@/components/studio-detail/booking-checkout-modal';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
 
@@ -39,6 +40,8 @@ const StudioDetail = () => {
   const { isAuthenticated } = useAuth();
 
   const [payload, setPayload] = useState<StudioPayload | null>(undefined);
+  const [checkoutTarget, setCheckoutTarget] = useState<CheckoutModalTarget | null>(null);
+  const [onlinePayments, setOnlinePayments] = useState(true);
 
   const fetchStudioPayload = useCallback(async (): Promise<StudioPayload | null> => {
     if (!id) return null;
@@ -46,6 +49,15 @@ const StudioDetail = () => {
     if (!res.ok) return null;
     return (await res.json()) as StudioPayload;
   }, [id]);
+
+  useEffect(() => {
+    void fetch('/api/public/payment-settings')
+      .then((r) => r.json())
+      .then((d: { onlinePayments?: boolean }) => {
+        if (typeof d.onlinePayments === 'boolean') setOnlinePayments(d.onlinePayments);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -81,7 +93,7 @@ const StudioDetail = () => {
   const { studio, instructors, classes, schedule, subscription, reviews } = payload;
   const studioReviews = reviews.filter((r) => r.targetId === studio.id && r.targetType === 'studio');
 
-  const handleBook = (classId: string) => {
+  const handleRequestClassBook = (classId: string) => {
     if (!isAuthenticated) {
       toast.error('Моля, влезте в акаунта си, за да се запишете.');
       return;
@@ -90,13 +102,37 @@ const StudioDetail = () => {
     if (!cls) return;
     if (cls.enrolled >= cls.maxCapacity) {
       toast.info('Класът е пълен. Добавени сте в списъка на изчакване.');
-    } else {
-      toast.success('Успешно се записахте за класа!');
+      return;
     }
+    setCheckoutTarget({ kind: 'class', studioId: studio.id, yogaClass: cls });
+  };
+
+  const handleRequestScheduleBook = (entry: ScheduleEntry) => {
+    if (!isAuthenticated) {
+      toast.error('Моля, влезте в акаунта си, за да се запишете.');
+      return;
+    }
+    if (entry.studioId !== studio.id) return;
+    if (entry.enrolled >= entry.maxCapacity) {
+      toast.info('Този час е пълен.');
+      return;
+    }
+    setCheckoutTarget({ kind: 'schedule', studioId: studio.id, entry });
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <BookingCheckoutModal
+        open={checkoutTarget !== null}
+        target={checkoutTarget}
+        onlinePayments={onlinePayments}
+        onClose={() => setCheckoutTarget(null)}
+        onBooked={() => {
+          void fetchStudioPayload().then((data) => {
+            if (data) setPayload(data);
+          });
+        }}
+      />
       <Link
         href="/discover"
         className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
@@ -117,9 +153,11 @@ const StudioDetail = () => {
             studioClasses={classes}
             studioInstructors={instructors}
             studioReviews={studioReviews}
-            onBookClass={handleBook}
+            onBookClass={handleRequestClassBook}
+            onRequestScheduleBook={handleRequestScheduleBook}
             onReviewSubmitted={handleReviewSubmitted}
             defaultTab={defaultTab}
+            checkoutModalOpen={checkoutTarget !== null}
           />
         </div>
 

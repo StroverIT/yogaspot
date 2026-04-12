@@ -87,6 +87,7 @@ export function scheduleEntryToDto(s: PrismaScheduleEntry): ScheduleEntry {
     startTime: s.startTime,
     endTime: s.endTime,
     maxCapacity: s.maxCapacity,
+    enrolled: s.enrolled,
     price: s.price,
     isRecurring: s.isRecurring,
   };

@@ -88,6 +88,7 @@ export interface ScheduleEntry {
   startTime: string;
   endTime: string;
   maxCapacity: number;
+  enrolled: number;
   price: number;
   isRecurring: boolean; // true = weekly recurring
 }
@@ -263,27 +264,27 @@ export const mockRecentEnrollments: RecentEnrollment[] = [
 
 export const mockSchedule: ScheduleEntry[] = [
   // Studio s1 - Лотос Йога Студио
-  { id: 'sch1', studioId: 's1', className: 'Сутрешна Хатха', instructorId: 'i1', yogaType: 'Хатха', difficulty: 'начинаещ', day: 'Понеделник', startTime: '07:00', endTime: '08:30', maxCapacity: 20, price: 25, isRecurring: true },
-  { id: 'sch2', studioId: 's1', className: 'Виняса Флоу', instructorId: 'i1', yogaType: 'Виняса', difficulty: 'среден', day: 'Понеделник', startTime: '10:00', endTime: '11:30', maxCapacity: 18, price: 30, isRecurring: true },
-  { id: 'sch3', studioId: 's1', className: 'Сутрешна Хатха', instructorId: 'i1', yogaType: 'Хатха', difficulty: 'начинаещ', day: 'Сряда', startTime: '07:00', endTime: '08:30', maxCapacity: 20, price: 25, isRecurring: true },
-  { id: 'sch4', studioId: 's1', className: 'Виняса Флоу', instructorId: 'i1', yogaType: 'Виняса', difficulty: 'среден', day: 'Сряда', startTime: '18:00', endTime: '19:30', maxCapacity: 18, price: 30, isRecurring: true },
-  { id: 'sch5', studioId: 's1', className: 'Ин Йога Релакс', instructorId: 'i1', yogaType: 'Ин', difficulty: 'начинаещ', day: 'Петък', startTime: '19:00', endTime: '20:30', maxCapacity: 15, price: 28, isRecurring: true },
-  { id: 'sch6', studioId: 's1', className: 'Уикенд Виняса', instructorId: 'i1', yogaType: 'Виняса', difficulty: 'среден', day: 'Събота', startTime: '09:00', endTime: '10:30', maxCapacity: 20, price: 30, isRecurring: true },
+  { id: 'sch1', studioId: 's1', className: 'Сутрешна Хатха', instructorId: 'i1', yogaType: 'Хатха', difficulty: 'начинаещ', day: 'Понеделник', startTime: '07:00', endTime: '08:30', maxCapacity: 20, enrolled: 0, price: 25, isRecurring: true },
+  { id: 'sch2', studioId: 's1', className: 'Виняса Флоу', instructorId: 'i1', yogaType: 'Виняса', difficulty: 'среден', day: 'Понеделник', startTime: '10:00', endTime: '11:30', maxCapacity: 18, enrolled: 0, price: 30, isRecurring: true },
+  { id: 'sch3', studioId: 's1', className: 'Сутрешна Хатха', instructorId: 'i1', yogaType: 'Хатха', difficulty: 'начинаещ', day: 'Сряда', startTime: '07:00', endTime: '08:30', maxCapacity: 20, enrolled: 0, price: 25, isRecurring: true },
+  { id: 'sch4', studioId: 's1', className: 'Виняса Флоу', instructorId: 'i1', yogaType: 'Виняса', difficulty: 'среден', day: 'Сряда', startTime: '18:00', endTime: '19:30', maxCapacity: 18, enrolled: 0, price: 30, isRecurring: true },
+  { id: 'sch5', studioId: 's1', className: 'Ин Йога Релакс', instructorId: 'i1', yogaType: 'Ин', difficulty: 'начинаещ', day: 'Петък', startTime: '19:00', endTime: '20:30', maxCapacity: 15, enrolled: 0, price: 28, isRecurring: true },
+  { id: 'sch6', studioId: 's1', className: 'Уикенд Виняса', instructorId: 'i1', yogaType: 'Виняса', difficulty: 'среден', day: 'Събота', startTime: '09:00', endTime: '10:30', maxCapacity: 20, enrolled: 0, price: 30, isRecurring: true },
 
   // Studio s2 - Шанти Йога Център
-  { id: 'sch7', studioId: 's2', className: 'Аштанга Първична серия', instructorId: 'i2', yogaType: 'Аштанга', difficulty: 'напреднал', day: 'Вторник', startTime: '06:30', endTime: '08:00', maxCapacity: 15, price: 35, isRecurring: true },
-  { id: 'sch8', studioId: 's2', className: 'Пауър Йога', instructorId: 'i2', yogaType: 'Пауър', difficulty: 'напреднал', day: 'Четвъртък', startTime: '06:30', endTime: '08:00', maxCapacity: 15, price: 35, isRecurring: true },
-  { id: 'sch9', studioId: 's2', className: 'Аштанга за начинаещи', instructorId: 'i2', yogaType: 'Аштанга', difficulty: 'начинаещ', day: 'Събота', startTime: '10:00', endTime: '11:30', maxCapacity: 12, price: 30, isRecurring: true },
+  { id: 'sch7', studioId: 's2', className: 'Аштанга Първична серия', instructorId: 'i2', yogaType: 'Аштанга', difficulty: 'напреднал', day: 'Вторник', startTime: '06:30', endTime: '08:00', maxCapacity: 15, enrolled: 0, price: 35, isRecurring: true },
+  { id: 'sch8', studioId: 's2', className: 'Пауър Йога', instructorId: 'i2', yogaType: 'Пауър', difficulty: 'напреднал', day: 'Четвъртък', startTime: '06:30', endTime: '08:00', maxCapacity: 15, enrolled: 0, price: 35, isRecurring: true },
+  { id: 'sch9', studioId: 's2', className: 'Аштанга за начинаещи', instructorId: 'i2', yogaType: 'Аштанга', difficulty: 'начинаещ', day: 'Събота', startTime: '10:00', endTime: '11:30', maxCapacity: 12, enrolled: 0, price: 30, isRecurring: true },
 
   // Studio s3 - Прана Студио
-  { id: 'sch10', studioId: 's3', className: 'Вечерна Ин Йога', instructorId: 'i3', yogaType: 'Ин', difficulty: 'начинаещ', day: 'Понеделник', startTime: '19:00', endTime: '20:30', maxCapacity: 12, price: 28, isRecurring: true },
-  { id: 'sch11', studioId: 's3', className: 'Ресторативна Йога', instructorId: 'i3', yogaType: 'Ресторативна', difficulty: 'начинаещ', day: 'Сряда', startTime: '19:00', endTime: '20:30', maxCapacity: 10, price: 28, isRecurring: true },
-  { id: 'sch12', studioId: 's3', className: 'Медитация и Ин', instructorId: 'i3', yogaType: 'Ин', difficulty: 'среден', day: 'Петък', startTime: '18:00', endTime: '19:30', maxCapacity: 12, price: 30, isRecurring: true },
+  { id: 'sch10', studioId: 's3', className: 'Вечерна Ин Йога', instructorId: 'i3', yogaType: 'Ин', difficulty: 'начинаещ', day: 'Понеделник', startTime: '19:00', endTime: '20:30', maxCapacity: 12, enrolled: 0, price: 28, isRecurring: true },
+  { id: 'sch11', studioId: 's3', className: 'Ресторативна Йога', instructorId: 'i3', yogaType: 'Ресторативна', difficulty: 'начинаещ', day: 'Сряда', startTime: '19:00', endTime: '20:30', maxCapacity: 10, enrolled: 0, price: 28, isRecurring: true },
+  { id: 'sch12', studioId: 's3', className: 'Медитация и Ин', instructorId: 'i3', yogaType: 'Ин', difficulty: 'среден', day: 'Петък', startTime: '18:00', endTime: '19:30', maxCapacity: 12, enrolled: 0, price: 30, isRecurring: true },
 
   // Studio s4 - Асана Фит
-  { id: 'sch13', studioId: 's4', className: 'Пауър Йога', instructorId: 'i4', yogaType: 'Пауър', difficulty: 'напреднал', day: 'Вторник', startTime: '18:00', endTime: '19:30', maxCapacity: 22, price: 30, isRecurring: true },
-  { id: 'sch14', studioId: 's4', className: 'Аеро Йога', instructorId: 'i4', yogaType: 'Аеро йога', difficulty: 'среден', day: 'Четвъртък', startTime: '18:00', endTime: '19:30', maxCapacity: 10, price: 40, isRecurring: true },
-  { id: 'sch15', studioId: 's4', className: 'Пауър Уикенд', instructorId: 'i4', yogaType: 'Пауър', difficulty: 'напреднал', day: 'Неделя', startTime: '10:00', endTime: '11:30', maxCapacity: 22, price: 30, isRecurring: true },
+  { id: 'sch13', studioId: 's4', className: 'Пауър Йога', instructorId: 'i4', yogaType: 'Пауър', difficulty: 'напреднал', day: 'Вторник', startTime: '18:00', endTime: '19:30', maxCapacity: 22, enrolled: 0, price: 30, isRecurring: true },
+  { id: 'sch14', studioId: 's4', className: 'Аеро Йога', instructorId: 'i4', yogaType: 'Аеро йога', difficulty: 'среден', day: 'Четвъртък', startTime: '18:00', endTime: '19:30', maxCapacity: 10, enrolled: 0, price: 40, isRecurring: true },
+  { id: 'sch15', studioId: 's4', className: 'Пауър Уикенд', instructorId: 'i4', yogaType: 'Пауър', difficulty: 'напреднал', day: 'Неделя', startTime: '10:00', endTime: '11:30', maxCapacity: 22, enrolled: 0, price: 30, isRecurring: true },
 ];
 
 export const mockSubscriptions: StudioSubscription[] = [

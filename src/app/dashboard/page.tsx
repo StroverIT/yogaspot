@@ -24,7 +24,7 @@ export default function DashboardOverviewPage() {
     return <div className="text-destructive">{ws.error}</div>;
   }
 
-  return (
+    return (
     <OverviewSection
       avgRating={avgRating}
       totalEnrolled={totalEnrolled}
@@ -36,6 +36,7 @@ export default function DashboardOverviewPage() {
       revenue={revenue}
       subscriptions={ws.subscriptions}
       subscriptionRequests={ws.subscriptionRequests}
+      recentSignups={ws.recentSignups}
     />
   );
 }
