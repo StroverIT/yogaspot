@@ -1,11 +1,12 @@
 import { Activity, Heart, MapPin } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ProfileStatPill } from '@/components/profile/profile-stat-pill';
 
 interface ProfileHeroProps {
   displayName: string;
   displayEmail: string;
   initials: string;
+  avatarUrl?: string | null;
   totalClasses: number;
   uniqueStudios: number;
   favoriteCount: number;
@@ -15,6 +16,7 @@ export const ProfileHero = ({
   displayName,
   displayEmail,
   initials,
+  avatarUrl,
   totalClasses,
   uniqueStudios,
   favoriteCount,
@@ -23,6 +25,7 @@ export const ProfileHero = ({
     <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(var(--primary)/0.08),transparent_50%)]" />
     <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
       <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+        {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} /> : null}
         <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">{initials}</AvatarFallback>
       </Avatar>
       <div className="text-center sm:text-left flex-1">

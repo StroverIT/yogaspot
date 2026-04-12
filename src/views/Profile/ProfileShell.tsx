@@ -32,6 +32,10 @@ export default function ProfileShell({
 
   const displayName = user?.name?.trim() || serverUser.name || 'Гост потребител';
   const displayEmail = user?.email?.trim() || serverUser.email || 'guest@Zenno.bg';
+  const avatarUrl =
+    (typeof user?.image === 'string' && user.image.trim()) ||
+    (typeof serverUser.image === 'string' && serverUser.image.trim()) ||
+    null;
   const initials = displayName
     .split(' ')
     .map((n) => n[0])
@@ -58,6 +62,7 @@ export default function ProfileShell({
         displayName={displayName}
         displayEmail={displayEmail}
         initials={initials}
+        avatarUrl={avatarUrl}
         totalClasses={totalClasses}
         uniqueStudios={uniqueStudios}
         favoriteCount={favoriteIds.length}

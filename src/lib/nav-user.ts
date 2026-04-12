@@ -6,6 +6,7 @@ export type NavUser = {
   name: string;
   email: string;
   role: UserRole;
+  image?: string | null;
 };
 
 export function sessionToNavUser(session: Session | null): NavUser | null {
@@ -15,6 +16,7 @@ export function sessionToNavUser(session: Session | null): NavUser | null {
     name?: string | null;
     email?: string | null;
     role?: string;
+    image?: string | null;
   };
   const email = u.email ?? '';
   const id = u.id ?? '';
@@ -24,5 +26,6 @@ export function sessionToNavUser(session: Session | null): NavUser | null {
     name: u.name ?? '',
     email,
     role: (u.role as UserRole) ?? 'client',
+    image: typeof u.image === 'string' && u.image.length > 0 ? u.image : null,
   };
 }
