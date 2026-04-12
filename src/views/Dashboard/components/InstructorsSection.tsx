@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -72,6 +72,7 @@ export function InstructorsSection({
             <div key={instr.id} className={`group ${dashboardCardClass} p-5`}>
               <div className="flex items-start gap-4">
                 <Avatar className="h-14 w-14 border-2 border-secondary/30 ring-2 ring-primary/10">
+                  {instr.photo ? <AvatarImage src={instr.photo} alt={instr.name} /> : null}
                   <AvatarFallback className="bg-linear-to-br from-primary/15 to-secondary/20 text-lg font-semibold text-primary">
                     {instr.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>

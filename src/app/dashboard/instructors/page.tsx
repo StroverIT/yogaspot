@@ -73,6 +73,7 @@ export default function DashboardInstructorsPage() {
           bio: payload.bio,
           experienceLevel: payload.experienceLevel,
           yogaStyle: payload.yogaStyle,
+          photo: payload.photo ?? '',
         }),
       },
     );

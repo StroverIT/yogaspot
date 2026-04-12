@@ -1,5 +1,6 @@
 import { Star, UsersRound } from 'lucide-react';
 import type { Instructor } from '@/data/mock-data';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 
@@ -19,9 +20,12 @@ export function InstructorsTabContent({ studioInstructors }: { studioInstructors
       {studioInstructors.map((instr) => (
         <div key={instr.id} className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-sage/30 text-2xl">
-              {'\u{1F9D1}\u{200D}\u{1F3EB}'}
-            </div>
+            <Avatar className="h-14 w-14 border border-border bg-sage/30">
+              {instr.photo ? <AvatarImage src={instr.photo} alt={instr.name} /> : null}
+              <AvatarFallback className="bg-sage/30 text-2xl">
+                {'\u{1F9D1}\u{200D}\u{1F3EB}'}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h4 className="font-display font-semibold text-foreground">{instr.name}</h4>
               <div className="flex items-center gap-1 text-sm">
