@@ -9,6 +9,7 @@ import {
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
 import { getSessionUser, jsonError } from '@/lib/api-auth';
+import { trackServerEvent } from '@/lib/server-analytics';
 export const runtime = 'nodejs';
 
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -53,6 +54,22 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       scheduleEntryIds: scheduleRows.map((r) => r.scheduleEntryId),
     };
   }
+
+  await Promise.all([
+    trackServerEvent({
+      eventName: 'studio_view',
+      userId: sessionUser?.id,
+      studioId: studio.id,
+    }),
+    trackServerEvent({
+      eventName: 'schedule_view',
+      userId: sessionUser?.id,
+      studioId: studio.id,
+      metadata: {
+        scheduleEntries: studio.schedule.length,
+      },
+    }),
+  ]);
 
   return NextResponse.json({
     studio: studioToDto(studio),

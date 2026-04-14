@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export async function POST(request: Request) {
   try {
@@ -21,12 +22,21 @@ export async function POST(request: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    await prisma.user.create({
+    const createdUser = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
         role: (role ?? 'client') as any,
+      },
+    });
+
+    const isStudioSignup = createdUser.role === 'business';
+    await trackServerEvent({
+      eventName: isStudioSignup ? 'studio_signup_completed' : 'signup_completed',
+      userId: createdUser.id,
+      metadata: {
+        role: createdUser.role,
       },
     });
 

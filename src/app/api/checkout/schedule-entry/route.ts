@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { jsonError, requireSession } from '@/lib/api-auth';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { prisma } from '@/lib/prisma';
+import { trackServerEvent } from '@/lib/server-analytics';
 import { assertStripeConfigured, classPriceToStripeUnitAmountEurCents, getPublicAppBaseUrl, getStripe } from '@/lib/stripe-server';
 
 export const runtime = 'nodejs';
@@ -108,6 +109,17 @@ export async function POST(request: Request) {
   if (!session.url) {
     return jsonError('Checkout session missing URL', 500);
   }
+
+  await trackServerEvent({
+    eventName: 'booking_started',
+    userId: gate.user.id,
+    studioId: entry.studioId,
+    metadata: {
+      kind: 'schedule',
+      scheduleEntryId: entry.id,
+      checkoutSessionId: session.id,
+    },
+  });
 
   return NextResponse.json({ url: session.url });
 }

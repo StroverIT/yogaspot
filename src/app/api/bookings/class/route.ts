@@ -3,6 +3,7 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { enrollUserInYogaClassOffline } from '@/lib/offline-booking';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
 
@@ -39,6 +40,16 @@ export async function POST(request: Request) {
         startTime: classDetail.startTime,
         endTime: classDetail.endTime,
         basePriceBgn: classDetail.basePriceBgn,
+      },
+    });
+    await trackServerEvent({
+      eventName: 'booking_completed',
+      userId: gate.user.id,
+      studioId,
+      metadata: {
+        kind: 'class',
+        classId,
+        paymentMode: 'offline',
       },
     });
   } catch (err) {

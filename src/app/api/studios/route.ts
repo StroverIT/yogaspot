@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { randomUUID } from 'crypto';
 import { requireRole } from '@/lib/api-auth';
 import { getDashboardStudiosListForUser, mapStudioResponse } from '@/lib/dashboard-studios-data';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
 
@@ -139,6 +140,16 @@ export async function POST(request: Request) {
       amenitiesChangingRoom,
       amenitiesEquipmentRental,
       yogaTypes: uniqueYogaTypes,
+    },
+  });
+
+  await trackServerEvent({
+    eventName: 'studio_profile_completed',
+    userId: gate.user.id,
+    studioId: created.id,
+    metadata: {
+      businessId: business.id,
+      hasImages: created.images.length > 0,
     },
   });
 

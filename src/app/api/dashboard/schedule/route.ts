@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import { scheduleEntryToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
 
@@ -98,6 +99,20 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Stripe catalog sync failed for schedule', created.id, error);
+  }
+
+  const studioScheduleCount = await prisma.scheduleEntry.count({
+    where: { studioId: created.studioId },
+  });
+  if (studioScheduleCount === 1) {
+    await trackServerEvent({
+      eventName: 'studio_first_event_published',
+      userId: gate.user.id,
+      studioId: created.studioId,
+      metadata: {
+        scheduleEntryId: created.id,
+      },
+    });
   }
 
   return NextResponse.json({ entry: scheduleEntryToDto(created) }, { status: 201 });

@@ -1,4 +1,4 @@
-export const ADMIN_SECTION_KEYS = ['overview', 'studios', 'users', 'reviews', 'requests'] as const;
+export const ADMIN_SECTION_KEYS = ['analytics', 'overview', 'studios', 'users', 'reviews', 'requests'] as const;
 export type AdminSectionKey = (typeof ADMIN_SECTION_KEYS)[number];
 
 export function isAdminSectionKey(value: string): value is AdminSectionKey {

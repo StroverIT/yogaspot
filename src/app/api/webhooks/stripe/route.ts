@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { getStripe } from '@/lib/stripe-server';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
 
@@ -155,6 +156,17 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
         basePriceBgn: Number(classSnapshot.price) || 0,
       },
     });
+    await trackServerEvent({
+      eventName: 'booking_completed',
+      userId: md.userId,
+      studioId: md.studioId,
+      metadata: {
+        kind: 'class',
+        classId: classSnapshot.id,
+        paymentMode: 'online',
+        checkoutSessionId: session.id,
+      },
+    });
   }
 }
 
@@ -256,6 +268,17 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
         startTime: entrySnapshot.startTime,
         endTime: entrySnapshot.endTime,
         basePriceBgn: Number(entrySnapshot.price) || 0,
+      },
+    });
+    await trackServerEvent({
+      eventName: 'booking_completed',
+      userId: md.userId,
+      studioId: md.studioId,
+      metadata: {
+        kind: 'schedule',
+        scheduleEntryId: entrySnapshot.id,
+        paymentMode: 'online',
+        checkoutSessionId: session.id,
       },
     });
   }

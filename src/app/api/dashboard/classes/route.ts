@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
 
@@ -104,6 +105,20 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Stripe catalog sync failed for class', created.id, error);
+  }
+
+  const studioClassCount = await prisma.yogaClass.count({
+    where: { studioId: created.studioId },
+  });
+  if (studioClassCount === 1) {
+    await trackServerEvent({
+      eventName: 'studio_first_class_created',
+      userId: gate.user.id,
+      studioId: created.studioId,
+      metadata: {
+        classId: created.id,
+      },
+    });
   }
 
   return NextResponse.json({ class: yogaClassToDto(created) }, { status: 201 });
