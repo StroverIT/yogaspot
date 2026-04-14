@@ -142,7 +142,9 @@ export async function getAdminAnalytics(query: AdminAnalyticsQuery = {}): Promis
       prisma.analyticsEvent.findMany({
         where: {
           ...eventWhere,
-          event_name: 'signup_completed',
+          event_name: {
+            in: ['signup_completed', 'studio_signup_completed'],
+          },
         },
         select: {
           created_at: true,

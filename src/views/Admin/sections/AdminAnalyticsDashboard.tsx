@@ -208,7 +208,7 @@ export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardPr
         </section>
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <BookingsLineChart data={analytics.timeSeries.map((d) => ({ date: d.date, bookings: d.bookings }))} />
+        <BookingsLineChart data={analytics.timeSeries.map((d) => ({ date: d.date, bookings: d.bookings, signups: d.signups, total: d.bookings + d.signups }))} />
         <FunnelBarChart data={funnel} />
         </section>
 

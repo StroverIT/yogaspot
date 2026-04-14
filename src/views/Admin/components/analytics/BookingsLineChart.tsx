@@ -8,6 +8,8 @@ type BookingsLineChartProps = {
   data: Array<{
     date: string;
     bookings: number;
+    signups: number;
+    total: number;
   }>;
 };
 
@@ -15,6 +17,14 @@ const chartConfig: ChartConfig = {
   bookings: {
     label: 'Bookings',
     color: 'hsl(var(--primary))',
+  },
+  signups: {
+    label: 'Signups',
+    color: 'hsl(var(--accent))',
+  },
+  total: {
+    label: 'Total',
+    color: 'hsl(var(--secondary))',
   },
 };
 
@@ -26,7 +36,7 @@ export function BookingsLineChart({ data }: BookingsLineChartProps) {
   return (
     <Card className="rounded-2xl border-border/80 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Bookings (Last 7 days)</CardTitle>
+        <CardTitle className="text-base font-semibold">Bookings, Signups & Total (Last 7 days)</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[280px] w-full">
@@ -35,6 +45,8 @@ export function BookingsLineChart({ data }: BookingsLineChartProps) {
             <XAxis dataKey="date" tickFormatter={formatDay} tickLine={false} axisLine={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Line type="monotone" dataKey="bookings" stroke="var(--color-bookings)" strokeWidth={3} dot={false} />
+            <Line type="monotone" dataKey="signups" stroke="var(--color-signups)" strokeWidth={3} dot={false} />
+            <Line type="monotone" dataKey="total" stroke="var(--color-total)" strokeWidth={3} dot={false} />
           </LineChart>
         </ChartContainer>
       </CardContent>
