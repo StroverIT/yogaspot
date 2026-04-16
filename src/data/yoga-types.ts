@@ -62,6 +62,12 @@ export const YOGA_TYPES: YogaTypeCatalogEntry[] = [
     category: 'traditionalPhysical',
   },
   {
+    name: 'Класическа йога',
+    description:
+      'Традиционна практика, базирана на основните йога принципи: асани, пранаяма, концентрация и медитация.',
+    category: 'traditionalPhysical',
+  },
+  {
     name: 'Ащанга йога',
     description: 'Интензивна и структурирана практика, следваща специфична последователност от пози.',
     category: 'traditionalPhysical',
@@ -93,6 +99,12 @@ export const YOGA_TYPES: YogaTypeCatalogEntry[] = [
     name: 'Шивананда йога',
     description:
       'Класическа система, базирана на пет принципа: правилни упражнения, правилно дишане, правилна релаксация, правилна диета и позитивно мислене с медитация.',
+    category: 'traditionalPhysical',
+  },
+  {
+    name: 'Сатянанда йога (Бихар йога)',
+    description:
+      'Систематичен подход от школата Bihar School of Yoga, който обединява асани, пранаяма, мудри, бандхи и медитативни техники.',
     category: 'traditionalPhysical',
   },
   {
