@@ -39,6 +39,7 @@ export function studioToDto(s: StudioRowForDto): Studio {
     reviewCount: s.reviewCount,
     businessId: s.businessId,
     ownerUserId: s.business?.ownerUserId ?? '',
+    isHidden: s.isHidden,
     createdAt: s.createdAt.toISOString().slice(0, 10),
   };
 }

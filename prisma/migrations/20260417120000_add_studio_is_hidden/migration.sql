@@ -1,0 +1,2 @@
+ALTER TABLE "Studio"
+ADD COLUMN "isHidden" BOOLEAN NOT NULL DEFAULT false;

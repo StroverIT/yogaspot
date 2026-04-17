@@ -101,7 +101,7 @@ export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: Yoga
     styles: stylesForStudio(s.id, classes),
     level: studioLevelFromClasses(s.id, classes),
     amenities: amenitiesFromStudio(s),
-    isHidden: false,
+    isHidden: s.isHidden,
     createdAt: new Date(s.createdAt),
     lat: s.lat,
     lng: s.lng,

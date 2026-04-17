@@ -11,6 +11,7 @@ export type PublicCatalog = {
 /** DB-backed public catalog for SSR and `/api/public/studios`. */
 async function getPublicCatalogImpl(): Promise<PublicCatalog> {
   const studios = await prisma.studio.findMany({
+    where: { isHidden: false },
     orderBy: { createdAt: "desc" },
     include: { business: { select: { ownerUserId: true } } },
   });

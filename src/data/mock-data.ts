@@ -20,6 +20,8 @@ export interface Studio {
   businessId: string;
   /** User id of the business owner — used to hide “add review” for own studios. */
   ownerUserId: string;
+  /** Admin visibility flag for public pages. */
+  isHidden: boolean;
   /** ISO date — за сортиране „най-нови първи“ в админ преглед */
   createdAt: string;
 }
@@ -138,6 +140,7 @@ export const mockStudios: Studio[] = [
     reviewCount: 124,
     businessId: 'b1',
     ownerUserId: 'mock-owner-b1',
+    isHidden: false,
     createdAt: '2023-04-12',
   },
   {
@@ -155,6 +158,7 @@ export const mockStudios: Studio[] = [
     reviewCount: 89,
     businessId: 'b2',
     ownerUserId: 'mock-owner-b2',
+    isHidden: false,
     createdAt: '2024-01-20',
   },
   {
@@ -172,6 +176,7 @@ export const mockStudios: Studio[] = [
     reviewCount: 67,
     businessId: 'b3',
     ownerUserId: 'mock-owner-b3',
+    isHidden: false,
     createdAt: '2024-09-05',
   },
   {
@@ -189,6 +194,7 @@ export const mockStudios: Studio[] = [
     reviewCount: 156,
     businessId: 'b1',
     ownerUserId: 'mock-owner-b1',
+    isHidden: false,
     createdAt: '2025-11-18',
   },
 ];

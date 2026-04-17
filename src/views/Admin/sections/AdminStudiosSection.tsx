@@ -11,18 +11,40 @@ export type AdminStudiosSectionClientProps = {
 };
 
 export function AdminStudiosSectionClient({ studios }: AdminStudiosSectionClientProps) {
+  const [rows, setRows] = useState(studios);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingStudioId, setPendingStudioId] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
-      studios.filter(
+      rows.filter(
         (s) =>
           !searchQuery ||
           s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           (s.ownerEmail ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
       ),
-    [studios, searchQuery],
+    [rows, searchQuery],
   );
+
+  const toggleStudioVisibility = async (studioId: string, nextHiddenState: boolean) => {
+    try {
+      setPendingStudioId(studioId);
+      const res = await fetch(`/api/admin/studios/${studioId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isHidden: nextHiddenState }),
+      });
+      if (!res.ok) throw new Error('Failed to toggle studio visibility');
+
+      setRows((prev) =>
+        prev.map((row) => (row.id === studioId ? { ...row, isHidden: nextHiddenState } : row)),
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setPendingStudioId(null);
+    }
+  };
 
   return (
     <div>
@@ -46,6 +68,9 @@ export function AdminStudiosSectionClient({ studios }: AdminStudiosSectionClient
                 {studio.ownerEmail && (
                   <p className="text-xs text-muted-foreground mt-0.5">Собственик: {studio.ownerEmail}</p>
                 )}
+                <p className="text-xs mt-1 font-medium text-muted-foreground">
+                  Статус: {studio.isHidden ? 'Скрито' : 'Видимо'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -53,8 +78,14 @@ export function AdminStudiosSectionClient({ studios }: AdminStudiosSectionClient
                 <Star className="h-3.5 w-3.5 fill-accent text-accent" />
                 <span className="text-sm font-bold text-accent">{studio.rating}</span>
               </div>
-              <Button variant="ghost" size="sm" className="rounded-lg">
-                <EyeOff className="h-4 w-4 mr-1.5" /> Скрий
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-lg"
+                disabled={pendingStudioId === studio.id}
+                onClick={() => toggleStudioVisibility(studio.id, !studio.isHidden)}
+              >
+                <EyeOff className="h-4 w-4 mr-1.5" /> {studio.isHidden ? 'Покажи' : 'Скрий'}
               </Button>
               <Button variant="ghost" size="sm" className="rounded-lg text-destructive hover:text-destructive">
                 <Trash2 className="h-4 w-4 mr-1.5" /> Изтрий
