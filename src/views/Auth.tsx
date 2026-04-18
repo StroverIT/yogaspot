@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from 'next-auth/react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
@@ -20,6 +20,7 @@ const Auth = () => {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const prevAuthModeRef = useRef<'login' | 'register' | null>(null);
 
   const reset = () => {
     setEmail('');
@@ -38,13 +39,19 @@ const Auth = () => {
     const nextMode: 'login' | 'register' =
       typeParam === 'register' ? 'register' : 'login';
     setMode(nextMode);
+
+    const roleParam = searchParams?.get('role');
     if (nextMode === 'register') {
-      const roleParam = searchParams?.get('role');
       setRole(
         roleParam === 'business' || roleParam === 'client' ? roleParam : 'client',
       );
     }
-    reset();
+
+    const modeChanged = prevAuthModeRef.current !== nextMode;
+    prevAuthModeRef.current = nextMode;
+    if (modeChanged) {
+      reset();
+    }
   }, [searchParams]);
 
   if (status === 'loading' || status === 'authenticated') {
@@ -242,7 +249,14 @@ const Auth = () => {
                       <button
                         key={r.value}
                         type="button"
-                        onClick={() => setRole(r.value)}
+                        onClick={() => {
+                          setRole(r.value);
+                          const q = new URLSearchParams({
+                            type: 'register',
+                            role: r.value,
+                          });
+                          router.replace(`/auth?${q.toString()}`);
+                        }}
                         className={`rounded-xl border-2 p-4 text-left transition-all ${role === r.value
                             ? 'border-primary bg-primary/5 shadow-sm'
                             : 'border-border hover:border-muted-foreground/30'
