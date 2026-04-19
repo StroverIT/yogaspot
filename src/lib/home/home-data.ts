@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import type { Studio, YogaClass } from "@/data/mock-data";
 import { getPublicCatalogCached } from "@/lib/get-public-catalog";
 import { prisma } from '@/lib/prisma';
+import { getSessionUser } from '@/lib/api-auth';
 
 /**
  * Per-request dedupe; all home sections share one `getPublicCatalogCached()` read
@@ -37,6 +38,7 @@ export type HomeRetreat = {
   studioName: string;
   contactPhone: string;
   contactEmail: string;
+  isEnrolled: boolean;
 };
 
 type RetreatRow = {
@@ -58,7 +60,7 @@ type RetreatRow = {
   studio: { name: string; isHidden: boolean; phone: string; email: string };
 };
 
-function mapRetreatRow(retreat: RetreatRow): HomeRetreat {
+function mapRetreatRow(retreat: RetreatRow, isEnrolled = false): HomeRetreat {
   return {
     id: retreat.id,
     title: retreat.title,
@@ -78,11 +80,21 @@ function mapRetreatRow(retreat: RetreatRow): HomeRetreat {
     studioName: retreat.studio.name,
     contactPhone: retreat.studio.phone,
     contactEmail: retreat.studio.email,
+    isEnrolled,
   };
 }
 
 export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
   noStore();
+  const user = await getSessionUser();
+  const retreatBookingDelegate = (prisma as unknown as {
+    retreatBooking: {
+      findMany: (args: {
+        where: { userId: string; retreatId: { in: string[] } };
+        select: { retreatId: true };
+      }) => Promise<Array<{ retreatId: string }>>;
+    };
+  }).retreatBooking;
   const retreatDelegate = (prisma as unknown as {
     retreat: {
       findMany: (args: {
@@ -110,11 +122,32 @@ export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
     take: limit,
   });
 
-  return retreats.map(mapRetreatRow);
+  const enrolledIds = new Set<string>();
+  if (user?.id && retreats.length > 0) {
+    const bookings = await retreatBookingDelegate.findMany({
+      where: {
+        userId: user.id,
+        retreatId: { in: retreats.map((retreat) => retreat.id) },
+      },
+      select: { retreatId: true },
+    });
+    for (const booking of bookings) enrolledIds.add(booking.retreatId);
+  }
+
+  return retreats.map((retreat) => mapRetreatRow(retreat, enrolledIds.has(retreat.id)));
 }
 
 export async function getHomeRetreatById(id: string): Promise<HomeRetreat | null> {
   noStore();
+  const user = await getSessionUser();
+  const retreatBookingDelegate = (prisma as unknown as {
+    retreatBooking: {
+      findUnique: (args: {
+        where: { retreatId_userId: { retreatId: string; userId: string } };
+        select: { retreatId: true };
+      }) => Promise<{ retreatId: string } | null>;
+    };
+  }).retreatBooking;
   const retreatDelegate = (prisma as unknown as {
     retreat: {
       findFirst: (args: {
@@ -141,7 +174,15 @@ export async function getHomeRetreatById(id: string): Promise<HomeRetreat | null
   });
 
   if (!retreat) return null;
-  return mapRetreatRow(retreat);
+  let isEnrolled = false;
+  if (user?.id) {
+    const booking = await retreatBookingDelegate.findUnique({
+      where: { retreatId_userId: { retreatId: retreat.id, userId: user.id } },
+      select: { retreatId: true },
+    });
+    isEnrolled = Boolean(booking);
+  }
+  return mapRetreatRow(retreat, isEnrolled);
 }
 
 export function computeTopStudios(studios: Studio[], limit = 6): Studio[] {

@@ -5,10 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { HomeRetreat } from '@/lib/home/home-data';
 import { CalendarDays, Clock3, LocateFixed, MapPin, Sparkles } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import Link from 'next/link';
+import { RetreatSignupButton } from '@/components/retreats/RetreatSignupButton';
 
 type Coordinates = { lat: number; lng: number };
 
@@ -23,12 +21,9 @@ function haversineDistanceKm(a: Coordinates, b: Coordinates): number {
 }
 
 export function RetreatsCatalog({ retreats }: { retreats: HomeRetreat[] }) {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
   const [sortByNear, setSortByNear] = useState(false);
   const [sortBySoon, setSortBySoon] = useState(true);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  const [pendingBookingId, setPendingBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!sortByNear) return;
@@ -82,30 +77,6 @@ export function RetreatsCatalog({ retreats }: { retreats: HomeRetreat[] }) {
       return 0;
     });
   }, [retreats, sortByNear, sortBySoon, userLocation]);
-
-  const handleSignup = async (retreatId: string) => {
-    if (!isAuthenticated) {
-      router.push('/auth');
-      return;
-    }
-    setPendingBookingId(retreatId);
-    try {
-      const res = await fetch('/api/bookings/retreat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ retreatId }),
-      });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(typeof j.error === 'string' ? j.error : `Неуспешно записване (${res.status})`);
-        return;
-      }
-      toast.success('Успешно записване за рийтрийта.');
-      router.refresh();
-    } finally {
-      setPendingBookingId(null);
-    }
-  };
 
   const formatPrice = (price: number) => (price === 0 ? 'Безплатно' : `${price.toFixed(2)} лв.`);
 
@@ -175,7 +146,8 @@ export function RetreatsCatalog({ retreats }: { retreats: HomeRetreat[] }) {
                 {sortByNear && Number.isFinite(distance) ? (
                   <p className="text-xs text-primary">На {distance.toFixed(1)} км от теб</p>
                 ) : null}
-                <p className="text-xs">Свободни места: {Math.max(retreat.maxCapacity - retreat.enrolled, 0)} / {retreat.maxCapacity}</p>
+                <p className="text-xs">Записани: {retreat.enrolled} / {retreat.maxCapacity}</p>
+                <p className="text-xs">Свободни места: {Math.max(retreat.maxCapacity - retreat.enrolled, 0)}</p>
                 <p className="text-sm font-medium text-foreground">{formatPrice(retreat.price)}</p>
               </div>
               <div className="flex flex-wrap gap-1">
@@ -185,18 +157,12 @@ export function RetreatsCatalog({ retreats }: { retreats: HomeRetreat[] }) {
                   </Badge>
                 ))}
               </div>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={retreat.enrolled >= retreat.maxCapacity || pendingBookingId === retreat.id}
-                onClick={() => void handleSignup(retreat.id)}
-              >
-                {retreat.enrolled >= retreat.maxCapacity
-                  ? 'Няма свободни места'
-                  : pendingBookingId === retreat.id
-                    ? 'Записване...'
-                    : 'Запиши се'}
-              </Button>
+              <RetreatSignupButton
+                retreatId={retreat.id}
+                enrolled={retreat.enrolled}
+                maxCapacity={retreat.maxCapacity}
+                isEnrolled={retreat.isEnrolled}
+              />
             </div>
           </article>
         ))}

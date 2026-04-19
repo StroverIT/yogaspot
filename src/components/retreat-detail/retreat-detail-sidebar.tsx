@@ -1,6 +1,7 @@
 import { CalendarDays, Clock3, ExternalLink, Mail, MapPin, Phone, UserRound, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { HomeRetreat } from '@/lib/home/home-data';
+import { RetreatSignupButton } from '@/components/retreats/RetreatSignupButton';
 
 export function RetreatDetailSidebar({ retreat }: { retreat: HomeRetreat }) {
   return (
@@ -24,8 +25,9 @@ export function RetreatDetailSidebar({ retreat }: { retreat: HomeRetreat }) {
         </p>
         <p className="flex items-center gap-2">
           <Users className="h-4 w-4" />
-          Свободни места: {Math.max(retreat.maxCapacity - retreat.enrolled, 0)} / {retreat.maxCapacity}
+          Записани: {retreat.enrolled} / {retreat.maxCapacity}
         </p>
+        <p>Свободни места: {Math.max(retreat.maxCapacity - retreat.enrolled, 0)}</p>
         <p className="flex items-center gap-2">
           <Phone className="h-4 w-4" />
           {retreat.contactPhone}
@@ -39,6 +41,13 @@ export function RetreatDetailSidebar({ retreat }: { retreat: HomeRetreat }) {
       <p className="text-lg font-semibold text-foreground">
         {retreat.price === 0 ? 'Безплатно' : `${retreat.price.toFixed(2)} лв.`}
       </p>
+
+      <RetreatSignupButton
+        retreatId={retreat.id}
+        enrolled={retreat.enrolled}
+        maxCapacity={retreat.maxCapacity}
+        isEnrolled={retreat.isEnrolled}
+      />
 
       <Button asChild variant="outline" className="w-full">
         <a
