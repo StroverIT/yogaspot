@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Retreat, Studio } from '@/data/mock-data';
-import { CalendarDays, Clock3, Edit, MapPin, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, Clock3, Edit, Mail, MapPin, Phone, Plus, Trash2 } from 'lucide-react';
 import { DashboardPageHeader } from './DashboardPageHeader';
 import { dashboardCardClass } from '../dashboardUi';
 
@@ -32,7 +32,8 @@ export function RetreatsSection({
 
       <div className="space-y-4">
         {retreats.map((retreat) => {
-          const studioName = studios.find((s) => s.id === retreat.studioId)?.name ?? 'Студио';
+          const studio = studios.find((s) => s.id === retreat.studioId);
+          const studioName = studio?.name ?? 'Студио';
           return (
             <div key={retreat.id} className={`${dashboardCardClass} p-5`}>
               <div className="flex items-start justify-between gap-3">
@@ -67,6 +68,16 @@ export function RetreatsSection({
                         {activity}
                       </Badge>
                     ))}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Phone className="h-3.5 w-3.5" />
+                      {studio?.phone ?? 'Няма телефон'}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Mail className="h-3.5 w-3.5" />
+                      {studio?.email ?? 'Няма имейл'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-1">

@@ -27,14 +27,18 @@ export default function HomeRetreatsSection({ retreats }: { retreats: HomeRetrea
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {retreats.map((retreat) => (
             <article key={retreat.id} className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
-              <div className="relative aspect-[16/10] bg-muted">
-                {retreat.images[0] ? (
-                  <img src={retreat.images[0]} alt={retreat.title} className="h-full w-full object-cover" loading="lazy" />
-                ) : null}
-              </div>
+              <Link href={`/retreats/${retreat.id}`} className="block">
+                <div className="relative aspect-[16/10] bg-muted">
+                  {retreat.images[0] ? (
+                    <img src={retreat.images[0]} alt={retreat.title} className="h-full w-full object-cover" loading="lazy" />
+                  ) : null}
+                </div>
+              </Link>
               <div className="space-y-3 p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-display text-lg font-semibold">{retreat.title}</h3>
+                  <Link href={`/retreats/${retreat.id}`} className="font-display text-lg font-semibold hover:text-primary">
+                    {retreat.title}
+                  </Link>
                   <Badge variant="secondary">{retreat.studioName}</Badge>
                 </div>
                 <p className="line-clamp-2 text-sm text-muted-foreground">{retreat.description}</p>

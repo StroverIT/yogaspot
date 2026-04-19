@@ -35,57 +35,31 @@ export type HomeRetreat = {
   endDate: string;
   createdAt: string;
   studioName: string;
+  contactPhone: string;
+  contactEmail: string;
 };
 
-export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
-  noStore();
-  const retreatDelegate = (prisma as unknown as {
-    retreat: {
-      findMany: (args: {
-        where: {
-          isPublished: boolean;
-          isHidden: boolean;
-          studio: { isHidden: boolean };
-        };
-        include: {
-          studio: { select: { name: true } };
-        };
-        orderBy: Array<{ createdAt: 'desc' }>;
-        take: number;
-      }) => Promise<Array<{
-        id: string;
-        title: string;
-        description: string;
-        images: string[];
-        address: string;
-        lat: number | null;
-        lng: number | null;
-        activities: string[];
-        duration: string;
-        maxCapacity: number;
-        enrolled: number;
-        price: number;
-        startDate: Date;
-        endDate: Date;
-        createdAt: Date;
-        studio: { name: string };
-      }>>;
-    };
-  }).retreat;
-  const retreats = await retreatDelegate.findMany({
-    where: {
-      isPublished: true,
-      isHidden: false,
-      studio: { isHidden: false },
-    },
-    include: {
-      studio: { select: { name: true } },
-    },
-    orderBy: [{ createdAt: 'desc' }],
-    take: limit,
-  });
+type RetreatRow = {
+  id: string;
+  title: string;
+  description: string;
+  images: string[];
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  activities: string[];
+  duration: string;
+  maxCapacity: number;
+  enrolled: number;
+  price: number;
+  startDate: Date;
+  endDate: Date;
+  createdAt: Date;
+  studio: { name: string; isHidden: boolean; phone: string; email: string };
+};
 
-  return retreats.map((retreat) => ({
+function mapRetreatRow(retreat: RetreatRow): HomeRetreat {
+  return {
     id: retreat.id,
     title: retreat.title,
     description: retreat.description,
@@ -102,7 +76,72 @@ export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
     endDate: retreat.endDate.toISOString().slice(0, 10),
     createdAt: retreat.createdAt.toISOString(),
     studioName: retreat.studio.name,
-  }));
+    contactPhone: retreat.studio.phone,
+    contactEmail: retreat.studio.email,
+  };
+}
+
+export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
+  noStore();
+  const retreatDelegate = (prisma as unknown as {
+    retreat: {
+      findMany: (args: {
+        where: {
+          isPublished: boolean;
+          isHidden: boolean;
+        };
+        include: {
+          studio: { select: { name: true; isHidden: true; phone: true; email: true } };
+        };
+        orderBy: Array<{ createdAt: 'desc' }>;
+        take: number;
+      }) => Promise<RetreatRow[]>;
+    };
+  }).retreat;
+  const retreats = await retreatDelegate.findMany({
+    where: {
+      isPublished: true,
+      isHidden: false,
+    },
+    include: {
+      studio: { select: { name: true, isHidden: true, phone: true, email: true } },
+    },
+    orderBy: [{ createdAt: 'desc' }],
+    take: limit,
+  });
+
+  return retreats.map(mapRetreatRow);
+}
+
+export async function getHomeRetreatById(id: string): Promise<HomeRetreat | null> {
+  noStore();
+  const retreatDelegate = (prisma as unknown as {
+    retreat: {
+      findFirst: (args: {
+        where: {
+          id: string;
+          isPublished: boolean;
+          isHidden: boolean;
+        };
+        include: {
+          studio: { select: { name: true; isHidden: true; phone: true; email: true } };
+        };
+      }) => Promise<RetreatRow | null>;
+    };
+  }).retreat;
+  const retreat = await retreatDelegate.findFirst({
+    where: {
+      id,
+      isPublished: true,
+      isHidden: false,
+    },
+    include: {
+      studio: { select: { name: true, isHidden: true, phone: true, email: true } },
+    },
+  });
+
+  if (!retreat) return null;
+  return mapRetreatRow(retreat);
 }
 
 export function computeTopStudios(studios: Studio[], limit = 6): Studio[] {

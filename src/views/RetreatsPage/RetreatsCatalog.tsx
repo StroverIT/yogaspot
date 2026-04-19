@@ -8,6 +8,7 @@ import { CalendarDays, Clock3, LocateFixed, MapPin, Sparkles } from 'lucide-reac
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 type Coordinates = { lat: number; lng: number };
 
@@ -148,11 +149,15 @@ export function RetreatsCatalog({ retreats }: { retreats: HomeRetreat[] }) {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sortedRetreats.map(({ retreat, distance }) => (
           <article key={retreat.id} className="overflow-hidden rounded-2xl border border-border bg-background">
-            <div className="relative aspect-[16/10] bg-muted">
-              {retreat.images[0] ? <img src={retreat.images[0]} alt={retreat.title} className="h-full w-full object-cover" /> : null}
-            </div>
+            <Link href={`/retreats/${retreat.id}`} className="block">
+              <div className="relative aspect-[16/10] bg-muted">
+                {retreat.images[0] ? <img src={retreat.images[0]} alt={retreat.title} className="h-full w-full object-cover" /> : null}
+              </div>
+            </Link>
             <div className="space-y-3 p-4">
-              <h2 className="font-display text-lg font-semibold text-foreground">{retreat.title}</h2>
+              <Link href={`/retreats/${retreat.id}`} className="font-display text-lg font-semibold text-foreground hover:text-primary">
+                {retreat.title}
+              </Link>
               <p className="line-clamp-2 text-sm text-muted-foreground">{retreat.description}</p>
               <div className="space-y-1 text-sm text-muted-foreground">
                 <p className="flex items-center gap-1">
