@@ -38,33 +38,82 @@ export default function DashboardSchedulePage() {
     setEntryPendingDelete(null);
   };
 
-  const handleSave = async (payload: ScheduleModalPayload) => {
-    const isEdit = Boolean(payload.id);
-    const res = await fetch(isEdit ? `/api/dashboard/schedule/${payload.id}` : '/api/dashboard/schedule', {
-      method: isEdit ? 'PATCH' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        studioId: payload.studioId,
-        instructorId: payload.instructorId,
-        className: payload.className,
-        yogaType: payload.yogaType,
-        difficulty: payload.difficulty,
-        day: payload.day,
-        startTime: payload.startTime,
-        endTime: payload.endTime,
-        maxCapacity: payload.maxCapacity,
-        price: payload.price,
-        isRecurring: payload.isRecurring,
-      }),
-    });
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
-      toast.error(typeof j.error === 'string' ? j.error : `Неуспешно запазване (${res.status})`);
+  const handleSave = async (payloads: ScheduleModalPayload[]) => {
+    if (payloads.length === 0) {
+      toast.error('Няма часове за запазване.');
       return;
     }
-    toastDashboardSaved('schedule');
-    closeModal();
-    void ws.reload();
+
+    const saveSingle = async (payload: ScheduleModalPayload, mode: 'create' | 'edit') => {
+      const res = await fetch(mode === 'edit' ? `/api/dashboard/schedule/${payload.id}` : '/api/dashboard/schedule', {
+        method: mode === 'edit' ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studioId: payload.studioId,
+          instructorId: payload.instructorId,
+          className: payload.className,
+          yogaType: payload.yogaType,
+          difficulty: payload.difficulty,
+          day: payload.day,
+          startTime: payload.startTime,
+          endTime: payload.endTime,
+          maxCapacity: payload.maxCapacity,
+          price: payload.price,
+          isRecurring: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        return {
+          ok: false as const,
+          message: typeof j.error === 'string' ? j.error : `Неуспешно запазване (${res.status})`,
+        };
+      }
+
+      return { ok: true as const };
+    };
+
+    const isEdit = payloads.length === 1 && Boolean(payloads[0]?.id);
+    if (isEdit) {
+      const result = await saveSingle(payloads[0], 'edit');
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      toastDashboardSaved('schedule');
+      closeModal();
+      void ws.reload();
+      return;
+    }
+
+    let successCount = 0;
+    const errors: string[] = [];
+
+    for (const payload of payloads) {
+      const result = await saveSingle(payload, 'create');
+      if (result.ok) {
+        successCount += 1;
+      } else {
+        errors.push(result.message);
+      }
+    }
+
+    if (successCount === payloads.length) {
+      toastDashboardSaved('schedule');
+      closeModal();
+      void ws.reload();
+      return;
+    }
+
+    if (successCount > 0) {
+      toast.error(`Добавени са ${successCount} от ${payloads.length} часа. ${errors[0] ?? ''}`.trim());
+      closeModal();
+      void ws.reload();
+      return;
+    }
+
+    toast.error(errors[0] ?? 'Неуспешно запазване.');
   };
 
   const confirmDeleteEntry = async () => {

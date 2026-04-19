@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { DIFFICULTY_LEVELS, mockInstructors, mockStudios, WEEKDAYS, YOGA_TYPES, type ScheduleEntry } from '@/data/mock-data';
 import {
   classPriceBgnFromEur,
@@ -34,7 +33,12 @@ export type ScheduleModalPayload = {
   endTime: string;
   maxCapacity: number;
   price: number;
-  isRecurring: boolean;
+};
+
+type TimeSlot = {
+  day: string;
+  startTime: string;
+  endTime: string;
 };
 
 export function ScheduleModal({
@@ -48,7 +52,7 @@ export function ScheduleModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSave: (payload: ScheduleModalPayload) => void | Promise<void>;
+  onSave: (payloads: ScheduleModalPayload[]) => void | Promise<void>;
   studios: typeof mockStudios;
   instructors: typeof mockInstructors;
   entry: ScheduleEntry | null;
@@ -58,14 +62,11 @@ export function ScheduleModal({
   const [className, setClassName] = useState('');
   const [studioId, setStudioId] = useState('');
   const [instructorId, setInstructorId] = useState('');
-  const [day, setDay] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
   const [yogaType, setYogaType] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [maxCapacity, setMaxCapacity] = useState('');
   const [price, setPrice] = useState('');
-  const [isRecurring, setIsRecurring] = useState(true);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([{ day: '', startTime: '', endTime: '' }]);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
   const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
@@ -80,14 +81,15 @@ export function ScheduleModal({
     setClassName(entry?.className ?? '');
     setStudioId(entry?.studioId ?? '');
     setInstructorId(entry?.instructorId ?? '');
-    setDay(entry?.day ?? '');
-    setStartTime(entry?.startTime ?? '');
-    setEndTime(entry?.endTime ?? '');
+    setTimeSlots(
+      entry
+        ? [{ day: entry.day ?? '', startTime: entry.startTime ?? '', endTime: entry.endTime ?? '' }]
+        : [{ day: '', startTime: '', endTime: '' }],
+    );
     setYogaType(entry?.yogaType ?? '');
     setDifficulty(entry?.difficulty ?? '');
     setMaxCapacity(entry?.maxCapacity != null ? String(entry.maxCapacity) : '');
     setPrice(entry?.price != null ? formatEurInputFromBgn(entry.price) : '');
-    setIsRecurring(entry?.isRecurring ?? true);
   }, [open, entry]);
 
   useEffect(() => {
@@ -97,16 +99,26 @@ export function ScheduleModal({
     }
   }, [studioId, instructorId, instructors]);
 
+  const updateSlot = (index: number, patch: Partial<TimeSlot>) => {
+    setTimeSlots(prev => prev.map((slot, i) => (i === index ? { ...slot, ...patch } : slot)));
+  };
+
+  const addSlot = () => {
+    setTimeSlots(prev => [...prev, { day: '', startTime: '', endTime: '' }]);
+  };
+
+  const removeSlot = (index: number) => {
+    setTimeSlots(prev => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
   const handleSave = async () => {
     const cap = Number(maxCapacity);
     const pr = classPriceBgnFromEur(parseEurInput(price));
+    const hasInvalidSlot = timeSlots.some(slot => !slot.day || !slot.startTime || !slot.endTime);
     if (
       !className.trim()
       || !studioId
       || !instructorId
-      || !day
-      || !startTime
-      || !endTime
       || !yogaType
       || !difficulty
       || !maxCapacity.trim()
@@ -115,28 +127,27 @@ export function ScheduleModal({
       || !price.trim()
       || !Number.isFinite(parseEurInput(price))
       || parseEurInput(price) < 0
+      || hasInvalidSlot
     ) {
       toast.error(INCOMPLETE_MSG);
       return;
     }
+    const payloads: ScheduleModalPayload[] = timeSlots.map(slot => ({
+      id: entry?.id,
+      studioId,
+      instructorId,
+      className: className.trim(),
+      yogaType,
+      difficulty,
+      day: slot.day,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      maxCapacity: cap,
+      price: pr,
+    }));
     setSaving(true);
     try {
-      await Promise.resolve(
-        onSave({
-          id: entry?.id,
-          studioId,
-          instructorId,
-          className: className.trim(),
-          yogaType,
-          difficulty,
-          day,
-          startTime,
-          endTime,
-          maxCapacity: cap,
-          price: pr,
-          isRecurring,
-        }),
-      );
+      await Promise.resolve(onSave(payloads));
     } finally {
       setSaving(false);
     }
@@ -197,30 +208,67 @@ export function ScheduleModal({
               </Select>
             </div>
           </div>
-          <div>
-            <Label>Ден от седмицата</Label>
-            <Select value={day || undefined} onValueChange={setDay}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Изберете ден" />
-              </SelectTrigger>
-              <SelectContent>
-                {WEEKDAYS.map(d => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Начален час</Label>
-              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="mt-1" />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Часове</Label>
+              {!entry ? (
+                <Button type="button" variant="outline" size="sm" onClick={addSlot}>
+                  Добави час
+                </Button>
+              ) : null}
             </div>
-            <div>
-              <Label>Краен час</Label>
-              <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="mt-1" />
-            </div>
+            {timeSlots.map((slot, index) => (
+              <div key={`${index}-${slot.day}-${slot.startTime}-${slot.endTime}`} className="rounded-lg border p-3 space-y-3">
+                <div>
+                  <Label>Ден от седмицата</Label>
+                  <Select value={slot.day || undefined} onValueChange={value => updateSlot(index, { day: value })}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Изберете ден" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WEEKDAYS.map(d => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Начален час</Label>
+                    <Input
+                      type="time"
+                      value={slot.startTime}
+                      onChange={e => updateSlot(index, { startTime: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Краен час</Label>
+                    <Input
+                      type="time"
+                      value={slot.endTime}
+                      onChange={e => updateSlot(index, { endTime: e.target.value })}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                {!entry ? (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSlot(index)}
+                      disabled={timeSlots.length === 1}
+                    >
+                      Премахни
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            ))}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -260,7 +308,6 @@ export function ScheduleModal({
               <Input
                 type="number"
                 min={1}
-                placeholder="20"
                 value={maxCapacity}
                 onChange={e => setMaxCapacity(e.target.value)}
                 className="mt-1"
@@ -271,7 +318,6 @@ export function ScheduleModal({
               <Input
                 type="text"
                 inputMode="decimal"
-                placeholder="12,77"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
                 className="mt-1"
@@ -284,13 +330,6 @@ export function ScheduleModal({
                 </p>
               ) : null}
             </div>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <div>
-              <p className="text-sm font-medium">Повтарящ се</p>
-              <p className="text-xs text-muted-foreground">Този час ще се повтаря всяка седмица</p>
-            </div>
-            <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
           </div>
         </div>
         <DialogFooter className="mt-4">
