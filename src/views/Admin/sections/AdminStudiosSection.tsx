@@ -6,6 +6,11 @@ import { Input } from '@/components/ui/input';
 import { EyeOff, Search, Star, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+function formatStudioCreatedAt(isoDate: string) {
+  const d = new Date(`${isoDate}T12:00:00`);
+  return d.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 export type AdminStudiosSectionClientProps = {
   studios: AdminStudioRow[];
 };
@@ -68,6 +73,9 @@ export function AdminStudiosSectionClient({ studios }: AdminStudiosSectionClient
                 {studio.ownerEmail && (
                   <p className="text-xs text-muted-foreground mt-0.5">Собственик: {studio.ownerEmail}</p>
                 )}
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Създадено: {formatStudioCreatedAt(studio.createdAt)}
+                </p>
                 <p className="text-xs mt-1 font-medium text-muted-foreground">
                   Статус: {studio.isHidden ? 'Скрито' : 'Видимо'}
                 </p>
