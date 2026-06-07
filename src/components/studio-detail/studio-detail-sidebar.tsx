@@ -1,3 +1,5 @@
+'use client';
+
 import dynamic from 'next/dynamic';
 import type { Studio } from '@/data/mock-data';
 import { StudioDetailFavoriteButton } from '@/components/studio-detail/studio-detail-favorite-button';
