@@ -401,18 +401,22 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section data-offer-section className="border-t border-border bg-background py-16">
-          <div className="container mx-auto max-w-2xl px-4">
-            <div className="offer-section-head mb-8 text-center">
-              <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+        <section data-offer-section className="border-t border-border bg-background py-16 md:py-20 lg:py-24">
+          <div className="container mx-auto max-w-2xl px-4 lg:max-w-3xl xl:max-w-4xl">
+            <div className="offer-section-head mb-8 text-center lg:mb-10">
+              <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl lg:text-4xl">
                 Често задавани въпроси
               </h2>
             </div>
             <Accordion type="single" collapsible className="w-full">
               {faqItems.map((item, i) => (
                 <AccordionItem key={item.q} value={`faq-${i}`} className="offer-animate">
-                  <AccordionTrigger className="text-left font-medium">{item.q}</AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">{item.a}</AccordionContent>
+                  <AccordionTrigger className="py-4 text-left text-base font-medium lg:py-5 lg:text-lg xl:py-6 xl:text-xl [&>svg]:h-4 [&>svg]:w-4 lg:[&>svg]:h-5 lg:[&>svg]:w-5">
+                    {item.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-base leading-relaxed text-muted-foreground lg:text-lg xl:text-xl">
+                    {item.a}
+                  </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>

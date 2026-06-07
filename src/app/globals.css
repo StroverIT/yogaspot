@@ -14,7 +14,7 @@
   --yoga-tertiary: #bdb5da;
   --yoga-warm: #f4ccc1;
   --yoga-text: #2d2a4f;
-  --yoga-text-soft: #678b9f;
+  --yoga-text-soft: #524f6f;
 
   /* Map to semantic tokens */
   --background: #fff6ea;
@@ -28,7 +28,7 @@
   --secondary: #7da5bc;
   --secondary-foreground: #ffffff;
   --muted: #f4ccc1;
-  --muted-foreground: #678b9f;
+  --muted-foreground: #524f6f;
   --accent: #bdb5da;
   --accent-foreground: #2d2a4f;
   --destructive: #ef4444;
@@ -82,7 +82,7 @@
   --color-yoga-tertiary: #bdb5da;
   --color-yoga-warm: #f4ccc1;
   --color-yoga-text: #2d2a4f;
-  --color-yoga-text-soft: #678b9f;
+  --color-yoga-text-soft: #524f6f;
 }
 
 @layer base {
