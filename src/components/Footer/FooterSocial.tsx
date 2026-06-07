@@ -10,7 +10,7 @@ const socialButtonClass =
 export const FooterSocial = () => {
     return (
         <div>
-            <h4 className={footerColumnHeadingClass}>Социални мрежи</h4>
+            <h3 className={footerColumnHeadingClass}>Социални мрежи</h3>
 
             <div className="mt-6 flex items-center gap-2">
                 <a

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Studio, YogaClass } from "@/data/mock-data";
@@ -43,13 +43,15 @@ const haversineDistanceKm = (a: Coordinates, b: Coordinates) => {
 export default function NearbyStudiosSection({ studios, classes, isFavorite, onFavorite }: NearbyStudiosSectionProps) {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationRequested, setLocationRequested] = useState(false);
 
-  useEffect(() => {
+  const requestLocation = () => {
     if (!navigator.geolocation) {
       setLocationError("Локацията не се поддържа в този браузър.");
       return;
     }
 
+    setLocationRequested(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserLocation({
@@ -66,7 +68,7 @@ export default function NearbyStudiosSection({ studios, classes, isFavorite, onF
         timeout: 8000,
       }
     );
-  }, []);
+  };
 
   const studiosWithDistance = useMemo(() => {
     if (!userLocation) {
@@ -107,8 +109,23 @@ export default function NearbyStudiosSection({ studios, classes, isFavorite, onF
               <p className="text-muted-foreground">
                 {hasRealLocation
                   ? "Открий йога студиа в твоя район."
-                  : "Показваме примерни популярни студиа. Разреши достъп до локацията си за по-точни резултати."}
+                  : "Показваме популярни студиа. Използвай локацията си за по-точни резултати."}
               </p>
+              {!hasRealLocation ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 rounded-full gap-1.5"
+                  onClick={requestLocation}
+                  disabled={locationRequested && !locationError}
+                >
+                  <LocateFixed className="h-4 w-4" />
+                  {locationRequested && !locationError && !userLocation
+                    ? "Локацията се зарежда..."
+                    : "Използвай моята локация"}
+                </Button>
+              ) : null}
             </div>
 
           </div>

@@ -1,4 +1,4 @@
-import { FOOTER_SOCIAL, footerLinkClass } from "./constants";
+import { FOOTER_SOCIAL, footerInlineLinkClass } from "./constants";
 
 const externalLinkProps = {
   target: "_blank" as const,
@@ -17,7 +17,7 @@ export function FooterBetaNotice() {
           <a
             href={FOOTER_SOCIAL.facebook}
             {...externalLinkProps}
-            className={footerLinkClass}
+            className={footerInlineLinkClass}
           >
             Facebook
           </a>{" "}
@@ -25,7 +25,7 @@ export function FooterBetaNotice() {
           <a
             href={FOOTER_SOCIAL.instagram}
             {...externalLinkProps}
-            className={footerLinkClass}
+            className={footerInlineLinkClass}
           >
             Instagram
           </a>

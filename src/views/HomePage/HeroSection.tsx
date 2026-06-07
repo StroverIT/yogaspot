@@ -60,7 +60,14 @@ export default function HeroSection({
   return (
     <section className="relative overflow-hidden py-20 md:py-32">
       <div className="absolute inset-0">
-        <Image src="/homepage/hero-yoga.jpg" alt="Yoga studio" fill className="object-cover" sizes="100vw" />
+        <Image
+          src="/homepage/hero-yoga.jpg"
+          alt="Yoga studio"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px]" />
       </div>
       <div className="container mx-auto px-4 relative z-10">

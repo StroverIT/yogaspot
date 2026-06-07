@@ -4,7 +4,7 @@ import { footerColumnHeadingClass, footerLinkClass } from "./constants";
 export function FooterQuickLinks() {
   return (
     <div>
-      <h4 className={footerColumnHeadingClass}>Бързи връзки</h4>
+      <h3 className={footerColumnHeadingClass}>Бързи връзки</h3>
       <ul className="space-y-3">
         <li>
           <Link href="/discover?nearMe=true" className={footerLinkClass}>

@@ -7,7 +7,7 @@ const pricingMailto =
 export function FooterForStudios() {
   return (
     <div>
-      <h4 className={footerColumnHeadingClass}>За студиа</h4>
+      <h3 className={footerColumnHeadingClass}>За студиа</h3>
       <ul className="space-y-3">
         <li>
           <Link href="/auth" className={footerLinkClass}>
