@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { sessionToNavUser } from '@/lib/nav-user';
 import { AppProviders } from '@/components/AppProviders';
+import { GoogleTag } from '@/components/GoogleTag';
 import SiteLayout from '@/components/SiteLayout';
 import { defaultSiteDescription, getSiteUrl, siteName } from '@/lib/site';
 import { defaultShareOgImages, defaultShareTwitterImagePaths, facebookAppMetadata } from '@/lib/share-metadata';
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className={`${nunito.variable} ${playfair.variable} ${GeistMono.variable}`}
     >
       <body className="antialiased">
+        <GoogleTag />
         <AppProviders session={session}>
           <SiteLayout initialUser={initialUser}>{children}</SiteLayout>
         </AppProviders>
