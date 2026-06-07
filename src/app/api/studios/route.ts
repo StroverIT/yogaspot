@@ -95,43 +95,53 @@ export async function POST(request: Request) {
     await provisionPlatformSubscription(business.id);
   }
 
-  const imageFiles = formData
-    .getAll('images')
-    .filter((v): v is File => typeof v !== 'string');
+  const imageUrlsFromForm = formData
+    .getAll('imageUrls')
+    .filter((v): v is string => typeof v === 'string' && !!v.trim())
+    .map((url) => url.trim());
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[POST /api/studios] imageFiles:', imageFiles.length);
-  }
+  let imageUrls: string[];
 
-  const imageUrls: string[] = [];
-  for (const file of imageFiles) {
-    // Next.js provides uploaded files as `File` in formData.
-    if (!file?.name) continue;
+  if (imageUrlsFromForm.length > 0) {
+    imageUrls = imageUrlsFromForm;
+  } else {
+    const imageFiles = formData
+      .getAll('images')
+      .filter((v): v is File => typeof v !== 'string');
 
-    const originalName = String(file.name);
-    const ext = originalName.includes('.') ? originalName.split('.').pop() : undefined;
-    const safeExt = ext ? ext.toLowerCase().replace(/[^a-z0-9]/g, '') : 'bin';
-    const objectPath = `studios/${business.id}/${randomUUID()}${safeExt ? `.${safeExt}` : ''}`;
-
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-      .from(bucket)
-      .upload(objectPath, fileBuffer, {
-        contentType: file.type ?? 'application/octet-stream',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      const message = `Качването на снимката не успя: ${uploadError.message}. Уверете се, че bucket „${bucket}" съществува в Supabase Storage и е публичен.`;
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[POST /api/studios] Storage upload error:', uploadError);
-      }
-      return NextResponse.json({ error: message }, { status: 400 });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[POST /api/studios] imageFiles:', imageFiles.length);
     }
 
-    const { data: publicUrlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(uploadData.path);
-    imageUrls.push(publicUrlData.publicUrl);
+    imageUrls = [];
+    for (const file of imageFiles) {
+      if (!file?.name) continue;
+
+      const originalName = String(file.name);
+      const ext = originalName.includes('.') ? originalName.split('.').pop() : undefined;
+      const safeExt = ext ? ext.toLowerCase().replace(/[^a-z0-9]/g, '') : 'bin';
+      const objectPath = `studios/${business.id}/${randomUUID()}${safeExt ? `.${safeExt}` : ''}`;
+
+      const fileBuffer = Buffer.from(await file.arrayBuffer());
+
+      const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+        .from(bucket)
+        .upload(objectPath, fileBuffer, {
+          contentType: file.type ?? 'application/octet-stream',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        const message = `Качването на снимката не успя: ${uploadError.message}. Уверете се, че bucket „${bucket}" съществува в Supabase Storage и е публичен.`;
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[POST /api/studios] Storage upload error:', uploadError);
+        }
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+
+      const { data: publicUrlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(uploadData.path);
+      imageUrls.push(publicUrlData.publicUrl);
+    }
   }
 
   const created = await prisma.studio.create({

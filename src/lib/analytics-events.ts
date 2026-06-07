@@ -12,6 +12,7 @@ export const USER_ANALYTICS_EVENTS = [
 ] as const;
 
 export const STUDIO_ANALYTICS_EVENTS = [
+  'studio_offer_page_view',
   'studio_signup_completed',
   'signin_completed_business',
   'studio_profile_completed',

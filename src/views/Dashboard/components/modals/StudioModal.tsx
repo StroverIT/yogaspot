@@ -12,6 +12,7 @@ import {
 } from '@/data/yoga-types';
 import { useToast } from '@/hooks/use-toast';
 import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
+import { MAX_STUDIO_IMAGE_BYTES, MAX_STUDIO_IMAGE_SIZE_LABEL } from '@/lib/studio-image-limits';
 import { cn } from '@/lib/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
@@ -27,10 +28,16 @@ type StudioModalProps = {
 };
 
 type StudioImageUrlSlot = { kind: 'url'; id: string; url: string };
-type StudioImageFileSlot = { kind: 'file'; id: string; file: File; previewUrl: string };
-type StudioImageSlot = StudioImageUrlSlot | StudioImageFileSlot;
+type StudioImageUploadingSlot = { kind: 'uploading'; id: string; previewUrl: string };
+type StudioImageOversizedSlot = { kind: 'oversized'; id: string; previewUrl: string; fileName: string };
+type StudioImageSlot = StudioImageUrlSlot | StudioImageUploadingSlot | StudioImageOversizedSlot;
 
-const NEW_IMAGE_SLOT_MARKER = '__NEW__';
+function revokeStudioImageSlotPreview(slot: StudioImageSlot) {
+  if (slot.kind === 'uploading' || slot.kind === 'oversized') {
+    URL.revokeObjectURL(slot.previewUrl);
+  }
+}
+
 const DRAG_MIME = 'application/x-zenno-studio-image-index';
 
 export function StudioModal({
@@ -94,6 +101,36 @@ export function StudioModal({
     [selectedYogaTypes],
   );
 
+  const imageUploadingCount = useMemo(
+    () => imageSlots.filter(s => s.kind === 'uploading').length,
+    [imageSlots],
+  );
+
+  const oversizedImageCount = useMemo(
+    () => imageSlots.filter(s => s.kind === 'oversized').length,
+    [imageSlots],
+  );
+
+  const uploadStudioImage = useCallback(
+    async (file: File): Promise<string> => {
+      const fd = new FormData();
+      fd.append('file', file);
+      if (initialStudio?.id) {
+        fd.append('studioId', initialStudio.id);
+      }
+      const res = await fetch('/api/dashboard/studios/images', { method: 'POST', body: fd });
+      const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!res.ok) {
+        throw new Error(typeof body.error === 'string' ? body.error : `Качването не успя (${res.status})`);
+      }
+      if (typeof body.url !== 'string' || !body.url) {
+        throw new Error('Качването не успя.');
+      }
+      return body.url;
+    },
+    [initialStudio?.id],
+  );
+
   useEffect(() => {
     if (!open) return;
     setYogaTypesQuery('');
@@ -103,9 +140,7 @@ export function StudioModal({
     setAddressPredictions([]);
 
     setImageSlots(prev => {
-      prev.forEach(s => {
-        if (s.kind === 'file') URL.revokeObjectURL(s.previewUrl);
-      });
+      prev.forEach(revokeStudioImageSlotPreview);
       if (initialStudio) {
         return (initialStudio.images ?? []).map(url => ({
           kind: 'url' as const,
@@ -296,9 +331,7 @@ export function StudioModal({
   const removeImageSlot = useCallback((slotId: string) => {
     setImageSlots(prev => {
       const slot = prev.find(s => s.id === slotId);
-      if (slot?.kind === 'file') {
-        URL.revokeObjectURL(slot.previewUrl);
-      }
+      if (slot) revokeStudioImageSlotPreview(slot);
       return prev.filter(s => s.id !== slotId);
     });
   }, []);
@@ -385,6 +418,22 @@ export function StudioModal({
       });
       return;
     }
+    if (imageUploadingCount > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Изчакайте',
+        description: 'Снимките все още се качват.',
+      });
+      return;
+    }
+    if (oversizedImageCount > 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Голяма снимка',
+        description: `Премахнете снимките, които надхвърлят ${MAX_STUDIO_IMAGE_SIZE_LABEL}, преди да запазите.`,
+      });
+      return;
+    }
 
     setSubmitting(true);
 
@@ -415,15 +464,12 @@ export function StudioModal({
         for (const slot of imageSlots) {
           if (slot.kind === 'url') {
             formData.append('imageSlot', slot.url);
-          } else {
-            formData.append('imageSlot', NEW_IMAGE_SLOT_MARKER);
-            formData.append('images', slot.file);
           }
         }
       } else {
         for (const slot of imageSlots) {
-          if (slot.kind === 'file') {
-            formData.append('images', slot.file);
+          if (slot.kind === 'url') {
+            formData.append('imageUrls', slot.url);
           }
         }
       }
@@ -625,7 +671,8 @@ export function StudioModal({
           <div className="space-y-2">
             <Label>Снимки</Label>
             <p className="text-sm text-muted-foreground sm:text-base">
-              Първата снимка е корицата в списъците. Подредете със стрелките или плъзнете картата. Можете да премахвате снимки.
+              Първата снимка е корицата в списъците. Подредете със стрелките или плъзнете картата. Можете да
+              премахвате снимки. Всяка снимка не трябва да надхвърля {MAX_STUDIO_IMAGE_SIZE_LABEL}.
             </p>
             <Input
               type="file"
@@ -634,24 +681,51 @@ export function StudioModal({
               className="h-auto cursor-pointer py-3 text-base file:text-base file:font-medium"
               onChange={e => {
                 const files = Array.from(e.target.files ?? []);
-                if (!files.length) return;
-                setImageSlots(prev => [
-                  ...prev,
-                  ...files.map(file => ({
-                    kind: 'file' as const,
-                    id: crypto.randomUUID(),
-                    file,
-                    previewUrl: URL.createObjectURL(file),
-                  })),
-                ]);
                 e.target.value = '';
+                if (!files.length) return;
+
+                for (const file of files) {
+                  const slotId = crypto.randomUUID();
+                  const previewUrl = URL.createObjectURL(file);
+
+                  if (file.size > MAX_STUDIO_IMAGE_BYTES) {
+                    setImageSlots(prev => [
+                      ...prev,
+                      { kind: 'oversized', id: slotId, previewUrl, fileName: file.name },
+                    ]);
+                    continue;
+                  }
+
+                  setImageSlots(prev => [...prev, { kind: 'uploading', id: slotId, previewUrl }]);
+
+                  void (async () => {
+                    try {
+                      const url = await uploadStudioImage(file);
+                      setImageSlots(prev =>
+                        prev.map(s => (s.id === slotId ? { kind: 'url' as const, id: slotId, url } : s)),
+                      );
+                      URL.revokeObjectURL(previewUrl);
+                    } catch (err) {
+                      setImageSlots(prev => prev.filter(s => s.id !== slotId));
+                      URL.revokeObjectURL(previewUrl);
+                      toast({
+                        variant: 'destructive',
+                        title: 'Грешка',
+                        description: err instanceof Error ? err.message : 'Качването не успя.',
+                      });
+                    }
+                  })();
+                }
               }}
             />
             {imageSlots.length ? (
               <div className="grid grid-cols-3 gap-2">
                 {imageSlots.map((slot, idx) => {
                   const src = slot.kind === 'url' ? slot.url : slot.previewUrl;
-                  const canReorder = imageSlots.length > 1;
+                  const isUploading = slot.kind === 'uploading';
+                  const isOversized = slot.kind === 'oversized';
+                  const canReorder = imageSlots.length > 1 && !isUploading && !isOversized;
+                  const isCover = idx === 0 && slot.kind === 'url';
                   return (
                     <div
                       key={slot.id}
@@ -659,15 +733,34 @@ export function StudioModal({
                       onDragStart={canReorder ? onSlotDragStart(idx) : undefined}
                       onDragOver={canReorder ? onSlotDragOver : undefined}
                       onDrop={canReorder ? onSlotDrop(idx) : undefined}
-                      className="group/slot relative overflow-hidden rounded-lg border border-border bg-muted/20"
+                      className={cn(
+                        'group/slot relative overflow-hidden rounded-lg border bg-muted/20',
+                        isOversized ? 'border-destructive' : 'border-border',
+                      )}
                     >
                       <img
                         src={src}
                         alt=""
                         draggable={false}
-                        className="pointer-events-none h-36 w-full select-none object-cover sm:h-40"
+                        className={cn(
+                          'pointer-events-none h-36 w-full select-none object-cover sm:h-40',
+                          (isUploading || isOversized) && 'opacity-60',
+                        )}
                       />
-                      {idx === 0 ? (
+                      {isUploading ? (
+                        <span className="absolute inset-0 flex items-center justify-center bg-background/40 text-sm font-medium">
+                          Качване…
+                        </span>
+                      ) : null}
+                      {isOversized ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-destructive/15 px-2 text-center">
+                          <span className="text-xs font-semibold text-destructive sm:text-sm">Надхвърля максимума</span>
+                          <span className="text-[10px] leading-tight text-destructive/90 sm:text-xs">
+                            {MAX_STUDIO_IMAGE_SIZE_LABEL}
+                          </span>
+                        </div>
+                      ) : null}
+                      {isCover ? (
                         <span className="absolute bottom-10 left-1 rounded bg-background/95 px-2 py-0.5 text-xs font-medium text-foreground shadow-sm">
                           Главна
                         </span>
@@ -838,8 +931,19 @@ export function StudioModal({
           <Button variant="outline" size="lg" className="text-base" onClick={onClose}>
             Отказ
           </Button>
-          <Button size="lg" className="text-base" onClick={handleSave} disabled={submitting}>
-            {submitting ? 'Запазване...' : 'Запази'}
+          <Button
+            size="lg"
+            className="text-base"
+            onClick={handleSave}
+            disabled={submitting || imageUploadingCount > 0 || oversizedImageCount > 0}
+          >
+            {submitting
+              ? 'Запазване...'
+              : imageUploadingCount > 0
+                ? 'Качване на снимки…'
+                : oversizedImageCount > 0
+                  ? 'Премахнете големите снимки'
+                  : 'Запази'}
           </Button>
         </DialogFooter>
       </DialogContent>
