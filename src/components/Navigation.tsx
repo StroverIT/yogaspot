@@ -12,6 +12,7 @@ import Hamburger from "hamburger-react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import AuthModal from "@/components/AuthModal";
+import { AddStudioCtaButton } from "@/components/home/add-studio-cta-button";
 
 const LOGO_SCROLL_THRESHOLD_PX = 8;
 const LOGO_LARGE = { width: "7rem", height: "7rem" }; // h-28 w-28
@@ -43,9 +44,12 @@ function navUserToUser(n: NavUser): User {
   };
 }
 
-type NavigationProps = { initialUser?: NavUser | null };
+type NavigationProps = {
+  initialUser?: NavUser | null;
+  variant?: 'default' | 'landing';
+};
 
-const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
+const Navigation: React.FC<NavigationProps> = ({ initialUser = null, variant = 'default' }) => {
   const { status } = useSession();
   const { user: authUser, logout, isAuthenticated } = useAuth();
   const supplementUser =
@@ -244,7 +248,7 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
 
           <Link
-            href="/"
+            href={variant === "landing" ? "/studio-offer" : "/"}
             className="flex min-w-0 items-center gap-2 md:gap-3"
             aria-label="Zenno — начало. По-лесният път към йога"
           >
@@ -274,6 +278,21 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
             </div>
           </Link>
 
+          {variant === "landing" ? (
+            <>
+              <div className="hidden md:flex items-center">
+                <AddStudioCtaButton next="/dashboard" className="rounded-xl">
+                  Започнете безплатно
+                </AddStudioCtaButton>
+              </div>
+              <div className="md:hidden">
+                <AddStudioCtaButton next="/dashboard" size="sm" className="rounded-xl text-sm">
+                  Започнете
+                </AddStudioCtaButton>
+              </div>
+            </>
+          ) : (
+            <>
           <nav className="hidden md:flex items-center gap-6 font-body text-sm font-medium">
             <Link
               href="/discover"
@@ -366,9 +385,11 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null }) => {
               color="currentColor"
             />
           </div>
+            </>
+          )}
         </div>
 
-        {mobileMenuMounted && (
+        {variant !== "landing" && mobileMenuMounted && (
           <div
             ref={mobilePanelRef}
             className="md:hidden overflow-hidden border-t border-border bg-background font-body will-change-[clip-path]"

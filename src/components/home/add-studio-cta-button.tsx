@@ -9,14 +9,22 @@ import { Button, buttonVariants } from "@/components/ui/button";
 export type AddStudioCtaButtonProps = {
   className?: string;
   children: ReactNode;
+  /** Post-registration destination for guests (e.g. `/dashboard`). */
+  next?: string;
 } & VariantProps<typeof buttonVariants>;
 
-export function AddStudioCtaButton({ className, children, variant, size }: AddStudioCtaButtonProps) {
+export function AddStudioCtaButton({
+  className,
+  children,
+  variant,
+  size,
+  next,
+}: AddStudioCtaButtonProps) {
   const { status } = useSession();
-  const href =
-    status === "authenticated"
-      ? "/dashboard/studios"
-      : "/auth?type=register&role=business";
+  const registerHref = next
+    ? `/auth?type=register&role=business&next=${encodeURIComponent(next)}`
+    : "/auth?type=register&role=business";
+  const href = status === "authenticated" ? "/dashboard/studios" : registerHref;
 
   return (
     <Button asChild variant={variant} size={size} className={className}>

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { GoogleGIcon } from '@/components/icons/brand-icons';
 import { Spinner } from '@/components/ui/spinner';
+import { getSafeInternalPath } from '@/lib/safe-redirect';
 
 const Auth = () => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -22,6 +23,17 @@ const Auth = () => {
   const searchParams = useSearchParams();
   const prevAuthModeRef = useRef<'login' | 'register' | null>(null);
 
+  const redirectPath = getSafeInternalPath(searchParams?.get('next'));
+
+  const buildAuthUrl = (params: Record<string, string>) => {
+    const q = new URLSearchParams(params);
+    const nextParam = searchParams?.get('next');
+    if (nextParam) {
+      q.set('next', nextParam);
+    }
+    return `/auth?${q.toString()}`;
+  };
+
   const reset = () => {
     setEmail('');
     setPassword('');
@@ -30,9 +42,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/');
+      router.replace(redirectPath);
     }
-  }, [status, router]);
+  }, [status, router, redirectPath]);
 
   useEffect(() => {
     const typeParam = searchParams?.get('type');
@@ -65,10 +77,9 @@ const Auth = () => {
   const switchMode = (newMode: 'login' | 'register') => {
     reset();
     if (newMode === 'login') {
-      router.push('/auth?type=login');
+      router.push(buildAuthUrl({ type: 'login' }));
     } else {
-      const q = new URLSearchParams({ type: 'register', role });
-      router.push(`/auth?${q.toString()}`);
+      router.push(buildAuthUrl({ type: 'register', role }));
     }
   };
 
@@ -78,7 +89,7 @@ const Auth = () => {
     try {
       await login(email, password);
       toast.success('Успешен вход!');
-      router.push("/");
+      router.push(redirectPath);
     } catch { toast.error('Грешка при вход.'); }
   };
 
@@ -88,7 +99,7 @@ const Auth = () => {
     try {
       await register(name, email, password, role);
       toast.success('Успешна регистрация!');
-      router.push("/");
+      router.push(redirectPath);
     } catch { toast.error('Грешка при регистрация.'); }
   };
 
@@ -174,7 +185,7 @@ const Auth = () => {
                   className="w-full h-12 gap-3 text-base rounded-xl"
                   onClick={async () => {
                     try {
-                      await loginWithGoogle();
+                      await loginWithGoogle({ callbackUrl: redirectPath });
                     } catch (err) {
                       console.error(err);
                       toast.error('Грешка при вход с Google.');
@@ -226,7 +237,10 @@ const Auth = () => {
                   className="w-full h-12 gap-3 text-base rounded-xl"
                   onClick={async () => {
                     try {
-                      await loginWithGoogle({ registrationRole: role });
+                      await loginWithGoogle({
+                        registrationRole: role,
+                        callbackUrl: redirectPath,
+                      });
                     } catch (err) {
                       console.error(err);
                       toast.error('Грешка при регистрация с Google.');
@@ -251,11 +265,7 @@ const Auth = () => {
                         type="button"
                         onClick={() => {
                           setRole(r.value);
-                          const q = new URLSearchParams({
-                            type: 'register',
-                            role: r.value,
-                          });
-                          router.replace(`/auth?${q.toString()}`);
+                          router.replace(buildAuthUrl({ type: 'register', role: r.value }));
                         }}
                         className={`rounded-xl border-2 p-4 text-left transition-all ${role === r.value
                             ? 'border-primary bg-primary/5 shadow-sm'
