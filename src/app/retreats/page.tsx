@@ -1,9 +1,10 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
-import { getHomeRetreats } from '@/lib/home/home-data';
+import { RetreatsCatalogSection } from '@/components/retreats/retreats-catalog-section';
+import { RetreatsCatalogSkeleton } from '@/components/retreats/retreats-catalog-skeleton';
 import { defaultShareOgImages, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
-import { RetreatsCatalog } from '@/views/RetreatsPage/RetreatsCatalog';
 
 export const metadata: Metadata = {
   title: 'Рийтрийти',
@@ -26,17 +27,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RetreatsPage() {
-  const retreats = await getHomeRetreats();
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default function RetreatsPage({ searchParams }: PageProps) {
   return (
     <div className="flex min-h-screen flex-col bg-yoga-bg">
       <PageViewTracker event="retreats_page_view" />
       <main className="container mx-auto flex-1 px-4 py-8">
         <div className="mb-8">
           <h1 className="font-serif text-3xl font-semibold text-yoga-text md:text-4xl">Рийтрийти</h1>
-          <p className="mt-2 text-yoga-text-soft">Разгледай всички рийтрийти и намери следващото си йога приключение.</p>
+          <p className="mt-2 text-yoga-text-soft">
+            Разгледай всички рийтрийти и намери следващото си йога приключение.
+          </p>
         </div>
-        <RetreatsCatalog retreats={retreats} />
+        <Suspense fallback={<RetreatsCatalogSkeleton />}>
+          <RetreatsCatalogSection searchParams={searchParams} />
+        </Suspense>
       </main>
     </div>
   );

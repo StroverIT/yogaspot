@@ -159,19 +159,21 @@ const getPublishedRetreatRowByIdCached = unstable_cache(getPublishedRetreatRowBy
 });
 
 export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
-  const user = await getSessionUser();
-  const retreatBookingDelegate = (prisma as unknown as {
-    retreatBooking: {
-      findMany: (args: {
-        where: { userId: string; retreatId: { in: string[] } };
-        select: { retreatId: true };
-      }) => Promise<Array<{ retreatId: string }>>;
-    };
-  }).retreatBooking;
-  const retreats = await getPublishedRetreatRowsCached(limit);
+  const [retreats, user] = await Promise.all([
+    getPublishedRetreatRowsCached(limit),
+    getSessionUser(),
+  ]);
 
   const enrolledIds = new Set<string>();
   if (user?.id && retreats.length > 0) {
+    const retreatBookingDelegate = (prisma as unknown as {
+      retreatBooking: {
+        findMany: (args: {
+          where: { userId: string; retreatId: { in: string[] } };
+          select: { retreatId: true };
+        }) => Promise<Array<{ retreatId: string }>>;
+      };
+    }).retreatBooking;
     const bookings = await retreatBookingDelegate.findMany({
       where: {
         userId: user.id,
@@ -186,20 +188,22 @@ export async function getHomeRetreats(limit = 30): Promise<HomeRetreat[]> {
 }
 
 export async function getHomeRetreatById(id: string): Promise<HomeRetreat | null> {
-  const user = await getSessionUser();
-  const retreatBookingDelegate = (prisma as unknown as {
-    retreatBooking: {
-      findUnique: (args: {
-        where: { retreatId_userId: { retreatId: string; userId: string } };
-        select: { retreatId: true };
-      }) => Promise<{ retreatId: string } | null>;
-    };
-  }).retreatBooking;
-  const retreat = await getPublishedRetreatRowByIdCached(id);
+  const [retreat, user] = await Promise.all([
+    getPublishedRetreatRowByIdCached(id),
+    getSessionUser(),
+  ]);
 
   if (!retreat) return null;
   let isEnrolled = false;
   if (user?.id) {
+    const retreatBookingDelegate = (prisma as unknown as {
+      retreatBooking: {
+        findUnique: (args: {
+          where: { retreatId_userId: { retreatId: string; userId: string } };
+          select: { retreatId: true };
+        }) => Promise<{ retreatId: string } | null>;
+      };
+    }).retreatBooking;
     const booking = await retreatBookingDelegate.findUnique({
       where: { retreatId_userId: { retreatId: retreat.id, userId: user.id } },
       select: { retreatId: true },
