@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
-import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
+import {
+  StudioDetailPageContent,
+  StudioDetailPageContentFallback,
+} from '@/components/studio-detail/studio-detail-page-content';
 import { getPublicStudioPayload } from '@/lib/get-public-studio';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { getSiteUrl } from '@/lib/site';
 import { absoluteOgImageUrl, defaultShareOgImage, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
-import StudioDetail from '@/views/StudioDetail';
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -70,20 +70,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function StudioDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [payload, onlinePayments] = await Promise.all([
-    getPublicStudioPayload(id, { trackView: true }),
-    Promise.resolve(isOnlinePaymentsEnabled()),
-  ]);
-
-  if (!payload) {
-    notFound();
-  }
 
   return (
     <>
       <PageViewTracker event="studio_page_view" studioId={id} />
-      <Suspense fallback={<StudioDetailPageSkeleton />}>
-        <StudioDetail initialPayload={payload} onlinePayments={onlinePayments} />
+      <Suspense fallback={<StudioDetailPageContentFallback />}>
+        <StudioDetailPageContent id={id} />
       </Suspense>
     </>
   );

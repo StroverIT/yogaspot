@@ -1,6 +1,8 @@
 import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
 import type { Instructor, Review, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
 import { getSessionUser } from '@/lib/api-auth';
+import { CACHE_TAGS, getPublicStudioTag } from '@/lib/app-revalidate';
 import {
   instructorToDto,
   reviewToDto,
@@ -22,64 +24,108 @@ export type PublicStudioPayload = {
   myBookings: { classIds: string[]; scheduleEntryIds: string[] };
 };
 
+type PublicStudioContent = Omit<PublicStudioPayload, 'myBookings'>;
+
 type LoadedStudio = {
   payload: PublicStudioPayload;
   userId?: string;
 };
 
-const loadPublicStudioPayload = cache(async (id: string): Promise<LoadedStudio | null> => {
-  const [studio, sessionUser] = await Promise.all([
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+async function fetchPublicStudioContent(id: string): Promise<PublicStudioContent | null> {
+  const today = startOfToday();
+
+  const [studio, studioReviews] = await Promise.all([
     prisma.studio.findUnique({
       where: { id },
       include: {
         business: { select: { ownerUserId: true } },
         instructors: { orderBy: { name: 'asc' } },
-        classes: { orderBy: { date: 'asc' } },
+        classes: {
+          where: { date: { gte: today } },
+          orderBy: { date: 'asc' },
+          take: 80,
+        },
         schedule: { orderBy: [{ day: 'asc' }, { startTime: 'asc' }] },
         subscription: true,
       },
     }),
-    getSessionUser(),
+    prisma.review.findMany({
+      where: { targetType: 'studio', targetId: id },
+      orderBy: { date: 'desc' },
+      take: 50,
+      include: { author: { select: { image: true, name: true } } },
+    }),
   ]);
 
   if (!studio) {
     return null;
   }
 
-  const studioReviews = await prisma.review.findMany({
-    where: { targetType: 'studio', targetId: studio.id },
-    orderBy: { date: 'desc' },
-    include: { author: { select: { image: true, name: true } } },
-  });
+  return {
+    studio: studioToDto(studio),
+    instructors: studio.instructors.map(instructorToDto),
+    classes: studio.classes.map(yogaClassToDto),
+    schedule: studio.schedule.map(scheduleEntryToDto),
+    subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
+    reviews: studioReviews.map(reviewToDto),
+  };
+}
 
-  let myBookings: PublicStudioPayload['myBookings'] = { classIds: [], scheduleEntryIds: [] };
-  if (sessionUser?.id) {
-    const [classRows, scheduleRows] = await Promise.all([
-      prisma.booking.findMany({
-        where: { userId: sessionUser.id, yogaClass: { studioId: studio.id } },
-        select: { yogaClassId: true },
-      }),
-      prisma.scheduleEntryBooking.findMany({
-        where: { userId: sessionUser.id, scheduleEntry: { studioId: studio.id } },
-        select: { scheduleEntryId: true },
-      }),
-    ]);
-    myBookings = {
-      classIds: classRows.map((r) => r.yogaClassId),
-      scheduleEntryIds: scheduleRows.map((r) => r.scheduleEntryId),
-    };
-  }
+function getCachedPublicStudioContent(id: string) {
+  return unstable_cache(
+    async () => fetchPublicStudioContent(id),
+    ['public-studio-content', id],
+    {
+      tags: [CACHE_TAGS.publicStudio, getPublicStudioTag(id)],
+      revalidate: 120,
+    },
+  )();
+}
+
+async function loadMyBookings(
+  userId: string,
+  studioId: string,
+): Promise<PublicStudioPayload['myBookings']> {
+  const [classRows, scheduleRows] = await Promise.all([
+    prisma.booking.findMany({
+      where: { userId, yogaClass: { studioId } },
+      select: { yogaClassId: true },
+    }),
+    prisma.scheduleEntryBooking.findMany({
+      where: { userId, scheduleEntry: { studioId } },
+      select: { scheduleEntryId: true },
+    }),
+  ]);
 
   return {
-    payload: {
-      studio: studioToDto(studio),
-      instructors: studio.instructors.map(instructorToDto),
-      classes: studio.classes.map(yogaClassToDto),
-      schedule: studio.schedule.map(scheduleEntryToDto),
-      subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
-      reviews: studioReviews.map(reviewToDto),
-      myBookings,
-    },
+    classIds: classRows.map((r) => r.yogaClassId),
+    scheduleEntryIds: scheduleRows.map((r) => r.scheduleEntryId),
+  };
+}
+
+const loadPublicStudioPayload = cache(async (id: string): Promise<LoadedStudio | null> => {
+  const [content, sessionUser] = await Promise.all([
+    getCachedPublicStudioContent(id),
+    getSessionUser(),
+  ]);
+
+  if (!content) {
+    return null;
+  }
+
+  const myBookings =
+    sessionUser?.id != null
+      ? await loadMyBookings(sessionUser.id, content.studio.id)
+      : { classIds: [], scheduleEntryIds: [] };
+
+  return {
+    payload: { ...content, myBookings },
     userId: sessionUser?.id,
   };
 });

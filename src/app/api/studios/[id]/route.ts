@@ -223,7 +223,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       },
     });
 
-    invalidateAfterCatalogChange();
+    invalidateAfterCatalogChange(undefined, id);
     return NextResponse.json({ studio: mapStudioResponse(updated) });
   }
 
@@ -259,7 +259,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     data,
   });
 
-  invalidateAfterCatalogChange();
+  invalidateAfterCatalogChange(undefined, id);
   return NextResponse.json({ studio: mapStudioResponse(updated) });
 }
 
@@ -276,6 +276,6 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
 
   await prisma.studio.delete({ where: { id } });
 
-  invalidateAfterCatalogChange();
+  invalidateAfterCatalogChange(undefined, id);
   return NextResponse.json({ ok: true });
 }

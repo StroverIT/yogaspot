@@ -1,61 +1,61 @@
 'use client';
 
-import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Instructor, Review, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
+import type { ScheduleEntry } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
-import { StudioNotFound } from '@/components/studio-detail/studio-not-found';
-import { StudioDetailGallery } from '@/components/studio-detail/studio-detail-gallery';
-import { StudioDetailSummary } from '@/components/studio-detail/studio-detail-summary';
-import { StudioDetailTabs } from '@/components/studio-detail/studio-detail-tabs';
 import type { TabKey } from '@/components/studio-detail/studio-detail-tabs/types';
-import { StudioDetailSidebar } from '@/components/studio-detail/studio-detail-sidebar';
-import { BookingCheckoutModal, type CheckoutModalTarget } from '@/components/studio-detail/booking-checkout-modal';
+import type { CheckoutModalTarget } from '@/components/studio-detail/booking-checkout-modal';
 import type { PublicStudioPayload } from '@/lib/get-public-studio';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
+
+const StudioDetailTabs = dynamic(
+  () =>
+    import('@/components/studio-detail/studio-detail-tabs').then((m) => m.StudioDetailTabs),
+  {
+    loading: () => (
+      <div className="mt-6 h-48 animate-pulse rounded-2xl border border-border bg-muted/40" />
+    ),
+  },
+);
+
+const BookingCheckoutModal = dynamic(
+  () =>
+    import('@/components/studio-detail/booking-checkout-modal').then((m) => m.BookingCheckoutModal),
+  { ssr: false },
+);
 
 function tabFromSearchParam(tab: string | null): TabKey | undefined {
   if (tab && TAB_KEYS.includes(tab as TabKey)) return tab as TabKey;
   return undefined;
 }
 
-type StudioPayload = {
-  studio: Studio;
-  instructors: Instructor[];
-  classes: YogaClass[];
-  schedule: ScheduleEntry[];
-  subscription: StudioSubscription | null;
-  reviews: Review[];
-  myBookings?: { classIds: string[]; scheduleEntryIds: string[] };
-};
-
-type StudioDetailProps = {
+type StudioDetailInteractiveProps = {
   initialPayload: PublicStudioPayload;
   onlinePayments: boolean;
 };
 
-const StudioDetail = ({ initialPayload, onlinePayments }: StudioDetailProps) => {
+export function StudioDetailInteractive({ initialPayload, onlinePayments }: StudioDetailInteractiveProps) {
   const searchParams = useSearchParams();
   const defaultTab = tabFromSearchParam(searchParams.get('tab'));
   const { isAuthenticated } = useAuth();
   const wasAuthenticated = useRef(isAuthenticated);
 
-  const [payload, setPayload] = useState<StudioPayload>(initialPayload);
+  const [payload, setPayload] = useState(initialPayload);
   const [checkoutTarget, setCheckoutTarget] = useState<CheckoutModalTarget | null>(null);
 
   useEffect(() => {
     setPayload(initialPayload);
   }, [initialPayload]);
 
-  const fetchStudioPayload = useCallback(async (): Promise<StudioPayload | null> => {
+  const fetchStudioPayload = useCallback(async (): Promise<PublicStudioPayload | null> => {
     const studioId = payload.studio.id;
     const res = await fetch(`/api/public/studios/${encodeURIComponent(studioId)}`);
     if (!res.ok) return null;
-    return (await res.json()) as StudioPayload;
+    return (await res.json()) as PublicStudioPayload;
   }, [payload.studio.id]);
 
   useEffect(() => {
@@ -72,10 +72,6 @@ const StudioDetail = ({ initialPayload, onlinePayments }: StudioDetailProps) => 
       if (data) setPayload(data);
     });
   }, [fetchStudioPayload]);
-
-  if (!payload?.studio) {
-    return <StudioNotFound />;
-  }
 
   const { studio, instructors, classes, schedule, subscription, reviews } = payload;
   const studioReviews = reviews.filter((r) => r.targetId === studio.id && r.targetType === 'studio');
@@ -116,54 +112,38 @@ const StudioDetail = ({ initialPayload, onlinePayments }: StudioDetailProps) => 
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <BookingCheckoutModal
-        open={checkoutTarget !== null}
-        target={checkoutTarget}
-        onlinePayments={onlinePayments}
-        onClose={() => setCheckoutTarget(null)}
-        onBooked={() => {
-          void fetchStudioPayload().then((data) => {
-            if (data) setPayload(data);
-          });
-        }}
+    <>
+      {checkoutTarget !== null ? (
+        <BookingCheckoutModal
+          open
+          target={checkoutTarget}
+          onlinePayments={onlinePayments}
+          onClose={() => setCheckoutTarget(null)}
+          onBooked={() => {
+            void fetchStudioPayload().then((data) => {
+              if (data) setPayload(data);
+            });
+          }}
+        />
+      ) : null}
+
+      <StudioDetailTabs
+        key={studio.id}
+        studioId={studio.id}
+        studioOwnerUserId={studio.ownerUserId}
+        studioSchedule={schedule}
+        subscription={subscription ?? undefined}
+        studioClasses={classes}
+        studioInstructors={instructors}
+        studioReviews={studioReviews}
+        onBookClass={handleRequestClassBook}
+        onRequestScheduleBook={handleRequestScheduleBook}
+        onReviewSubmitted={handleReviewSubmitted}
+        defaultTab={defaultTab}
+        checkoutModalOpen={checkoutTarget !== null}
+        bookedClassIds={bookedClassIds}
+        bookedScheduleEntryIds={bookedScheduleEntryIds}
       />
-      <Link
-        href="/discover"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" /> Обратно към търсене
-      </Link>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <StudioDetailGallery images={studio.images} />
-          <StudioDetailSummary studio={studio} />
-          <StudioDetailTabs
-            key={studio.id}
-            studioId={studio.id}
-            studioOwnerUserId={studio.ownerUserId}
-            studioSchedule={schedule}
-            subscription={subscription ?? undefined}
-            studioClasses={classes}
-            studioInstructors={instructors}
-            studioReviews={studioReviews}
-            onBookClass={handleRequestClassBook}
-            onRequestScheduleBook={handleRequestScheduleBook}
-            onReviewSubmitted={handleReviewSubmitted}
-            defaultTab={defaultTab}
-            checkoutModalOpen={checkoutTarget !== null}
-            bookedClassIds={bookedClassIds}
-            bookedScheduleEntryIds={bookedScheduleEntryIds}
-          />
-        </div>
-
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          <StudioDetailSidebar studio={studio} />
-        </div>
-      </div>
-    </div>
+    </>
   );
-};
-
-export default StudioDetail;
+}

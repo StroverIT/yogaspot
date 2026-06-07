@@ -4,14 +4,23 @@ export const CACHE_TAGS = {
   publicCatalog: 'public-catalog',
   publicRetreats: 'public-retreats',
   publicRetreat: 'public-retreat',
+  publicStudio: 'public-studio',
 } as const;
+
+export function getPublicStudioTag(studioId: string): string {
+  return `${CACHE_TAGS.publicStudio}:${studioId}`;
+}
 
 export function getPublicRetreatTag(retreatId: string): string {
   return `${CACHE_TAGS.publicRetreat}:${retreatId}`;
 }
 
-export function revalidatePublicDataTags(retreatId?: string): void {
+export function revalidatePublicDataTags(retreatId?: string, studioId?: string): void {
   revalidateTag(CACHE_TAGS.publicCatalog);
+  revalidateTag(CACHE_TAGS.publicStudio);
+  if (studioId) {
+    revalidateTag(getPublicStudioTag(studioId));
+  }
   revalidateTag(CACHE_TAGS.publicRetreats);
   if (retreatId) {
     revalidateTag(getPublicRetreatTag(retreatId));
@@ -35,7 +44,7 @@ export function revalidateUserFacingRoutes(): void {
   revalidatePath('/sitemap.xml');
 }
 
-export function invalidateAfterCatalogChange(retreatId?: string): void {
-  revalidatePublicDataTags(retreatId);
+export function invalidateAfterCatalogChange(retreatId?: string, studioId?: string): void {
+  revalidatePublicDataTags(retreatId, studioId);
   revalidateUserFacingRoutes();
 }
