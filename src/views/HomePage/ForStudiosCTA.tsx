@@ -18,11 +18,11 @@ export default function ForStudiosCTA() {
             </h2>
             <p className="text-muted-foreground max-w-md">
               Покажи пространството си на хиляди йога ентусиасти. Управлявай разписание, инструктори и резервации —
-              всичко от едно табло.
+              всичко от едно табло. Първите 20 студиа получават 1 месец безплатно, след това 10 €/месец.
             </p>
           </div>
           <AddStudioCtaButton size="lg" className="text-base px-8 py-6 rounded-xl shrink-0">
-            Добави студио безплатно <ArrowRight className="ml-2 h-5 w-5" />
+            Добави студио <ArrowRight className="ml-2 h-5 w-5" />
           </AddStudioCtaButton>
         </div>
       </div>

@@ -31,6 +31,20 @@ enum PaymentStatus {
   failed
 }
 
+enum BusinessPlatformSubscriptionStatus {
+  trial
+  active
+  past_due
+  blocked
+}
+
+enum BusinessPlatformPaymentStatus {
+  pending
+  paid
+  overdue
+  failed
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -45,6 +59,9 @@ model User {
   dashboardSetupGuideDocked      Boolean @default(false)
   /// Setup guide widget: minimized to chip vs expanded panel.
   dashboardSetupGuideMinimized   Boolean @default(false)
+  createdAt DateTime @default(now())
+  /// Latest successful sign-in; used to estimate account start for legacy users without signup data.
+  lastSignedInAt DateTime?
 
   accounts       Account[]
   sessions       Session[]
@@ -106,7 +123,43 @@ model Business {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  studios Studio[]
+  studios                  Studio[]
+  platformSubscription     BusinessPlatformSubscription?
+}
+
+model BusinessPlatformSubscription {
+  id                   String                             @id @default(cuid())
+  businessId           String                             @unique
+  business             Business                           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  status               BusinessPlatformSubscriptionStatus @default(trial)
+  isEarlyAdopter       Boolean                            @default(false)
+  trialEndsAt          DateTime?
+  nextPaymentDueAt     DateTime?
+  gracePeriodEndsAt    DateTime?
+  monthlyAmountEur     Float                              @default(10)
+  stripeCustomerId     String?                            @unique
+  stripeSubscriptionId String?                            @unique
+  createdAt            DateTime                           @default(now())
+  updatedAt            DateTime                           @updatedAt
+
+  payments BusinessPlatformPayment[]
+}
+
+model BusinessPlatformPayment {
+  id              String                        @id @default(cuid())
+  subscriptionId  String
+  subscription    BusinessPlatformSubscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripeInvoiceId String                        @unique
+  amountEur       Float
+  periodStart     DateTime
+  periodEnd       DateTime
+  dueDate         DateTime
+  paidAt          DateTime?
+  status          BusinessPlatformPaymentStatus @default(pending)
+  createdAt       DateTime                      @default(now())
+  updatedAt       DateTime                      @updatedAt
+
+  @@index([subscriptionId, dueDate(sort: Desc)])
 }
 
 model Studio {

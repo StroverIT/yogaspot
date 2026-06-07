@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
 export const runtime = 'nodejs';
@@ -100,6 +100,9 @@ function mapStudioResponse(s: Awaited<ReturnType<typeof prisma.studio.findUnique
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const { id } = await ctx.params;
   const access = await assertStudioWriteAccess(gate.user, id);
@@ -263,6 +266,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const { id } = await ctx.params;
   const access = await assertStudioWriteAccess(gate.user, id);

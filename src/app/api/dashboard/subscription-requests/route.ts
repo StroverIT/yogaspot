@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
@@ -16,6 +16,9 @@ type PostBody = {
 export async function POST(req: Request) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   let body: PostBody;
   try {

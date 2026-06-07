@@ -142,6 +142,65 @@ export async function getAdminLatestSubscriptionRequestsForOverview(): Promise<A
   }));
 }
 
+export type AdminPlatformBillingRow = {
+  businessId: string;
+  businessName: string | null;
+  ownerName: string | null;
+  ownerEmail: string | null;
+  status: string;
+  isEarlyAdopter: boolean;
+  trialEndsAt: string | null;
+  nextPaymentDueAt: string | null;
+  gracePeriodEndsAt: string | null;
+  monthlyAmountEur: number;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  payments: {
+    id: string;
+    amountEur: number;
+    dueDate: string;
+    paidAt: string | null;
+    status: string;
+  }[];
+};
+
+export async function getAdminPlatformBillingForList(): Promise<AdminPlatformBillingRow[]> {
+  const rows = await prisma.businessPlatformSubscription.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      business: {
+        include: {
+          owner: { select: { name: true, email: true } },
+          studios: { select: { name: true }, take: 1 },
+        },
+      },
+      payments: { orderBy: { dueDate: 'desc' }, take: 6 },
+    },
+  });
+
+  return rows.map((row) => ({
+    businessId: row.businessId,
+    businessName: row.business.name ?? row.business.studios[0]?.name ?? null,
+    ownerName: row.business.owner.name,
+    ownerEmail: row.business.owner.email,
+    status: row.status,
+    isEarlyAdopter: row.isEarlyAdopter,
+    trialEndsAt: row.trialEndsAt?.toISOString() ?? null,
+    nextPaymentDueAt: row.nextPaymentDueAt?.toISOString() ?? null,
+    gracePeriodEndsAt: row.gracePeriodEndsAt?.toISOString() ?? null,
+    monthlyAmountEur: row.monthlyAmountEur,
+    stripeCustomerId: row.stripeCustomerId,
+    stripeSubscriptionId: row.stripeSubscriptionId,
+    payments: row.payments.map((p) => ({
+      id: p.id,
+      amountEur: p.amountEur,
+      dueDate: p.dueDate.toISOString(),
+      paidAt: p.paidAt?.toISOString() ?? null,
+      status: p.status,
+    })),
+  }));
+}
+
 export type AdminOverviewData = {
   studios: AdminStudioRow[];
   classes: YogaClass[];

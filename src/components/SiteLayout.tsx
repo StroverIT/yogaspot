@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import SiteTopBanner from '@/components/SiteTopBanner';
 import type { NavUser } from '@/lib/nav-user';
 
 export default function SiteLayout({
@@ -13,6 +14,7 @@ export default function SiteLayout({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation initialUser={initialUser} />
+      <SiteTopBanner />
 
       <main className="flex-1 min-h-0 overflow-x-clip">{children}</main>
 

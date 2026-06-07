@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { listStudioIdsForActor, requireRole } from '@/lib/api-auth';
+import { getSubscriptionSummaryForOwnerUserId } from '@/lib/business-platform-billing';
 import {
   instructorToDto,
   retreatToDto,
@@ -21,6 +22,9 @@ export async function GET() {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
 
+  const platformBilling =
+    gate.user.role === 'business' ? await getSubscriptionSummaryForOwnerUserId(gate.user.id) : null;
+
   const studioIds = await listStudioIdsForActor(gate.user);
   if (studioIds.length === 0) {
     return NextResponse.json({
@@ -34,6 +38,7 @@ export async function GET() {
       recentSignups: [],
       bookingRevenue: emptyDashboardBookingRevenue,
       onlinePayments: isOnlinePaymentsEnabled(),
+      platformBilling,
     });
   }
 
@@ -91,5 +96,6 @@ export async function GET() {
     recentSignups,
     bookingRevenue,
     onlinePayments: isOnlinePaymentsEnabled(),
+    platformBilling,
   });
 }

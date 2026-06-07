@@ -14,13 +14,17 @@ import {
   DashboardSetupGuideMobileDock,
   DashboardSetupGuideSidebarNav,
 } from './components/DashboardSetupGuide';
+import type { PlatformBillingSummary } from '@/lib/business-platform-billing';
+import { PlatformBlockedOverlay } from './components/PlatformBillingBanner';
 
 function DashboardShellInner({
   children,
   serverDisplayName,
+  initialPlatformBilling,
 }: {
   children: React.ReactNode;
   serverDisplayName?: string;
+  initialPlatformBilling?: PlatformBillingSummary | null;
 }) {
   const pathname = usePathname();
   const { user } = useAuth();
@@ -74,39 +78,47 @@ function DashboardShellInner({
       <DashboardSetupGuideSidebarNav doneCount={doneCount} onOpen={openGuideFromMenu} />
     ) : null;
 
+  const platformBilling = ws.platformBilling ?? initialPlatformBilling ?? null;
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex">
-      <DashboardSidebar
-        displayName={displayName}
-        activeSection={activeSection}
-        revenue={eventsAndScheduleIncomeBgn}
-        setupGuide={setupGuideSidebar}
-        setupSectionHints={setupSectionHints}
-      />
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col">
+      <div className="relative flex flex-1 min-h-0">
+        <DashboardSidebar
+          displayName={displayName}
+          activeSection={activeSection}
+          revenue={eventsAndScheduleIncomeBgn}
+          setupGuide={setupGuideSidebar}
+          setupSectionHints={setupSectionHints}
+        />
 
-      <DashboardMobileNav activeSection={activeSection} setupSectionHints={setupSectionHints} />
+        <DashboardMobileNav activeSection={activeSection} setupSectionHints={setupSectionHints} />
 
-      <main className="flex-1 overflow-y-auto bg-linear-to-br from-background via-card/40 to-muted/15 p-6 pb-24 lg:p-8 lg:pb-8">
-        {children}
-      </main>
+        <main className="flex-1 overflow-y-auto bg-linear-to-br from-background via-card/40 to-muted/15 p-6 pb-24 lg:p-8 lg:pb-8">
+          {children}
+        </main>
 
-      <DashboardSetupGuideMobileDock
-        show={showSetupFlow && prefs.docked && hydrated}
-        doneCount={doneCount}
-        onOpen={openGuideFromMenu}
-      />
+        <DashboardSetupGuideMobileDock
+          show={showSetupFlow && prefs.docked && hydrated}
+          doneCount={doneCount}
+          onOpen={openGuideFromMenu}
+        />
 
-      <DashboardSetupGuide
-        visible={showSetupFlow}
-        loading={ws.loading}
-        studiosCount={studiosCount}
-        instructorsCount={instructorsCount}
-        classesCount={classesCount}
-        scheduleCount={scheduleCount}
-        prefs={prefs}
-        setPrefs={setPrefs}
-        hydrated={hydrated}
-      />
+        <DashboardSetupGuide
+          visible={showSetupFlow}
+          loading={ws.loading}
+          studiosCount={studiosCount}
+          instructorsCount={instructorsCount}
+          classesCount={classesCount}
+          scheduleCount={scheduleCount}
+          prefs={prefs}
+          setPrefs={setPrefs}
+          hydrated={hydrated}
+        />
+
+        {isBusiness && platformBilling?.isBlocked ? (
+          <PlatformBlockedOverlay billing={platformBilling} />
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -114,14 +126,22 @@ function DashboardShellInner({
 export function DashboardShell({
   children,
   serverDisplayName,
+  initialPlatformBilling,
 }: {
   children: React.ReactNode;
   /** From server layout; avoids empty label before client session hydrates. */
   serverDisplayName?: string;
+  /** From server layout; shows trial/billing banner before workspace fetch completes. */
+  initialPlatformBilling?: PlatformBillingSummary | null;
 }) {
   return (
     <DashboardWorkspaceProvider>
-      <DashboardShellInner serverDisplayName={serverDisplayName}>{children}</DashboardShellInner>
+      <DashboardShellInner
+        serverDisplayName={serverDisplayName}
+        initialPlatformBilling={initialPlatformBilling}
+      >
+        {children}
+      </DashboardShellInner>
     </DashboardWorkspaceProvider>
   );
 }

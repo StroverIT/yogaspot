@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
@@ -9,6 +9,9 @@ export const runtime = 'nodejs';
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const { id } = await ctx.params;
   const existing = await prisma.yogaClass.findUnique({ where: { id } });
@@ -92,6 +95,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const { id } = await ctx.params;
   const existing = await prisma.yogaClass.findUnique({ where: { id } });

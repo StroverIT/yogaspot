@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 
-import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
@@ -10,6 +10,9 @@ export const runtime = 'nodejs';
 export async function POST(request: Request) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const bucket = process.env.SUPABASE_STORAGE_BUCKET_STUDIO_IMAGES;
   if (!bucket) {

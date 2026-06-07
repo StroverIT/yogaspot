@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
+import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { instructorToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
@@ -31,6 +31,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const allowed = new Set(await listStudioIdsForActor(gate.user));
 

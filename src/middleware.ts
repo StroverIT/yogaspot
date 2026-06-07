@@ -1,9 +1,12 @@
 import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export default withAuth(
-  function middleware(_req: NextRequest) {
-    // Custom logic can go here if needed.
+  function middleware(req: NextRequest) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-pathname', req.nextUrl.pathname);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   },
   {
     callbacks: {

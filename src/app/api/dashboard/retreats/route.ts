@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { jsonError, listStudioIdsForActor, requireRole } from '@/lib/api-auth';
+import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { retreatToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
@@ -64,6 +64,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const gate = await requireRole(['business', 'admin']);
   if (gate.ok === false) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const bucket = process.env.SUPABASE_STORAGE_BUCKET_STUDIO_IMAGES;
   if (!bucket) return jsonError('Missing SUPABASE_STORAGE_BUCKET_STUDIO_IMAGES', 500);

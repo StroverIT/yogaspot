@@ -231,14 +231,14 @@ export function OverviewSection({
           <div>
             <h3 className="font-display font-semibold text-foreground">Финанси</h3>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Приходи от реални записвания (събития и разписание), източници и теглене към банкова сметка
+              Приходи от записвания (събития и разписание)
             </p>
           </div>
-          <Badge variant={canRequestPayout ? 'default' : 'secondary'}>
+          {/* <Badge variant={canRequestPayout ? 'default' : 'secondary'}>
             {canRequestPayout
               ? `Налични за теглене: ${formatPriceDualFromBgn(netPayout)}`
               : `Минимум за теглене: ${formatPriceDualFromBgn(PAYOUT_MINIMUM_AMOUNT)}`}
-          </Badge>
+          </Badge> */}
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className={`${dashboardInsetClass} p-4`}>

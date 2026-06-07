@@ -13,6 +13,7 @@ import type {
 import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
 import { emptyDashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
+import type { PlatformBillingSummary } from '@/lib/business-platform-billing';
 import { parseOnlinePaymentsFlag } from '@/lib/payment-settings';
 
 type WorkspacePayload = {
@@ -26,6 +27,7 @@ type WorkspacePayload = {
   recentSignups: DashboardRecentSignup[];
   bookingRevenue: DashboardBookingRevenue;
   onlinePayments?: boolean;
+  platformBilling?: PlatformBillingSummary | null;
 };
 
 export function useDashboardWorkspace() {
@@ -81,6 +83,7 @@ export function useDashboardWorkspace() {
     recentSignups: data?.recentSignups ?? [],
     bookingRevenue: data?.bookingRevenue ?? emptyDashboardBookingRevenue,
     onlinePayments: data?.onlinePayments ?? true,
+    platformBilling: data?.platformBilling ?? null,
     loading,
     error,
     reload,

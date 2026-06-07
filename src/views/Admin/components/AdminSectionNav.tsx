@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart3, Building2, Inbox, LineChart, Star, Users } from 'lucide-react';
+import { BarChart3, Building2, CreditCard, Inbox, LineChart, Star, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -13,6 +13,7 @@ const sections: { key: AdminSectionKey; label: string; icon: ReactNode }[] = [
   { key: 'users', label: 'Потребители', icon: <Users className="h-4 w-4" /> },
   { key: 'reviews', label: 'Ревюта', icon: <Star className="h-4 w-4" /> },
   { key: 'requests', label: 'Заявки', icon: <Inbox className="h-4 w-4" /> },
+  { key: 'billing', label: 'Платформен абонамент', icon: <CreditCard className="h-4 w-4" /> },
 ];
 
 export function AdminSectionNav() {

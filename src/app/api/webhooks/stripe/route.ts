@@ -5,7 +5,11 @@ import { prisma } from '@/lib/prisma';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { getStripe } from '@/lib/stripe-server';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
-import { trackServerEvent } from '@/lib/server-analytics';
+import {
+  handlePlatformInvoicePaid,
+  handlePlatformInvoicePaymentFailed,
+  syncSubscriptionFromStripe,
+} from '@/lib/business-platform-billing';
 
 export const runtime = 'nodejs';
 
@@ -344,6 +348,45 @@ export async function POST(request: Request) {
       case 'checkout.session.async_payment_failed':
       case 'payment_intent.payment_failed': {
         console.warn('[stripe webhook]', event.type, (event.data.object as { id?: string }).id);
+        break;
+      }
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        if (subscription.metadata?.zennoKind === 'platform_subscription') {
+          await syncSubscriptionFromStripe(subscription);
+        }
+        break;
+      }
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        if (invoice.metadata?.zennoKind === 'platform_subscription' || invoice.subscription) {
+          const subId =
+            typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+          if (subId) {
+            const stripe = getStripe();
+            const sub = await stripe.subscriptions.retrieve(subId);
+            if (sub.metadata?.zennoKind === 'platform_subscription') {
+              await handlePlatformInvoicePaid(invoice);
+              await syncSubscriptionFromStripe(sub, invoice);
+            }
+          }
+        }
+        break;
+      }
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subId =
+          typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+        if (subId) {
+          const stripe = getStripe();
+          const sub = await stripe.subscriptions.retrieve(subId);
+          if (sub.metadata?.zennoKind === 'platform_subscription') {
+            await handlePlatformInvoicePaymentFailed(invoice);
+            await syncSubscriptionFromStripe(sub, invoice);
+          }
+        }
         break;
       }
       default:

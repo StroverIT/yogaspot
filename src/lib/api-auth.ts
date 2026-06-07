@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import type { Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import {
+  evaluateAndPersistAccess,
+  getSubscriptionForOwnerUserId,
+  isPlatformAccessBlocked,
+} from '@/lib/business-platform-billing';
 
 export type SessionUser = {
   id?: string;
@@ -101,4 +106,44 @@ export async function listStudioIdsForActor(user: SessionUser & { id: string; ro
     select: { id: true },
   });
   return rows.map((r) => r.id);
+}
+
+/** Blocks dashboard writes when the business platform subscription is past grace period. */
+export async function requireActivePlatformSubscription(
+  user: SessionUser & { id: string; role: Role },
+): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  if (user.role === 'admin') return { ok: true };
+  if (user.role !== 'business') return { ok: true };
+
+  const biz = await prisma.business.findUnique({
+    where: { ownerUserId: user.id },
+    select: { id: true },
+  });
+  if (!biz) return { ok: true };
+
+  const sub = await getSubscriptionForOwnerUserId(user.id);
+  if (!sub) return { ok: true };
+
+  const evaluated = await evaluateAndPersistAccess(sub);
+  if (isPlatformAccessBlocked(evaluated.status)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: 'Акаунтът е блокиран поради неплатена фактура. Моля, платете абонамента си.',
+          code: 'platform_payment_required',
+        },
+        { status: 402 },
+      ),
+    };
+  }
+  return { ok: true };
+}
+
+export async function requireBusinessWriteAccess(
+  user: SessionUser & { id: string; role: Role },
+): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  const subGate = await requireActivePlatformSubscription(user);
+  if (!subGate.ok) return subGate;
+  return { ok: true };
 }

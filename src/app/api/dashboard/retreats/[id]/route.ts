@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { assertStudioWriteAccess, jsonError, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { retreatToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
@@ -40,6 +40,9 @@ async function uploadRetreatImage(file: File, businessId: string, bucket: string
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const { id } = await ctx.params;
   const existing = await prisma.retreat.findUnique({
@@ -136,6 +139,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
+
+  const writeGate = await requireBusinessWriteAccess(gate.user);
+  if (!writeGate.ok) return writeGate.response;
 
   const { id } = await ctx.params;
   const existing = await prisma.retreat.findUnique({ where: { id }, select: { studioId: true } });

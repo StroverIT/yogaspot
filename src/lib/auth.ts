@@ -5,6 +5,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from './prisma';
 import bcrypt from 'bcrypt';
 import { trackServerEvent } from '@/lib/server-analytics';
+import { recordUserSignIn } from '@/lib/user-account-dates';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -63,6 +64,7 @@ export const authOptions: NextAuthOptions = {
             : null;
 
       if (dbUser) {
+        await recordUserSignIn(dbUser.id);
         await trackServerEvent({
           eventName: dbUser.role === 'business' ? 'signin_completed_business' : 'signin_completed_client',
           userId: dbUser.id,
