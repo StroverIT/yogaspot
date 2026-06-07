@@ -6,7 +6,7 @@ import {
   StudioDetailPageContent,
   StudioDetailPageContentFallback,
 } from '@/components/studio-detail/studio-detail-page-content';
-import { getPublicStudioPayload } from '@/lib/get-public-studio';
+import { getPublicStudioCorePayload } from '@/lib/get-public-studio';
 import { getSiteUrl } from '@/lib/site';
 import { absoluteOgImageUrl, defaultShareOgImage, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
 
@@ -14,7 +14,7 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const payload = await getPublicStudioPayload(id);
+  const payload = await getPublicStudioCorePayload(id);
 
   if (!payload) {
     return {

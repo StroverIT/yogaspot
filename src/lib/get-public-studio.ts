@@ -14,20 +14,24 @@ import {
 import { prisma } from '@/lib/prisma';
 import { trackServerEvent } from '@/lib/server-analytics';
 
-export type PublicStudioPayload = {
+export type PublicStudioCorePayload = {
   studio: Studio;
   instructors: Instructor[];
-  classes: YogaClass[];
   schedule: ScheduleEntry[];
   subscription: StudioSubscription | null;
-  reviews: Review[];
   myBookings: { classIds: string[]; scheduleEntryIds: string[] };
+  eventsCount: number;
 };
 
-type PublicStudioContent = Omit<PublicStudioPayload, 'myBookings'>;
+export type PublicStudioExtras = {
+  classes: YogaClass[];
+  reviews: Review[];
+};
 
-type LoadedStudio = {
-  payload: PublicStudioPayload;
+export type PublicStudioPayload = PublicStudioCorePayload & PublicStudioExtras;
+
+type LoadedStudioCore = {
+  payload: PublicStudioCorePayload;
   userId?: string;
 };
 
@@ -37,23 +41,53 @@ function startOfToday(): Date {
   return d;
 }
 
-async function fetchPublicStudioContent(id: string): Promise<PublicStudioContent | null> {
+async function fetchPublicStudioCore(id: string): Promise<Omit<PublicStudioCorePayload, 'myBookings'> | null> {
   const today = startOfToday();
 
-  const [studio, studioReviews] = await Promise.all([
-    prisma.studio.findUnique({
-      where: { id },
-      include: {
-        business: { select: { ownerUserId: true } },
-        instructors: { orderBy: { name: 'asc' } },
-        classes: {
-          where: { date: { gte: today } },
-          orderBy: { date: 'asc' },
-          take: 80,
+  const studio = await prisma.studio.findUnique({
+    where: { id },
+    include: {
+      business: { select: { ownerUserId: true } },
+      instructors: { orderBy: { name: 'asc' } },
+      schedule: { orderBy: [{ day: 'asc' }, { startTime: 'asc' }] },
+      subscription: true,
+      _count: {
+        select: {
+          classes: { where: { date: { gte: today } } },
         },
-        schedule: { orderBy: [{ day: 'asc' }, { startTime: 'asc' }] },
-        subscription: true,
       },
+    },
+  });
+
+  if (!studio) {
+    return null;
+  }
+
+  return {
+    studio: studioToDto(studio),
+    instructors: studio.instructors.map(instructorToDto),
+    schedule: studio.schedule.map(scheduleEntryToDto),
+    subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
+    eventsCount: studio._count.classes,
+  };
+}
+
+async function fetchPublicStudioExtras(id: string): Promise<PublicStudioExtras | null> {
+  const today = startOfToday();
+  const studio = await prisma.studio.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!studio) {
+    return null;
+  }
+
+  const [classes, reviews] = await Promise.all([
+    prisma.yogaClass.findMany({
+      where: { studioId: id, date: { gte: today } },
+      orderBy: { date: 'asc' },
+      take: 80,
     }),
     prisma.review.findMany({
       where: { targetType: 'studio', targetId: id },
@@ -63,24 +97,27 @@ async function fetchPublicStudioContent(id: string): Promise<PublicStudioContent
     }),
   ]);
 
-  if (!studio) {
-    return null;
-  }
-
   return {
-    studio: studioToDto(studio),
-    instructors: studio.instructors.map(instructorToDto),
-    classes: studio.classes.map(yogaClassToDto),
-    schedule: studio.schedule.map(scheduleEntryToDto),
-    subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
-    reviews: studioReviews.map(reviewToDto),
+    classes: classes.map(yogaClassToDto),
+    reviews: reviews.map(reviewToDto),
   };
 }
 
-function getCachedPublicStudioContent(id: string) {
+function getCachedPublicStudioCore(id: string) {
   return unstable_cache(
-    async () => fetchPublicStudioContent(id),
-    ['public-studio-content', id],
+    async () => fetchPublicStudioCore(id),
+    ['public-studio-core', id],
+    {
+      tags: [CACHE_TAGS.publicStudio, getPublicStudioTag(id)],
+      revalidate: 120,
+    },
+  )();
+}
+
+function getCachedPublicStudioExtras(id: string) {
+  return unstable_cache(
+    async () => fetchPublicStudioExtras(id),
+    ['public-studio-extras', id],
     {
       tags: [CACHE_TAGS.publicStudio, getPublicStudioTag(id)],
       revalidate: 120,
@@ -91,7 +128,7 @@ function getCachedPublicStudioContent(id: string) {
 async function loadMyBookings(
   userId: string,
   studioId: string,
-): Promise<PublicStudioPayload['myBookings']> {
+): Promise<PublicStudioCorePayload['myBookings']> {
   const [classRows, scheduleRows] = await Promise.all([
     prisma.booking.findMany({
       where: { userId, yogaClass: { studioId } },
@@ -109,32 +146,29 @@ async function loadMyBookings(
   };
 }
 
-const loadPublicStudioPayload = cache(async (id: string): Promise<LoadedStudio | null> => {
-  const [content, sessionUser] = await Promise.all([
-    getCachedPublicStudioContent(id),
-    getSessionUser(),
-  ]);
+const loadPublicStudioCore = cache(async (id: string): Promise<LoadedStudioCore | null> => {
+  const [core, sessionUser] = await Promise.all([getCachedPublicStudioCore(id), getSessionUser()]);
 
-  if (!content) {
+  if (!core) {
     return null;
   }
 
   const myBookings =
     sessionUser?.id != null
-      ? await loadMyBookings(sessionUser.id, content.studio.id)
+      ? await loadMyBookings(sessionUser.id, core.studio.id)
       : { classIds: [], scheduleEntryIds: [] };
 
   return {
-    payload: { ...content, myBookings },
+    payload: { ...core, myBookings },
     userId: sessionUser?.id,
   };
 });
 
-export async function getPublicStudioPayload(
+export async function getPublicStudioCorePayload(
   id: string,
   options?: { trackView?: boolean },
-): Promise<PublicStudioPayload | null> {
-  const loaded = await loadPublicStudioPayload(id);
+): Promise<PublicStudioCorePayload | null> {
+  const loaded = await loadPublicStudioCore(id);
   if (!loaded) {
     return null;
   }
@@ -158,4 +192,24 @@ export async function getPublicStudioPayload(
   }
 
   return loaded.payload;
+}
+
+export async function getPublicStudioExtras(id: string): Promise<PublicStudioExtras | null> {
+  return getCachedPublicStudioExtras(id);
+}
+
+export async function getPublicStudioPayload(
+  id: string,
+  options?: { trackView?: boolean },
+): Promise<PublicStudioPayload | null> {
+  const [core, extras] = await Promise.all([
+    getPublicStudioCorePayload(id, options),
+    getPublicStudioExtras(id),
+  ]);
+
+  if (!core || !extras) {
+    return null;
+  }
+
+  return { ...core, ...extras };
 }

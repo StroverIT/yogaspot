@@ -4,11 +4,15 @@ import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import type { ScheduleEntry } from '@/data/mock-data';
+import type { Review, ScheduleEntry } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
 import type { TabKey } from '@/components/studio-detail/studio-detail-tabs/types';
 import type { CheckoutModalTarget } from '@/components/studio-detail/booking-checkout-modal';
-import type { PublicStudioPayload } from '@/lib/get-public-studio';
+import type {
+  PublicStudioCorePayload,
+  PublicStudioExtras,
+  PublicStudioPayload,
+} from '@/lib/get-public-studio';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
 
@@ -33,8 +37,12 @@ function tabFromSearchParam(tab: string | null): TabKey | undefined {
   return undefined;
 }
 
+function tabNeedsExtras(tab: TabKey | undefined) {
+  return tab === 'events' || tab === 'reviews';
+}
+
 type StudioDetailInteractiveProps = {
-  initialPayload: PublicStudioPayload;
+  initialPayload: PublicStudioCorePayload;
   onlinePayments: boolean;
 };
 
@@ -44,39 +52,83 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
   const { isAuthenticated } = useAuth();
   const wasAuthenticated = useRef(isAuthenticated);
 
-  const [payload, setPayload] = useState(initialPayload);
+  const [core, setCore] = useState(initialPayload);
+  const [extras, setExtras] = useState<PublicStudioExtras | null>(null);
+  const [extrasLoading, setExtrasLoading] = useState(false);
+  const extrasRequested = useRef(false);
   const [checkoutTarget, setCheckoutTarget] = useState<CheckoutModalTarget | null>(null);
 
   useEffect(() => {
-    setPayload(initialPayload);
+    setCore(initialPayload);
   }, [initialPayload]);
 
-  const fetchStudioPayload = useCallback(async (): Promise<PublicStudioPayload | null> => {
-    const studioId = payload.studio.id;
-    const res = await fetch(`/api/public/studios/${encodeURIComponent(studioId)}`);
+  const loadExtras = useCallback(async () => {
+    if (extrasRequested.current || extras) return;
+    extrasRequested.current = true;
+    setExtrasLoading(true);
+    try {
+      const res = await fetch(`/api/public/studios/${encodeURIComponent(core.studio.id)}/extras`);
+      if (res.ok) {
+        setExtras((await res.json()) as PublicStudioExtras);
+      } else {
+        extrasRequested.current = false;
+      }
+    } catch {
+      extrasRequested.current = false;
+    } finally {
+      setExtrasLoading(false);
+    }
+  }, [core.studio.id, extras]);
+
+  useEffect(() => {
+    if (tabNeedsExtras(defaultTab)) {
+      void loadExtras();
+    }
+  }, [defaultTab, loadExtras]);
+
+  const handleTabChange = useCallback(
+    (tab: TabKey) => {
+      if (tabNeedsExtras(tab)) {
+        void loadExtras();
+      }
+    },
+    [loadExtras],
+  );
+
+  const fetchFullPayload = useCallback(async (): Promise<PublicStudioPayload | null> => {
+    const res = await fetch(`/api/public/studios/${encodeURIComponent(core.studio.id)}`);
     if (!res.ok) return null;
     return (await res.json()) as PublicStudioPayload;
-  }, [payload.studio.id]);
+  }, [core.studio.id]);
 
   useEffect(() => {
     if (!wasAuthenticated.current && isAuthenticated) {
-      void fetchStudioPayload().then((data) => {
-        if (data) setPayload(data);
+      void fetchFullPayload().then((data) => {
+        if (!data) return;
+        const { classes, reviews, ...nextCore } = data;
+        setCore(nextCore);
+        setExtras({ classes, reviews });
       });
     }
     wasAuthenticated.current = isAuthenticated;
-  }, [isAuthenticated, fetchStudioPayload]);
+  }, [isAuthenticated, fetchFullPayload]);
 
   const handleReviewSubmitted = useCallback(() => {
-    void fetchStudioPayload().then((data) => {
-      if (data) setPayload(data);
+    void fetchFullPayload().then((data) => {
+      if (!data) return;
+      const { classes, reviews, ...nextCore } = data;
+      setCore(nextCore);
+      setExtras({ classes, reviews });
     });
-  }, [fetchStudioPayload]);
+  }, [fetchFullPayload]);
 
-  const { studio, instructors, classes, schedule, subscription, reviews } = payload;
-  const studioReviews = reviews.filter((r) => r.targetId === studio.id && r.targetType === 'studio');
-  const bookedClassIds = payload.myBookings?.classIds ?? [];
-  const bookedScheduleEntryIds = payload.myBookings?.scheduleEntryIds ?? [];
+  const { studio, instructors, schedule, subscription } = core;
+  const studioClasses = extras?.classes ?? [];
+  const studioReviews = (extras?.reviews ?? []).filter(
+    (r: Review) => r.targetId === studio.id && r.targetType === 'studio',
+  );
+  const bookedClassIds = core.myBookings?.classIds ?? [];
+  const bookedScheduleEntryIds = core.myBookings?.scheduleEntryIds ?? [];
 
   const handleRequestClassBook = (classId: string) => {
     if (!isAuthenticated) {
@@ -86,7 +138,7 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
     if (bookedClassIds.includes(classId)) {
       return;
     }
-    const cls = classes.find((c) => c.id === classId);
+    const cls = studioClasses.find((c) => c.id === classId);
     if (!cls) return;
     if (cls.enrolled >= cls.maxCapacity) {
       toast.info('Класът е пълен. Добавени сте в списъка на изчакване.');
@@ -120,8 +172,11 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
           onlinePayments={onlinePayments}
           onClose={() => setCheckoutTarget(null)}
           onBooked={() => {
-            void fetchStudioPayload().then((data) => {
-              if (data) setPayload(data);
+            void fetchFullPayload().then((data) => {
+              if (!data) return;
+              const { classes, reviews, ...nextCore } = data;
+              setCore(nextCore);
+              setExtras({ classes, reviews });
             });
           }}
         />
@@ -133,9 +188,13 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
         studioOwnerUserId={studio.ownerUserId}
         studioSchedule={schedule}
         subscription={subscription ?? undefined}
-        studioClasses={classes}
+        studioClasses={studioClasses}
         studioInstructors={instructors}
         studioReviews={studioReviews}
+        eventsCount={core.eventsCount}
+        reviewsCount={studio.reviewCount}
+        extrasLoading={extrasLoading}
+        onTabChange={handleTabChange}
         onBookClass={handleRequestClassBook}
         onRequestScheduleBook={handleRequestScheduleBook}
         onReviewSubmitted={handleReviewSubmitted}

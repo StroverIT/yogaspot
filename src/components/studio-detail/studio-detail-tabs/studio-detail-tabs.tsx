@@ -18,6 +18,10 @@ export function StudioDetailTabs({
   studioClasses,
   studioInstructors,
   studioReviews,
+  eventsCount,
+  reviewsCount,
+  extrasLoading,
+  onTabChange,
   onBookClass,
   onRequestScheduleBook,
   onReviewSubmitted,
@@ -33,6 +37,10 @@ export function StudioDetailTabs({
   studioClasses: YogaClass[];
   studioInstructors: Instructor[];
   studioReviews: Review[];
+  eventsCount: number;
+  reviewsCount: number;
+  extrasLoading: boolean;
+  onTabChange: (tab: TabKey) => void;
   onBookClass: (classId: string) => void;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
   onReviewSubmitted: () => void;
@@ -48,16 +56,21 @@ export function StudioDetailTabs({
     if (defaultTab) setActiveTab(defaultTab);
   }, [defaultTab]);
 
+  const handleTabChange = (tab: TabKey) => {
+    setActiveTab(tab);
+    onTabChange(tab);
+  };
+
   const tabs = [
     { key: 'schedule' as const, label: 'Разписание', count: studioSchedule.length },
-    { key: 'events' as const, label: 'Събития', count: studioClasses.length },
+    { key: 'events' as const, label: 'Събития', count: eventsCount },
     { key: 'instructors' as const, label: 'Инструктори', count: studioInstructors.length },
-    { key: 'reviews' as const, label: 'Ревюта', count: studioReviews.length },
+    { key: 'reviews' as const, label: 'Ревюта', count: reviewsCount },
   ];
 
   return (
     <>
-      <StudioDetailTabBar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <StudioDetailTabBar tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
       <div className="mt-6">
         {activeTab === 'schedule' && (
@@ -72,27 +85,33 @@ export function StudioDetailTabs({
             bookedScheduleEntryIds={bookedScheduleEntryIds}
           />
         )}
-        {activeTab === 'events' && (
-          <EventsTabContent
-            studioClasses={studioClasses}
-            instructors={studioInstructors}
-            checkoutModalOpen={checkoutModalOpen}
-            onBookClass={onBookClass}
-            isAuthenticated={isAuthenticated}
-            bookedClassIds={bookedClassIds}
-          />
-        )}
+        {activeTab === 'events' &&
+          (extrasLoading ? (
+            <div className="h-48 animate-pulse rounded-2xl border border-border bg-muted/40" />
+          ) : (
+            <EventsTabContent
+              studioClasses={studioClasses}
+              instructors={studioInstructors}
+              checkoutModalOpen={checkoutModalOpen}
+              onBookClass={onBookClass}
+              isAuthenticated={isAuthenticated}
+              bookedClassIds={bookedClassIds}
+            />
+          ))}
         {activeTab === 'instructors' && (
           <InstructorsTabContent studioInstructors={studioInstructors} />
         )}
-        {activeTab === 'reviews' && (
-          <ReviewsTabContent
-            studioId={studioId}
-            studioOwnerUserId={studioOwnerUserId}
-            studioReviews={studioReviews}
-            onReviewSubmitted={onReviewSubmitted}
-          />
-        )}
+        {activeTab === 'reviews' &&
+          (extrasLoading ? (
+            <div className="h-48 animate-pulse rounded-2xl border border-border bg-muted/40" />
+          ) : (
+            <ReviewsTabContent
+              studioId={studioId}
+              studioOwnerUserId={studioOwnerUserId}
+              studioReviews={studioReviews}
+              onReviewSubmitted={onReviewSubmitted}
+            />
+          ))}
       </div>
     </>
   );

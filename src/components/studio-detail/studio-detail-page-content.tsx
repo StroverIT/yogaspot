@@ -9,12 +9,12 @@ import { StudioDetailInteractive } from '@/components/studio-detail/studio-detai
 import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
 import { StudioDetailSidebar } from '@/components/studio-detail/studio-detail-sidebar';
 import { StudioDetailSummary } from '@/components/studio-detail/studio-detail-summary';
-import { getPublicStudioPayload } from '@/lib/get-public-studio';
+import { getPublicStudioCorePayload } from '@/lib/get-public-studio';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
 export async function StudioDetailPageContent({ id }: { id: string }) {
   const [payload, onlinePayments] = await Promise.all([
-    getPublicStudioPayload(id, { trackView: true }),
+    getPublicStudioCorePayload(id, { trackView: true }),
     Promise.resolve(isOnlinePaymentsEnabled()),
   ]);
 
