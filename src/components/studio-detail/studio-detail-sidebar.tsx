@@ -1,12 +1,20 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { Globe, Mail, MapPin, Navigation, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
-import { GOOGLE_MAPS_LIBRARIES } from '@/lib/google-maps-config';
 import type { Studio } from '@/data/mock-data';
 import { StudioDetailFavoriteButton } from '@/components/studio-detail/studio-detail-favorite-button';
-import { useMemo } from 'react';
+
+const StudioDetailMap = dynamic(
+  () => import('@/components/studio-detail/studio-detail-map').then((m) => m.StudioDetailMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Зареждане на карта…</div>
+    ),
+  },
+);
 
 function hasStudioCoords(studio: Studio) {
   const { lat, lng } = studio;
@@ -22,17 +30,7 @@ function googleMapsDirectionsUrl(lat: number, lng: number) {
 }
 
 export function StudioDetailSidebar({ studio }: { studio: Studio }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
-
-  const coords = useMemo(() => {
-    if (!hasStudioCoords(studio)) return null;
-    return { lat: studio.lat, lng: studio.lng };
-  }, [studio]);
+  const coords = hasStudioCoords(studio) ? { lat: studio.lat, lng: studio.lng } : null;
 
   return (
     <aside className="space-y-6">
@@ -65,30 +63,7 @@ export function StudioDetailSidebar({ studio }: { studio: Studio }) {
       <div className="rounded-2xl border border-border bg-card p-6">
         <h3 className="mb-3 font-display text-lg font-semibold text-foreground">Локация</h3>
         <div className="aspect-square overflow-hidden rounded-xl border border-border bg-muted/20">
-          {!apiKey ? (
-            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
-              За да се визуализира карта, добавете `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
-            </div>
-          ) : !coords ? (
-            <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
-              Локацията на картата още не е зададена за това студио.
-            </div>
-          ) : !isLoaded ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Зареждане на карта…</div>
-          ) : (
-            <GoogleMap
-              mapContainerStyle={{ width: '100%', height: '100%' }}
-              center={coords}
-              zoom={15}
-              options={{
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-              }}
-            >
-              <MarkerF position={coords} />
-            </GoogleMap>
-          )}
+          <StudioDetailMap studio={studio} />
         </div>
         {coords ? (
           <Button variant="outline" className="mt-4 w-full" asChild>

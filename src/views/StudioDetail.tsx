@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Instructor, Review, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
@@ -13,9 +13,8 @@ import { StudioDetailSummary } from '@/components/studio-detail/studio-detail-su
 import { StudioDetailTabs } from '@/components/studio-detail/studio-detail-tabs';
 import type { TabKey } from '@/components/studio-detail/studio-detail-tabs/types';
 import { StudioDetailSidebar } from '@/components/studio-detail/studio-detail-sidebar';
-import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
 import { BookingCheckoutModal, type CheckoutModalTarget } from '@/components/studio-detail/booking-checkout-modal';
-import { parseOnlinePaymentsFlag } from '@/lib/payment-settings';
+import type { PublicStudioPayload } from '@/lib/get-public-studio';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
 
@@ -34,59 +33,45 @@ type StudioPayload = {
   myBookings?: { classIds: string[]; scheduleEntryIds: string[] };
 };
 
-const StudioDetail = () => {
-  const params = useParams();
+type StudioDetailProps = {
+  initialPayload: PublicStudioPayload;
+  onlinePayments: boolean;
+};
+
+const StudioDetail = ({ initialPayload, onlinePayments }: StudioDetailProps) => {
   const searchParams = useSearchParams();
-  const id = params?.id as string | undefined;
   const defaultTab = tabFromSearchParam(searchParams.get('tab'));
   const { isAuthenticated } = useAuth();
+  const wasAuthenticated = useRef(isAuthenticated);
 
-  const [payload, setPayload] = useState<StudioPayload | null>(undefined);
+  const [payload, setPayload] = useState<StudioPayload>(initialPayload);
   const [checkoutTarget, setCheckoutTarget] = useState<CheckoutModalTarget | null>(null);
-  const [onlinePayments, setOnlinePayments] = useState(true);
+
+  useEffect(() => {
+    setPayload(initialPayload);
+  }, [initialPayload]);
 
   const fetchStudioPayload = useCallback(async (): Promise<StudioPayload | null> => {
-    if (!id) return null;
-    const res = await fetch(`/api/public/studios/${encodeURIComponent(id)}`);
+    const studioId = payload.studio.id;
+    const res = await fetch(`/api/public/studios/${encodeURIComponent(studioId)}`);
     if (!res.ok) return null;
     return (await res.json()) as StudioPayload;
-  }, [id]);
+  }, [payload.studio.id]);
 
   useEffect(() => {
-    void fetch('/api/public/payment-settings', { cache: 'no-store' })
-      .then((r) => r.json())
-      .then((d: { onlinePayments?: unknown }) => {
-        setOnlinePayments(parseOnlinePaymentsFlag(d.onlinePayments));
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!id) {
-      setPayload(null);
-      return;
-    }
-    let cancelled = false;
-    setPayload(undefined);
-    void fetchStudioPayload()
-      .then((data) => {
-        if (!cancelled) setPayload(data);
-      })
-      .catch(() => {
-        if (!cancelled) setPayload(null);
+    if (!wasAuthenticated.current && isAuthenticated) {
+      void fetchStudioPayload().then((data) => {
+        if (data) setPayload(data);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, fetchStudioPayload, isAuthenticated]);
+    }
+    wasAuthenticated.current = isAuthenticated;
+  }, [isAuthenticated, fetchStudioPayload]);
 
   const handleReviewSubmitted = useCallback(() => {
-    void fetchStudioPayload().then((data) => setPayload(data));
+    void fetchStudioPayload().then((data) => {
+      if (data) setPayload(data);
+    });
   }, [fetchStudioPayload]);
-
-  if (payload === undefined) {
-    return <StudioDetailPageSkeleton />;
-  }
 
   if (!payload?.studio) {
     return <StudioNotFound />;

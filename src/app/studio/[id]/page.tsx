@@ -2,9 +2,10 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
-import { prisma } from '@/lib/prisma';
+import { StudioDetailPageSkeleton } from '@/components/studio-detail/studio-detail-page-skeleton';
+import { getPublicStudioPayload } from '@/lib/get-public-studio';
+import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { getSiteUrl } from '@/lib/site';
 import { absoluteOgImageUrl, defaultShareOgImage, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
 import StudioDetail from '@/views/StudioDetail';
@@ -13,25 +14,16 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const studio = await prisma.studio.findUnique({
-    where: { id },
-    select: {
-      name: true,
-      description: true,
-      address: true,
-      images: true,
-      rating: true,
-      reviewCount: true,
-    },
-  });
+  const payload = await getPublicStudioPayload(id);
 
-  if (!studio) {
+  if (!payload) {
     return {
       title: 'Студио не е намерено',
       robots: { index: false, follow: false },
     };
   }
 
+  const { studio } = payload;
   const plainDesc = studio.description.replace(/\s+/g, ' ').trim();
   const snippet =
     plainDesc.length > 160 ? `${plainDesc.slice(0, 157)}…` : plainDesc;
@@ -78,15 +70,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function StudioDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const exists = await prisma.studio.findUnique({ where: { id }, select: { id: true } });
-  if (!exists) {
+  const [payload, onlinePayments] = await Promise.all([
+    getPublicStudioPayload(id, { trackView: true }),
+    Promise.resolve(isOnlinePaymentsEnabled()),
+  ]);
+
+  if (!payload) {
     notFound();
   }
 
   return (
-    <Suspense fallback={<StudioDetailPageSkeleton />}>
+    <>
       <PageViewTracker event="studio_page_view" studioId={id} />
-      <StudioDetail />
-    </Suspense>
+      <Suspense fallback={<StudioDetailPageSkeleton />}>
+        <StudioDetail initialPayload={payload} onlinePayments={onlinePayments} />
+      </Suspense>
+    </>
   );
 }
