@@ -58,9 +58,8 @@ export function StudioOfferStickyCta({
       aria-hidden={!show}
     >
       <div className="mx-auto flex max-w-lg items-center gap-3">
-        <p className="min-w-0 flex-1 text-xs leading-snug text-muted-foreground">
-          <span className="font-semibold text-foreground">Безплатен пробен период</span>
-          <span className="block">{trialDays} дни · без ангажимент</span>
+        <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-foreground">
+          {trialDays} дни безплатен пробен период
         </p>
         <AddStudioCtaButton next="/dashboard" size="sm" className="shrink-0 rounded-xl text-sm">
           Започнете <ArrowRight className="ml-1 h-4 w-4" />

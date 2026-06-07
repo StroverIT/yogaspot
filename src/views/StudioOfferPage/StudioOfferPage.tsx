@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -41,7 +40,6 @@ export type StudioOfferStats = {
   avgRating: string;
 };
 
-const REGISTER_HREF = "/auth?type=register&role=business&next=%2Fdashboard";
 const FINAL_SECTION_ID = "studio-offer-final-cta";
 
 const benefits = [
@@ -435,16 +433,6 @@ export function StudioOfferPage({
                 <p className="mt-2 max-w-md text-muted-foreground">
                   Създайте бизнес акаунт, добавете студиото, инструкторите и графиците - за около 2
                   минути.
-                </p>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Можете да създадете акаунт от{" "}
-                  <Link
-                    href={REGISTER_HREF}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
-                  >
-                    тук
-                  </Link>
-                  .
                 </p>
               </div>
               <div className="offer-animate shrink-0">
