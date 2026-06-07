@@ -2,16 +2,13 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import HomeHeroSectionServer from '@/components/home/home-hero-section-server';
-import HomeNearbyStudiosSectionServer from '@/components/home/home-nearby-studios-section-server';
+import HomeStudiosSectionsServer from '@/components/home/home-studios-sections-server';
 import {
   HomeHeroSectionSkeleton,
-  HomeNearbyStudiosSectionSkeleton,
-  HomeTopStudiosSectionSkeleton,
+  HomeStudiosSectionsSkeleton,
 } from '@/components/home/home-section-skeletons';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { HomeStudiosFavoriteShell } from '@/components/home/home-studios-favorite-shell';
-import HomeTopStudiosSectionServer from '@/components/home/home-top-studios-section-server';
-import HomeRetreatsSectionServer from '@/components/home/home-retreats-section-server';
 import { defaultSiteDescription } from '@/lib/site';
 import { defaultShareOgImages, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
 import ForStudiosCTA from '@/views/HomePage/ForStudiosCTA';
@@ -51,16 +48,8 @@ export default function HomePage() {
       <HowItWorksSection />
 
       <HomeStudiosFavoriteShell>
-        <Suspense fallback={<HomeNearbyStudiosSectionSkeleton />}>
-          <HomeNearbyStudiosSectionServer />
-        </Suspense>
-
-        <Suspense fallback={<HomeTopStudiosSectionSkeleton />}>
-          <HomeTopStudiosSectionServer />
-        </Suspense>
-
-        <Suspense fallback={<HomeTopStudiosSectionSkeleton />}>
-          <HomeRetreatsSectionServer />
+        <Suspense fallback={<HomeStudiosSectionsSkeleton />}>
+          <HomeStudiosSectionsServer />
         </Suspense>
       </HomeStudiosFavoriteShell>
 

@@ -86,3 +86,22 @@ export function HomeTopStudiosSectionSkeleton() {
     </section>
   );
 }
+
+export function HomeStudiosSectionsSkeleton() {
+  return (
+    <>
+      <HomeNearbyStudiosSectionSkeleton />
+      <HomeTopStudiosSectionSkeleton />
+      <section className="bg-card py-20">
+        <div className="container mx-auto px-4">
+          <Skeleton className="mb-6 h-9 w-56 bg-yoga-accent-soft/40" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }, (_, i) => (
+              <StudioCardRowSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
