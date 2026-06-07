@@ -6,41 +6,54 @@ import { ArrowRight } from "lucide-react";
 import { AddStudioCtaButton } from "@/components/home/add-studio-cta-button";
 import { cn } from "@/lib/utils";
 
+const STICKY_BAR_HEIGHT_PX = 72;
+const SCROLL_SHOW_OFFSET_PX = 400;
+
 type StudioOfferStickyCtaProps = {
   trialDays: number;
   finalSectionId: string;
+  onVisibleChange?: (visible: boolean) => void;
 };
 
-export function StudioOfferStickyCta({ trialDays, finalSectionId }: StudioOfferStickyCtaProps) {
-  const [visible, setVisible] = useState(false);
-  const [finalInView, setFinalInView] = useState(false);
+export function StudioOfferStickyCta({
+  trialDays,
+  finalSectionId,
+  onVisibleChange,
+}: StudioOfferStickyCtaProps) {
+  const [scrolledPastHero, setScrolledPastHero] = useState(false);
+  const [finalSectionReached, setFinalSectionReached] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 400);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    const finalSection = document.getElementById(finalSectionId);
+    if (!finalSection) return;
 
-  useEffect(() => {
-    const el = document.getElementById(finalSectionId);
-    if (!el) return;
+    const update = () => {
+      setScrolledPastHero(window.scrollY > SCROLL_SHOW_OFFSET_PX);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => setFinalInView(entry.isIntersecting),
-      { threshold: 0.25 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+      const rect = finalSection.getBoundingClientRect();
+      setFinalSectionReached(rect.top <= window.innerHeight - STICKY_BAR_HEIGHT_PX);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, [finalSectionId]);
 
-  const show = visible && !finalInView;
+  const show = scrolledPastHero && !finalSectionReached;
+
+  useEffect(() => {
+    onVisibleChange?.(show);
+  }, [show, onVisibleChange]);
 
   return (
     <div
       className={cn(
         "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-8px_24px_rgba(45,42,79,0.12)] backdrop-blur-md transition-transform duration-300 md:hidden",
-        show ? "translate-y-0" : "translate-y-full",
+        show ? "translate-y-0" : "translate-y-full pointer-events-none",
       )}
       aria-hidden={!show}
     >
@@ -56,3 +69,5 @@ export function StudioOfferStickyCta({ trialDays, finalSectionId }: StudioOfferS
     </div>
   );
 }
+
+export const STUDIO_OFFER_STICKY_OFFSET_CLASS = "pb-[4.5rem] md:pb-0";

@@ -5,7 +5,7 @@ import { LayoutDashboard, CalendarDays, Users, MapPin } from "lucide-react";
 export function StudioOfferDashboardPreview() {
   return (
     <div
-      className="studio-offer-preview gsap-reveal-stagger overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-primary/10"
+      className="studio-offer-preview overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-primary/10"
       aria-hidden
     >
       <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-3">

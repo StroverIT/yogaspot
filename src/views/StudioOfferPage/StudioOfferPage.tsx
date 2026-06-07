@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -17,7 +18,7 @@ import {
   Check,
 } from "lucide-react";
 
-import { GsapRevealScope } from "@/components/GsapRevealScope";
+import { StudioOfferScrollScope } from "@/views/StudioOfferPage/StudioOfferScrollScope";
 import { AddStudioCtaButton } from "@/components/home/add-studio-cta-button";
 import {
   Accordion,
@@ -26,8 +27,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import type { BusinessOfferDto } from "@/lib/business-platform-billing";
+import { cn } from "@/lib/utils";
 import { StudioOfferDashboardPreview } from "@/views/StudioOfferPage/StudioOfferDashboardPreview";
-import { StudioOfferStickyCta } from "@/views/StudioOfferPage/StudioOfferStickyCta";
+import {
+  STUDIO_OFFER_STICKY_OFFSET_CLASS,
+  StudioOfferStickyCta,
+} from "@/views/StudioOfferPage/StudioOfferStickyCta";
 
 export type StudioOfferStats = {
   studioCount: number;
@@ -141,6 +146,7 @@ export function StudioOfferPage({
   offer: BusinessOfferDto;
   stats: StudioOfferStats;
 }) {
+  const [mobileStickyVisible, setMobileStickyVisible] = useState(false);
   const fmt = (n: number) => n.toLocaleString("bg-BG");
 
   const heroStats: {
@@ -156,23 +162,31 @@ export function StudioOfferPage({
 
   return (
     <>
-      <GsapRevealScope className="font-body bg-yoga-bg pb-20 md:pb-0">
-        <section className="relative overflow-hidden border-b border-border py-16 md:py-24">
+      <StudioOfferScrollScope
+        className={cn(
+          "font-body bg-yoga-bg",
+          mobileStickyVisible && STUDIO_OFFER_STICKY_OFFSET_CLASS,
+        )}
+      >
+        <section
+          data-offer-hero
+          className="relative overflow-hidden border-b border-border py-16 md:py-24"
+        >
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-yoga-bg to-sage/10" />
           <div className="container relative mx-auto px-4">
             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-              <div className="gsap-reveal-block">
-                <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
+              <div className="offer-hero-intro">
+                <p className="offer-animate mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
                   За йога студиа
                 </p>
-                <h1 className="font-display text-3xl font-bold leading-tight text-foreground md:text-5xl">
+                <h1 className="offer-animate font-display text-3xl font-bold leading-tight text-foreground md:text-5xl">
                   Управлявайте студиото си без излишни разходи
                 </h1>
-                <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
+                <p className="offer-animate mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
                   Zenno свързва практикуващи с йога студиа. Достигнете до нови клиенти,
                   управлявайте разписание и записвания - всичко от едно табло.
                 </p>
-                <div className="mt-8">
+                <div className="offer-animate mt-8">
                   <AddStudioCtaButton
                     next="/dashboard"
                     size="lg"
@@ -185,7 +199,7 @@ export function StudioOfferPage({
                   {heroStats.map((stat) => (
                     <div
                       key={stat.label}
-                      className="gsap-reveal-stagger rounded-xl border border-border bg-card/80 p-3 backdrop-blur-sm"
+                      className="offer-hero-stat rounded-xl border border-border bg-card/80 p-3 backdrop-blur-sm"
                     >
                       <div className="flex items-center gap-1 font-display text-xl font-bold text-foreground">
                         {stat.showStar ? (
@@ -198,7 +212,7 @@ export function StudioOfferPage({
                   ))}
                 </div>
               </div>
-              <div className="gsap-reveal-stagger">
+              <div className="offer-hero-preview">
                 <StudioOfferDashboardPreview />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   Така изглежда таблото ви - разписание, записвания и onboarding на едно място
@@ -208,9 +222,9 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section className="border-b border-border py-16 md:py-20">
+        <section data-offer-section className="border-b border-border py-16 md:py-20">
           <div className="container mx-auto px-4">
-            <div className="gsap-reveal-block mb-10 text-center">
+            <div className="offer-section-head mb-10 text-center">
               <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
                 Преди и след Zenno
               </h2>
@@ -219,7 +233,7 @@ export function StudioOfferPage({
               </p>
             </div>
             <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2 md:gap-6">
-              <div className="gsap-reveal-stagger rounded-2xl border border-border bg-muted/30 p-6">
+              <div className="offer-animate rounded-2xl border border-border bg-muted/30 p-6">
                 <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-muted-foreground">
                   <X className="h-5 w-5 text-destructive/70" />
                   Без Zenno
@@ -233,7 +247,7 @@ export function StudioOfferPage({
                   ))}
                 </ul>
               </div>
-              <div className="gsap-reveal-stagger rounded-2xl border border-primary/25 bg-primary/5 p-6 shadow-sm">
+              <div className="offer-animate rounded-2xl border border-primary/25 bg-primary/5 p-6 shadow-sm">
                 <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
                   <Check className="h-5 w-5 text-primary" />
                   С Zenno
@@ -251,9 +265,9 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section className="py-12 md:py-16">
+        <section data-offer-section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
-            <div className="gsap-reveal-block mb-8 text-center md:mb-10">
+            <div className="offer-section-head mb-8 text-center md:mb-10">
               <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">
                 Защо студиата избират Zenno
               </h2>
@@ -267,7 +281,7 @@ export function StudioOfferPage({
                 .map((item) => (
                   <div
                     key={item.title}
-                    className="gsap-reveal-stagger flex flex-col gap-4 rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-sage/10 p-5 shadow-sm sm:flex-row sm:items-center sm:gap-5 md:p-6"
+                    className="offer-animate flex flex-col gap-4 rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-sage/10 p-5 shadow-sm sm:flex-row sm:items-center sm:gap-5 md:p-6"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                       <item.icon className="h-7 w-7" />
@@ -289,7 +303,7 @@ export function StudioOfferPage({
                   .map((item) => (
                     <div
                       key={item.title}
-                      className="gsap-reveal-stagger flex h-full flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
+                      className="offer-animate flex h-full flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
                     >
                       <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <item.icon className="h-5 w-5" />
@@ -308,9 +322,9 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section className="border-y border-border bg-background py-16 md:py-20">
+        <section data-offer-section className="border-y border-border bg-background py-16 md:py-20">
           <div className="container mx-auto px-4">
-            <div className="gsap-reveal-block mb-14 text-center">
+            <div className="offer-section-head mb-14 text-center">
               <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">
                 Как да започнете
               </h2>
@@ -324,7 +338,7 @@ export function StudioOfferPage({
               />
               <div className="grid gap-8 md:grid-cols-4 md:gap-4">
                 {steps.map((item) => (
-                  <div key={item.step} className="gsap-reveal-stagger relative flex gap-4 md:block md:text-center">
+                  <div key={item.step} className="offer-animate relative flex gap-4 md:block md:text-center">
                     <div className="relative z-10 shrink-0 md:mx-auto md:mb-5 md:inline-block">
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-card text-primary shadow-sm md:h-20 md:w-20">
                         <item.icon className="h-5 w-5 md:h-7 md:w-7" />
@@ -344,7 +358,7 @@ export function StudioOfferPage({
               </div>
             </div>
 
-            <p className="gsap-reveal-block mx-auto mt-12 max-w-2xl text-center text-muted-foreground">
+            <p className="offer-animate mx-auto mt-12 max-w-2xl text-center text-muted-foreground">
               След регистрация получавате{" "}
               <span className="font-medium text-foreground">„Ръководство за настройка“</span> в
               таблото - onboarding списък, който ви води стъпка по стъпка до първия записан клас.
@@ -352,33 +366,35 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section className="py-16 md:py-20">
+        <section data-offer-section className="py-16 md:py-20">
           <div className="container mx-auto px-4">
-            <div className="gsap-reveal-block mx-auto max-w-3xl rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-sage/15 px-6 py-10 text-center md:px-12 md:py-14">
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-sage/15 px-6 py-10 text-center md:px-12 md:py-14">
+              <p className="offer-animate text-sm font-semibold uppercase tracking-wide text-primary">
                 Специална оферта
               </p>
               {offer.slotsRemaining > 0 ? (
                 <>
-                  <div className="mt-4 font-display text-6xl font-bold text-foreground md:text-7xl">
+                  <div className="offer-animate mt-4 font-display text-6xl font-bold text-foreground md:text-7xl">
                     {offer.slotsRemaining}
                   </div>
-                  <p className="mt-2 text-lg font-medium text-foreground">безплатни места за студиа</p>
-                  <p className="mt-3 text-muted-foreground">
+                  <p className="offer-animate mt-2 text-lg font-medium text-foreground">
+                    безплатни места за студиа
+                  </p>
+                  <p className="offer-animate mt-3 text-muted-foreground">
                     {offer.trialDays} дни пробен период · след това {offer.monthlyPriceEur} €/месец
                   </p>
                 </>
               ) : (
                 <>
-                  <h2 className="mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
+                  <h2 className="offer-animate mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
                     Присъединете се към Zenno
                   </h2>
-                  <p className="mt-3 text-lg text-muted-foreground">
+                  <p className="offer-animate mt-3 text-lg text-muted-foreground">
                     {offer.monthlyPriceEur} €/месец · без пробен период
                   </p>
                 </>
               )}
-              <div className="mt-8">
+              <div className="offer-animate mt-8">
                 <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
                   Създайте акаунт <ArrowRight className="ml-2 h-5 w-5" />
                 </AddStudioCtaButton>
@@ -387,16 +403,16 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section className="border-t border-border bg-background py-16">
+        <section data-offer-section className="border-t border-border bg-background py-16">
           <div className="container mx-auto max-w-2xl px-4">
-            <div className="gsap-reveal-block mb-8 text-center">
+            <div className="offer-section-head mb-8 text-center">
               <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
                 Често задавани въпроси
               </h2>
             </div>
-            <Accordion type="single" collapsible className="gsap-reveal-stagger w-full">
+            <Accordion type="single" collapsible className="w-full">
               {faqItems.map((item, i) => (
-                <AccordionItem key={item.q} value={`faq-${i}`}>
+                <AccordionItem key={item.q} value={`faq-${i}`} className="offer-animate">
                   <AccordionTrigger className="text-left font-medium">{item.q}</AccordionTrigger>
                   <AccordionContent className="text-muted-foreground">{item.a}</AccordionContent>
                 </AccordionItem>
@@ -407,11 +423,12 @@ export function StudioOfferPage({
 
         <section
           id={FINAL_SECTION_ID}
+          data-offer-section
           className="border-t border-border bg-gradient-to-r from-primary/10 via-primary/5 to-sage/15 py-16"
         >
           <div className="container mx-auto px-4">
-            <div className="gsap-reveal-block mx-auto flex max-w-4xl flex-col items-center justify-between gap-8 md:flex-row">
-              <div className="text-center md:text-left">
+            <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-8 md:flex-row">
+              <div className="offer-animate text-center md:text-left">
                 <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
                   Готови ли сте да започнете?
                 </h2>
@@ -430,15 +447,21 @@ export function StudioOfferPage({
                   .
                 </p>
               </div>
-              <AddStudioCtaButton next="/dashboard" size="lg" className="shrink-0 rounded-xl px-8 py-6 text-base">
-                Създайте акаунт за 2 минути <ArrowRight className="ml-2 h-5 w-5" />
-              </AddStudioCtaButton>
+              <div className="offer-animate shrink-0">
+                <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
+                  Създайте акаунт за 2 минути <ArrowRight className="ml-2 h-5 w-5" />
+                </AddStudioCtaButton>
+              </div>
             </div>
           </div>
         </section>
-      </GsapRevealScope>
+      </StudioOfferScrollScope>
 
-      <StudioOfferStickyCta trialDays={offer.trialDays} finalSectionId={FINAL_SECTION_ID} />
+      <StudioOfferStickyCta
+        trialDays={offer.trialDays}
+        finalSectionId={FINAL_SECTION_ID}
+        onVisibleChange={setMobileStickyVisible}
+      />
     </>
   );
 }
