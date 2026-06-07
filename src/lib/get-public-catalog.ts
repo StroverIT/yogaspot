@@ -9,22 +9,31 @@ export type PublicCatalog = {
   classes: YogaClass[];
 };
 
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 /** DB-backed public catalog for SSR and `/api/public/studios`. */
 async function getPublicCatalogImpl(): Promise<PublicCatalog> {
-  const studios = await prisma.studio.findMany({
-    where: { isHidden: false },
-    orderBy: { createdAt: "desc" },
-    include: { business: { select: { ownerUserId: true } } },
-  });
-  const studioIds = studios.map((s) => s.id);
-  const classes =
-    studioIds.length === 0
-      ? []
-      : await prisma.yogaClass.findMany({
-          where: { studioId: { in: studioIds } },
-          orderBy: [{ date: "asc" }, { startTime: "asc" }],
-          take: 500,
-        });
+  const today = startOfToday();
+
+  const [studios, classes] = await Promise.all([
+    prisma.studio.findMany({
+      where: { isHidden: false },
+      orderBy: { createdAt: 'desc' },
+      include: { business: { select: { ownerUserId: true } } },
+    }),
+    prisma.yogaClass.findMany({
+      where: {
+        date: { gte: today },
+        studio: { isHidden: false },
+      },
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+      take: 500,
+    }),
+  ]);
 
   return {
     studios: studios.map(studioToDto),

@@ -20,10 +20,13 @@ function DiscoverStudioCardSkeleton() {
 /** Skeleton for the discover results grid only (inside main column). */
 export function DiscoverGridSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <>
+      <Skeleton className="mb-6 h-5 w-48 bg-yoga-accent-soft/30" />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, i) => (
         <DiscoverStudioCardSkeleton key={i} />
       ))}
-    </div>
+      </div>
+    </>
   );
 }

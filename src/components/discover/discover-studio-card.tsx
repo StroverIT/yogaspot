@@ -12,7 +12,7 @@ interface DiscoverStudioCardProps {
 
 export function DiscoverStudioCard({ studio, priority = false }: DiscoverStudioCardProps) {
   return (
-    <Link href={`/studio/${studio.id}`}>
+    <Link href={`/studio/${studio.id}`} prefetch={priority}>
       <Card className="group overflow-hidden bg-yoga-surface border-yoga-accent-soft hover:border-yoga-accent hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
         <div className="relative h-48 overflow-hidden">
           <img

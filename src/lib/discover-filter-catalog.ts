@@ -1,7 +1,7 @@
-import { buildDiscoverStudiosFromPayload } from "@/lib/discover-studios";
-import type { Studio, YogaClass } from "@/data/mock-data";
-import type { DiscoverFiltersState } from "@/types/discover-filters";
-import type { DiscoverStudio, YogaLevel } from "@/types/studio-discovery";
+import { buildDiscoverStudiosFromPayload } from '@/lib/discover-studios';
+import type { Studio, YogaClass } from '@/data/mock-data';
+import type { DiscoverFiltersState } from '@/types/discover-filters';
+import type { DiscoverStudio, YogaLevel } from '@/types/studio-discovery';
 
 const levelOrder: Record<YogaLevel, number> = {
   beginner: 1,
@@ -26,18 +26,12 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 type Coordinates = { lat: number; lng: number };
 
-export function filterDiscoverStudios(
-  catalogStudios: Studio[],
-  catalogClasses: YogaClass[],
+export function applyDiscoverFilters(
+  discoverStudios: DiscoverStudio[],
   filters: DiscoverFiltersState,
   userLocation: Coordinates | null,
 ): DiscoverStudio[] {
-  const allDiscoverStudios =
-    catalogStudios.length > 0
-      ? buildDiscoverStudiosFromPayload(catalogStudios, catalogClasses)
-      : [];
-
-  let result = allDiscoverStudios.filter((s) => !s.isHidden);
+  let result = discoverStudios;
 
   if (filters.search) {
     const searchLower = filters.search.toLowerCase();
@@ -49,8 +43,8 @@ export function filterDiscoverStudios(
     );
   }
 
-  if (filters.level !== "all") {
-    result = result.filter((s) => s.level === filters.level || s.level === "all");
+  if (filters.level !== 'all') {
+    result = result.filter((s) => s.level === filters.level || s.level === 'all');
   }
 
   if (filters.yogaTypes.length > 0) {
@@ -73,20 +67,38 @@ export function filterDiscoverStudios(
   } else if (filters.levelSort) {
     result.sort((a, b) => {
       const diff = levelOrder[a.level] - levelOrder[b.level];
-      return filters.levelSort === "asc" ? diff : -diff;
+      return filters.levelSort === 'asc' ? diff : -diff;
     });
   } else if (filters.ratingSort) {
     result.sort((a, b) =>
-      filters.ratingSort === "desc" ? b.rating - a.rating : a.rating - b.rating,
+      filters.ratingSort === 'desc' ? b.rating - a.rating : a.rating - b.rating,
     );
   }
 
   if (userLocation) {
     result = result.map((s) => ({
       ...s,
-      distance: `${(s as WithDistance).calculatedDistance?.toFixed(1) || "?"} км`,
+      distance: `${(s as WithDistance).calculatedDistance?.toFixed(1) || '?'} км`,
     }));
   }
 
   return result;
+}
+
+export function filterDiscoverStudios(
+  catalogStudios: Studio[],
+  catalogClasses: YogaClass[],
+  filters: DiscoverFiltersState,
+  userLocation: Coordinates | null,
+): DiscoverStudio[] {
+  const allDiscoverStudios =
+    catalogStudios.length > 0
+      ? buildDiscoverStudiosFromPayload(catalogStudios, catalogClasses)
+      : [];
+
+  return applyDiscoverFilters(
+    allDiscoverStudios.filter((s) => !s.isHidden),
+    filters,
+    userLocation,
+  );
 }
