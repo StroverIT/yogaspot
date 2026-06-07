@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { AddStudioCtaButton } from "@/components/home/add-studio-cta-button";
 import { cn } from "@/lib/utils";
 
-const STICKY_BAR_HEIGHT_PX = 72;
+const STICKY_BAR_HEIGHT_PX = 88;
 const SCROLL_SHOW_OFFSET_PX = 400;
 
 type StudioOfferStickyCtaProps = {
@@ -52,7 +52,7 @@ export function StudioOfferStickyCta({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-8px_24px_rgba(45,42,79,0.12)] backdrop-blur-md transition-transform duration-300 md:hidden",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-3 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(45,42,79,0.12)] backdrop-blur-md transition-transform duration-300 md:hidden",
         show ? "translate-y-0" : "translate-y-full pointer-events-none",
       )}
       aria-hidden={!show}
@@ -70,4 +70,5 @@ export function StudioOfferStickyCta({
   );
 }
 
-export const STUDIO_OFFER_STICKY_OFFSET_CLASS = "pb-[4.5rem] md:pb-0";
+export const STUDIO_OFFER_STICKY_OFFSET_CLASS =
+  "pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0";
