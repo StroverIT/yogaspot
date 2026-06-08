@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, type ReactNode } from 'react';
 import type { Session } from 'next-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,6 +9,14 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/contexts/AuthContext';
+
+const CookieConsent = dynamic(
+  () =>
+    import('@/components/CookieConsent').then((mod) => ({
+      default: mod.CookieConsent,
+    })),
+  { ssr: false },
+);
 
 export function AppProviders({
   children,
@@ -24,7 +33,10 @@ export function AppProviders({
         <Toaster />
         <Sonner />
         <SessionProvider session={session}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <CookieConsent />
+          </AuthProvider>
         </SessionProvider>
       </TooltipProvider>
     </QueryClientProvider>

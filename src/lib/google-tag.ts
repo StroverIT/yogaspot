@@ -1,3 +1,5 @@
+import { hasAdsConsent } from '@/lib/cookies/consent';
+
 const BUSINESS_REGISTRATION_FLAG = 'zenno:business_registration';
 
 declare global {
@@ -12,7 +14,7 @@ function isGoogleTagEnabled(): boolean {
 }
 
 export function trackGoogleTag(event: string, params?: Record<string, unknown>) {
-  if (typeof window === 'undefined' || !isGoogleTagEnabled()) {
+  if (typeof window === 'undefined' || !isGoogleTagEnabled() || !hasAdsConsent()) {
     return;
   }
 

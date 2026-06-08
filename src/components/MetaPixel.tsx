@@ -1,9 +1,41 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
+import {
+  COOKIE_CONSENT_UPDATED_EVENT,
+  hasAdsConsent,
+  type CookieConsentState,
+} from '@/lib/cookies/consent';
 
 const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
 
 export function MetaPixel() {
-  if (!metaPixelId) {
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    if (!metaPixelId) return;
+
+    const maybeAllow = () => {
+      setAllowed(hasAdsConsent());
+    };
+
+    maybeAllow();
+
+    const onConsentUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<CookieConsentState>).detail;
+      if (detail?.ads) {
+        setAllowed(true);
+      }
+    };
+
+    window.addEventListener(COOKIE_CONSENT_UPDATED_EVENT, onConsentUpdated);
+    return () => {
+      window.removeEventListener(COOKIE_CONSENT_UPDATED_EVENT, onConsentUpdated);
+    };
+  }, []);
+
+  if (!metaPixelId || !allowed) {
     return null;
   }
 

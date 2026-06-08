@@ -1,3 +1,5 @@
+import { hasAdsConsent } from '@/lib/cookies/consent';
+
 const BUSINESS_REGISTRATION_FLAG = 'zenno:business_registration';
 
 declare global {
@@ -11,7 +13,7 @@ function isMetaPixelEnabled(): boolean {
 }
 
 export function trackMetaPixel(event: string, params?: Record<string, unknown>) {
-  if (typeof window === 'undefined' || !isMetaPixelEnabled()) {
+  if (typeof window === 'undefined' || !isMetaPixelEnabled() || !hasAdsConsent()) {
     return;
   }
 
