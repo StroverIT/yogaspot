@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { MetaPixelPageViewTracker } from '@/components/analytics/MetaPixelPageViewTracker';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { getBusinessOffer } from '@/lib/business-platform-billing';
 import { getHomeStudios, getHomeClasses } from '@/lib/home/home-data';
@@ -35,6 +36,7 @@ export default async function StudioOfferRoutePage() {
   return (
     <>
       <PageViewTracker event="studio_offer_page_view" />
+      <MetaPixelPageViewTracker contentName="studio_offer" />
       <StudioOfferPage
         offer={offer}
         stats={{
