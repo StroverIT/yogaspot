@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { markBusinessRegistrationForMetaPixel } from '@/lib/meta-pixel';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -21,7 +22,10 @@ const Register = () => {
     try {
       await register(name, email, password, role);
       toast.success("Успешна регистрация!");
-      router.push("/");
+      if (role === 'business') {
+        markBusinessRegistrationForMetaPixel();
+      }
+      router.push(role === 'business' ? '/dashboard' : '/');
     } catch { toast.error('Грешка при регистрация.'); }
   };
 

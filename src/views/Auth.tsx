@@ -10,6 +10,7 @@ import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { GoogleGIcon } from '@/components/icons/brand-icons';
 import { Spinner } from '@/components/ui/spinner';
 import { getSafeInternalPath } from '@/lib/safe-redirect';
+import { markBusinessRegistrationForMetaPixel } from '@/lib/meta-pixel';
 
 const Auth = () => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -23,7 +24,19 @@ const Auth = () => {
   const searchParams = useSearchParams();
   const prevAuthModeRef = useRef<'login' | 'register' | null>(null);
 
-  const redirectPath = getSafeInternalPath(searchParams?.get('next'));
+  const nextParam = searchParams?.get('next');
+  const typeParam = searchParams?.get('type');
+  const roleParam = searchParams?.get('role');
+
+  const loginRedirectPath = getSafeInternalPath(nextParam);
+  const registerRedirectPath = getSafeInternalPath(
+    nextParam,
+    role === 'business' ? '/dashboard' : '/',
+  );
+  const authenticatedRedirectPath = getSafeInternalPath(
+    nextParam,
+    typeParam === 'register' && roleParam === 'business' ? '/dashboard' : '/',
+  );
 
   const buildAuthUrl = (params: Record<string, string>) => {
     const q = new URLSearchParams(params);
@@ -42,9 +55,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace(redirectPath);
+      router.replace(authenticatedRedirectPath);
     }
-  }, [status, router, redirectPath]);
+  }, [status, router, authenticatedRedirectPath]);
 
   useEffect(() => {
     const typeParam = searchParams?.get('type');
@@ -89,7 +102,7 @@ const Auth = () => {
     try {
       await login(email, password);
       toast.success('Успешен вход!');
-      router.push(redirectPath);
+      router.push(loginRedirectPath);
     } catch { toast.error('Грешка при вход.'); }
   };
 
@@ -99,7 +112,10 @@ const Auth = () => {
     try {
       await register(name, email, password, role);
       toast.success('Успешна регистрация!');
-      router.push(redirectPath);
+      if (role === 'business') {
+        markBusinessRegistrationForMetaPixel();
+      }
+      router.push(registerRedirectPath);
     } catch { toast.error('Грешка при регистрация.'); }
   };
 
@@ -185,7 +201,7 @@ const Auth = () => {
                   className="w-full h-12 gap-3 text-base rounded-xl"
                   onClick={async () => {
                     try {
-                      await loginWithGoogle({ callbackUrl: redirectPath });
+                      await loginWithGoogle({ callbackUrl: loginRedirectPath });
                     } catch (err) {
                       console.error(err);
                       toast.error('Грешка при вход с Google.');
@@ -239,7 +255,7 @@ const Auth = () => {
                     try {
                       await loginWithGoogle({
                         registrationRole: role,
-                        callbackUrl: redirectPath,
+                        callbackUrl: registerRedirectPath,
                       });
                     } catch (err) {
                       console.error(err);

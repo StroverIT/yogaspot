@@ -4,9 +4,9 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { trackServerEvent } from '@/lib/server-analytics';
 
-function safeInternalPath(next: string | null): string {
+function safeInternalPath(next: string | null, fallback = '/'): string {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) {
-    return '/';
+    return fallback;
   }
   return next;
 }
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   const roleParam = req.nextUrl.searchParams.get('role');
   const nextRaw = req.nextUrl.searchParams.get('next');
-  const next = safeInternalPath(nextRaw);
+  const next = safeInternalPath(nextRaw, roleParam === 'business' ? '/dashboard' : '/');
 
   if (roleParam === 'business') {
     const userId = (session.user as { id?: string }).id;
@@ -34,6 +34,8 @@ export async function GET(req: NextRequest) {
   // Google signup path: record one signup event exactly once per user.
   // We infer "first signup" by checking if a signup event already exists.
   const userId = (session.user as { id?: string }).id;
+  let isNewBusinessSignup = false;
+
   if (userId) {
     const hasSignupEvent = await prisma.analyticsEvent.findFirst({
       where: {
@@ -49,8 +51,10 @@ export async function GET(req: NextRequest) {
         select: { role: true },
       });
 
+      isNewBusinessSignup = user?.role === 'business';
+
       await trackServerEvent({
-        eventName: user?.role === 'business' ? 'studio_signup_completed' : 'signup_completed',
+        eventName: isNewBusinessSignup ? 'studio_signup_completed' : 'signup_completed',
         userId,
         metadata: {
           source: 'google_oauth',
@@ -59,5 +63,10 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL(next, req.url));
+  const redirectUrl = new URL(next, req.url);
+  if (isNewBusinessSignup) {
+    redirectUrl.searchParams.set('registered', '1');
+  }
+
+  return NextResponse.redirect(redirectUrl);
 }

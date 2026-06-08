@@ -21,9 +21,8 @@ export function AddStudioCtaButton({
   next,
 }: AddStudioCtaButtonProps) {
   const { status } = useSession();
-  const registerHref = next
-    ? `/auth?type=register&role=business&next=${encodeURIComponent(next)}`
-    : "/auth?type=register&role=business";
+  const postRegisterPath = next ?? "/dashboard";
+  const registerHref = `/auth?type=register&role=business&next=${encodeURIComponent(postRegisterPath)}`;
   const href = status === "authenticated" ? "/dashboard/studios" : registerHref;
 
   return (

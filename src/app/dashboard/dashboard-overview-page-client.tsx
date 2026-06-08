@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense, type ReactNode } from 'react';
+import { BusinessDashboardMetaPixelTracker } from '@/components/analytics/BusinessDashboardMetaPixelTracker';
 import { OverviewSection } from '@/views/Dashboard/components/OverviewSection';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
@@ -16,26 +18,36 @@ export default function DashboardOverviewPageClient() {
     myInstructors,
   } = deriveDashboardMetrics(ws.studios, ws.classes, ws.instructors);
 
+  let content: ReactNode;
+
   if (ws.loading) {
-    return <div className="text-muted-foreground">Зареждане…</div>;
-  }
-  if (ws.error) {
-    return <div className="text-destructive">{ws.error}</div>;
+    content = <div className="text-muted-foreground">Зареждане…</div>;
+  } else if (ws.error) {
+    content = <div className="text-destructive">{ws.error}</div>;
+  } else {
+    content = (
+      <OverviewSection
+        avgRating={avgRating}
+        totalEnrolled={totalEnrolled}
+        totalCapacity={totalCapacity}
+        occupancyRate={occupancyRate}
+        myStudios={myStudios}
+        myClasses={myClasses}
+        myInstructors={myInstructors}
+        bookingRevenue={ws.bookingRevenue}
+        subscriptions={ws.subscriptions}
+        subscriptionRequests={ws.subscriptionRequests}
+        recentSignups={ws.recentSignups}
+      />
+    );
   }
 
   return (
-    <OverviewSection
-      avgRating={avgRating}
-      totalEnrolled={totalEnrolled}
-      totalCapacity={totalCapacity}
-      occupancyRate={occupancyRate}
-      myStudios={myStudios}
-      myClasses={myClasses}
-      myInstructors={myInstructors}
-      bookingRevenue={ws.bookingRevenue}
-      subscriptions={ws.subscriptions}
-      subscriptionRequests={ws.subscriptionRequests}
-      recentSignups={ws.recentSignups}
-    />
+    <>
+      <Suspense fallback={null}>
+        <BusinessDashboardMetaPixelTracker />
+      </Suspense>
+      {content}
+    </>
   );
 }

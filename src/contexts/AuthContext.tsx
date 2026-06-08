@@ -46,13 +46,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithGoogle = useCallback(async (options?: LoginWithGoogleOptions) => {
+    const businessRegisterFallback = options?.registrationRole === 'business' ? '/dashboard' : '/';
     let next = options?.callbackUrl;
     if (!next && typeof window !== 'undefined') {
       const path = window.location.pathname;
       const qs = window.location.search;
-      next = path.startsWith('/auth') ? '/' : `${path}${qs}`;
+      next = path.startsWith('/auth') ? businessRegisterFallback : `${path}${qs}`;
     }
-    if (!next) next = '/';
+    if (!next) next = businessRegisterFallback;
 
     const registrationRole = options?.registrationRole;
     const oauthCallback = `/api/auth/complete-google${registrationRole === 'business' ? '?role=business&' : '?'}next=${encodeURIComponent(next)}`;

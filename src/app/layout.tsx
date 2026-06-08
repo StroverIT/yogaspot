@@ -8,6 +8,7 @@ import { authOptions } from '@/lib/auth';
 import { sessionToNavUser } from '@/lib/nav-user';
 import { AppProviders } from '@/components/AppProviders';
 import { GoogleTag } from '@/components/GoogleTag';
+import { MetaPixel } from '@/components/MetaPixel';
 import SiteLayout from '@/components/SiteLayout';
 import { defaultSiteDescription, getSiteUrl, siteName } from '@/lib/site';
 import { defaultShareOgImages, defaultShareTwitterImagePaths, facebookAppMetadata } from '@/lib/share-metadata';
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     >
       <body className="antialiased">
         <GoogleTag />
+        <MetaPixel />
         <AppProviders session={session}>
           <SiteLayout initialUser={initialUser}>{children}</SiteLayout>
         </AppProviders>

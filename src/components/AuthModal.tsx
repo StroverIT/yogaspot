@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import { GoogleGIcon } from '@/components/icons/brand-icons';
+import { markBusinessRegistrationForMetaPixel } from '@/lib/meta-pixel';
 
 interface AuthModalProps {
   open: boolean;
@@ -21,6 +23,7 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
   const { login, register, loginWithGoogle } = useAuth();
+  const router = useRouter();
 
   const reset = () => {
     setMode('choice');
@@ -52,7 +55,12 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
       await register(name, email, password, role);
       toast.success('Успешна регистрация!');
       handleClose(false);
-      onSuccess?.();
+      if (role === 'business') {
+        markBusinessRegistrationForMetaPixel();
+        router.push('/dashboard');
+      } else {
+        onSuccess?.();
+      }
     } catch { toast.error('Грешка при регистрация.'); }
   };
 
