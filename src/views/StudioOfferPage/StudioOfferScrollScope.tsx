@@ -11,8 +11,15 @@ function motionOk(): boolean {
   return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** ScrollTrigger at "top 82%" may never fire for the last section on tall viewports. */
-function finishUnreachableSectionTriggers(timelines: gsap.core.Timeline[]) {
+/**
+ * Completes section timelines that ScrollTrigger cannot reach.
+ * - unreachable: last sections on tall viewports where max scroll never hits the trigger
+ * - includePassed: on mount/refresh only — sections already past their trigger (restored scroll)
+ */
+function finishStuckSectionTriggers(
+  timelines: gsap.core.Timeline[],
+  { includePassed = false }: { includePassed?: boolean } = {},
+) {
   const maxScroll = ScrollTrigger.maxScroll(window);
   const scroll = window.scrollY;
 
@@ -23,7 +30,7 @@ function finishUnreachableSectionTriggers(timelines: gsap.core.Timeline[]) {
     if (!st) continue;
 
     const unreachable = st.start > maxScroll;
-    const passed = scroll >= st.start;
+    const passed = includePassed && scroll >= st.start;
     if (!unreachable && !passed) continue;
 
     const trigger = st.trigger;
@@ -140,16 +147,17 @@ export function StudioOfferScrollScope({
 
     }, root);
 
-    ScrollTrigger.refresh();
-    finishUnreachableSectionTriggers(sectionTimelines);
+    const syncStuckSections = (includePassed: boolean) =>
+      finishStuckSectionTriggers(sectionTimelines, { includePassed });
 
-    const syncSectionVisibility = () => finishUnreachableSectionTriggers(sectionTimelines);
-    ScrollTrigger.addEventListener("refresh", syncSectionVisibility);
-    window.addEventListener("scroll", syncSectionVisibility, { passive: true });
+    ScrollTrigger.refresh();
+    syncStuckSections(true);
+
+    const onRefresh = () => syncStuckSections(true);
+    ScrollTrigger.addEventListener("refresh", onRefresh);
 
     return () => {
-      ScrollTrigger.removeEventListener("refresh", syncSectionVisibility);
-      window.removeEventListener("scroll", syncSectionVisibility);
+      ScrollTrigger.removeEventListener("refresh", onRefresh);
       ctx.revert();
     };
   }, []);
