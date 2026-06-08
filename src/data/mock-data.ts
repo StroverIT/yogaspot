@@ -24,6 +24,8 @@ export interface Studio {
   isHidden: boolean;
   /** ISO date — за сортиране „най-нови първи“ в админ преглед */
   createdAt: string;
+  /** Dashboard studio editor */
+  yogaTypes?: string[];
 }
 
 export interface Instructor {

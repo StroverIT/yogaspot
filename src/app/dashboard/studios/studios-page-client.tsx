@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -15,18 +16,21 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
+import { studioDtoToDashboardListItem } from '@/lib/dashboard-studios-data';
 import { StudiosSection } from '@/views/Dashboard/components/StudiosSection';
 import { StudioModal } from '@/views/Dashboard/components/modals/StudioModal';
 import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
+import { DashboardStudiosSectionSkeleton } from './studios-section-skeleton';
 
-type DashboardStudiosPageClientProps = {
-  studios: DashboardStudioListItem[];
-};
-
-export default function DashboardStudiosPageClient({ studios }: DashboardStudiosPageClientProps) {
+export default function DashboardStudiosPageClient() {
   const router = useRouter();
-  const { reload: reloadWorkspace } = useDashboardWorkspaceContext();
+  const ws = useDashboardWorkspaceContext();
+  const studios = useMemo(
+    () => ws.studios.map(studioDtoToDashboardListItem),
+    [ws.studios],
+  );
+  const { reload: reloadWorkspace } = ws;
   const [studioModalOpen, setStudioModalOpen] = useState(false);
   const [editingStudio, setEditingStudio] = useState<DashboardStudioListItem | null>(null);
   const [studioToDelete, setStudioToDelete] = useState<DashboardStudioListItem | null>(null);
@@ -63,6 +67,9 @@ export default function DashboardStudiosPageClient({ studios }: DashboardStudios
       setIsDeleting(false);
     }
   };
+
+  if (ws.loading) return <DashboardStudiosSectionSkeleton />;
+  if (ws.error) return <div className="text-destructive">{ws.error}</div>;
 
   return (
     <>

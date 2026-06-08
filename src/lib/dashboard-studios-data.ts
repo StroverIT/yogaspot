@@ -1,4 +1,5 @@
 import type { Role } from '@prisma/client';
+import type { Studio } from '@/data/mock-data';
 import { prisma } from '@/lib/prisma';
 import type { SessionUser } from '@/lib/api-auth';
 
@@ -23,6 +24,25 @@ export type DashboardStudioListItem = {
   businessId: string;
   yogaTypes: string[];
 };
+
+export function studioDtoToDashboardListItem(s: Studio): DashboardStudioListItem {
+  return {
+    id: s.id,
+    name: s.name,
+    address: s.address,
+    lat: s.lat,
+    lng: s.lng,
+    images: s.images,
+    description: s.description,
+    phone: s.phone,
+    email: s.email,
+    amenities: s.amenities,
+    rating: s.rating,
+    reviewCount: s.reviewCount,
+    businessId: s.businessId,
+    yogaTypes: s.yogaTypes ?? [],
+  };
+}
 
 export function mapStudioResponse(s: {
   id: string;

@@ -1,12 +1,5 @@
-import { Suspense } from 'react';
-
-import DashboardStudiosSection from './dashboard-studios-section';
-import { DashboardStudiosSectionSkeleton } from './studios-section-skeleton';
+import DashboardStudiosPageClient from './studios-page-client';
 
 export default function DashboardStudiosPage() {
-  return (
-    <Suspense fallback={<DashboardStudiosSectionSkeleton />}>
-      <DashboardStudiosSection />
-    </Suspense>
-  );
+  return <DashboardStudiosPageClient />;
 }

@@ -15,6 +15,7 @@ import {
   DashboardSetupGuideSidebarNav,
 } from './components/DashboardSetupGuide';
 import type { PlatformBillingSummary } from '@/lib/business-platform-billing';
+import type { DashboardWorkspaceData } from '@/lib/dashboard-workspace-data';
 import { PlatformBlockedOverlay } from './components/PlatformBillingBanner';
 
 function DashboardShellInner({
@@ -127,15 +128,18 @@ export function DashboardShell({
   children,
   serverDisplayName,
   initialPlatformBilling,
+  initialWorkspace,
 }: {
   children: React.ReactNode;
   /** From server layout; avoids empty label before client session hydrates. */
   serverDisplayName?: string;
   /** From server layout; shows trial/billing banner before workspace fetch completes. */
   initialPlatformBilling?: PlatformBillingSummary | null;
+  /** From server layout; avoids client-side workspace waterfall on first paint. */
+  initialWorkspace?: DashboardWorkspaceData | null;
 }) {
   return (
-    <DashboardWorkspaceProvider>
+    <DashboardWorkspaceProvider initialWorkspace={initialWorkspace}>
       <DashboardShellInner
         serverDisplayName={serverDisplayName}
         initialPlatformBilling={initialPlatformBilling}

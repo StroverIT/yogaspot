@@ -1,40 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type {
-  Instructor,
-  Retreat,
-  ScheduleEntry,
-  Studio,
-  StudioSubscription,
-  SubscriptionRequestDto,
-  YogaClass,
-} from '@/data/mock-data';
-import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
+import type { DashboardWorkspaceData } from '@/lib/dashboard-workspace-data';
 import { emptyDashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
-import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
-import type { PlatformBillingSummary } from '@/lib/business-platform-billing';
 import { parseOnlinePaymentsFlag } from '@/lib/payment-settings';
 
-type WorkspacePayload = {
-  studios: Studio[];
-  instructors: Instructor[];
-  classes: YogaClass[];
-  retreats: Retreat[];
-  schedule: ScheduleEntry[];
-  subscriptions: StudioSubscription[];
-  subscriptionRequests: SubscriptionRequestDto[];
-  recentSignups: DashboardRecentSignup[];
-  bookingRevenue: DashboardBookingRevenue;
-  onlinePayments?: boolean;
-  platformBilling?: PlatformBillingSummary | null;
-};
-
-export function useDashboardWorkspace() {
-  const [data, setData] = useState<WorkspacePayload | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData | null) {
+  const hasInitialData = initialWorkspace !== undefined;
+  const [data, setData] = useState<DashboardWorkspaceData | null>(initialWorkspace ?? null);
+  const [loading, setLoading] = useState(!hasInitialData);
   const [error, setError] = useState<string | null>(null);
-  const dataRef = useRef<WorkspacePayload | null>(null);
+  const dataRef = useRef<DashboardWorkspaceData | null>(null);
   dataRef.current = data;
 
   const reload = useCallback(async () => {
@@ -42,24 +18,19 @@ export function useDashboardWorkspace() {
     if (isFirstLoad) setLoading(true);
     setError(null);
     try {
-      const [workspaceRes, settingsRes] = await Promise.all([
-        fetch('/api/dashboard/workspace', { cache: 'no-store' }),
-        fetch('/api/public/payment-settings', { cache: 'no-store' }),
-      ]);
+      const workspaceRes = await fetch('/api/dashboard/workspace', { cache: 'no-store' });
       if (!workspaceRes.ok) {
         const j = await workspaceRes.json().catch(() => ({}));
         setError((j as { error?: string }).error ?? `HTTP ${workspaceRes.status}`);
         setData(null);
         return;
       }
-      const json = (await workspaceRes.json()) as WorkspacePayload;
-      const bookingRevenue = json.bookingRevenue ?? emptyDashboardBookingRevenue;
-      let onlinePayments = parseOnlinePaymentsFlag(json.onlinePayments);
-      if (settingsRes.ok) {
-        const s = (await settingsRes.json().catch(() => ({}))) as { onlinePayments?: unknown };
-        onlinePayments = parseOnlinePaymentsFlag(s.onlinePayments);
-      }
-      setData({ ...json, bookingRevenue, onlinePayments });
+      const json = (await workspaceRes.json()) as DashboardWorkspaceData;
+      setData({
+        ...json,
+        bookingRevenue: json.bookingRevenue ?? emptyDashboardBookingRevenue,
+        onlinePayments: parseOnlinePaymentsFlag(json.onlinePayments),
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
       setData(null);
@@ -69,8 +40,9 @@ export function useDashboardWorkspace() {
   }, []);
 
   useEffect(() => {
+    if (hasInitialData) return;
     void reload();
-  }, [reload]);
+  }, [hasInitialData, reload]);
 
   return {
     studios: data?.studios ?? [],
