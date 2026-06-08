@@ -18,6 +18,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const { login, loginWithGoogle, register } = useAuth();
   const { status } = useSession();
   const router = useRouter();
@@ -99,16 +101,19 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { toast.error('Моля, попълнете всички полета.'); return; }
+    setIsLoggingIn(true);
     try {
       await login(email, password);
       toast.success('Успешен вход!');
       router.push(loginRedirectPath);
     } catch { toast.error('Грешка при вход.'); }
+    finally { setIsLoggingIn(false); }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) { toast.error('Моля, попълнете всички полета.'); return; }
+    setIsRegistering(true);
     try {
       await register(name, email, password, role);
       toast.success('Успешна регистрация!');
@@ -117,6 +122,7 @@ const Auth = () => {
       }
       router.push(registerRedirectPath);
     } catch { toast.error('Грешка при регистрация.'); }
+    finally { setIsRegistering(false); }
   };
 
   const roles: { value: UserRole; label: string; desc: string; emoji: string }[] = [
@@ -232,8 +238,17 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full h-12 text-base rounded-xl gap-2">
-                  Вход <ArrowRight className="h-4 w-4" />
+                <Button type="submit" disabled={isLoggingIn} className="w-full h-12 text-base rounded-xl gap-2">
+                  {isLoggingIn ? (
+                    <>
+                      <Spinner className="h-4 w-4" />
+                      Вход
+                    </>
+                  ) : (
+                    <>
+                      Вход <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground pt-2">
@@ -318,8 +333,17 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full h-12 text-base rounded-xl gap-2">
-                  Регистрация <ArrowRight className="h-4 w-4" />
+                <Button type="submit" disabled={isRegistering} className="w-full h-12 text-base rounded-xl gap-2">
+                  {isRegistering ? (
+                    <>
+                      <Spinner className="h-4 w-4" />
+                      Регистрация
+                    </>
+                  ) : (
+                    <>
+                      Регистрация <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground pt-2">

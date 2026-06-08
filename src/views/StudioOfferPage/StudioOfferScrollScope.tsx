@@ -11,6 +11,31 @@ function motionOk(): boolean {
   return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** ScrollTrigger at "top 82%" may never fire for the last section on tall viewports. */
+function finishUnreachableSectionTriggers(timelines: gsap.core.Timeline[]) {
+  const maxScroll = ScrollTrigger.maxScroll(window);
+  const scroll = window.scrollY;
+
+  for (const tl of timelines) {
+    if (tl.progress() > 0) continue;
+
+    const st = tl.scrollTrigger;
+    if (!st) continue;
+
+    const unreachable = st.start > maxScroll;
+    const passed = scroll >= st.start;
+    if (!unreachable && !passed) continue;
+
+    const trigger = st.trigger;
+    if (trigger instanceof HTMLElement) {
+      const { top, bottom } = trigger.getBoundingClientRect();
+      if (top >= window.innerHeight || bottom <= 0) continue;
+    }
+
+    tl.progress(1);
+  }
+}
+
 export function StudioOfferScrollScope({
   children,
   className,
@@ -23,6 +48,8 @@ export function StudioOfferScrollScope({
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || !motionOk()) return;
+
+    const sectionTimelines: gsap.core.Timeline[] = [];
 
     const ctx = gsap.context(() => {
       const hero = root.querySelector<HTMLElement>("[data-offer-hero]");
@@ -84,7 +111,7 @@ export function StudioOfferScrollScope({
         const sectionTl = gsap.timeline({
           scrollTrigger: {
             trigger: section,
-            start: "top 82%",
+            start: "top 85%",
             toggleActions: "play none none none",
             once: true,
           },
@@ -107,10 +134,24 @@ export function StudioOfferScrollScope({
             header ? "-=0.2" : 0,
           );
         }
+
+        sectionTimelines.push(sectionTl);
       });
+
     }, root);
 
-    return () => ctx.revert();
+    ScrollTrigger.refresh();
+    finishUnreachableSectionTriggers(sectionTimelines);
+
+    const syncSectionVisibility = () => finishUnreachableSectionTriggers(sectionTimelines);
+    ScrollTrigger.addEventListener("refresh", syncSectionVisibility);
+    window.addEventListener("scroll", syncSectionVisibility, { passive: true });
+
+    return () => {
+      ScrollTrigger.removeEventListener("refresh", syncSectionVisibility);
+      window.removeEventListener("scroll", syncSectionVisibility);
+      ctx.revert();
+    };
   }, []);
 
   return (
