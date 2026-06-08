@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
 import { GoogleGIcon } from '@/components/icons/brand-icons';
+import { markBusinessRegistrationForGoogleTag } from '@/lib/google-tag';
 import { markBusinessRegistrationForMetaPixel } from '@/lib/meta-pixel';
 
 interface AuthModalProps {
@@ -57,6 +58,7 @@ const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => {
       handleClose(false);
       if (role === 'business') {
         markBusinessRegistrationForMetaPixel();
+        markBusinessRegistrationForGoogleTag();
         router.push('/dashboard');
       } else {
         onSuccess?.();

@@ -10,6 +10,7 @@ import { Mail, Lock, User, ArrowRight, Sparkles } from 'lucide-react';
 import { GoogleGIcon } from '@/components/icons/brand-icons';
 import { Spinner } from '@/components/ui/spinner';
 import { getSafeInternalPath } from '@/lib/safe-redirect';
+import { markBusinessRegistrationForGoogleTag } from '@/lib/google-tag';
 import { markBusinessRegistrationForMetaPixel } from '@/lib/meta-pixel';
 
 const Auth = () => {
@@ -119,6 +120,7 @@ const Auth = () => {
       toast.success('Успешна регистрация!');
       if (role === 'business') {
         markBusinessRegistrationForMetaPixel();
+        markBusinessRegistrationForGoogleTag();
       }
       router.push(registerRedirectPath);
     } catch { toast.error('Грешка при регистрация.'); }

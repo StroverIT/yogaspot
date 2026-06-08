@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { markBusinessRegistrationForGoogleTag } from '@/lib/google-tag';
 import { markBusinessRegistrationForMetaPixel } from '@/lib/meta-pixel';
 
 const Register = () => {
@@ -24,6 +25,7 @@ const Register = () => {
       toast.success("Успешна регистрация!");
       if (role === 'business') {
         markBusinessRegistrationForMetaPixel();
+        markBusinessRegistrationForGoogleTag();
       }
       router.push(role === 'business' ? '/dashboard' : '/');
     } catch { toast.error('Грешка при регистрация.'); }

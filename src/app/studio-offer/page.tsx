@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { GoogleTagPageViewTracker } from '@/components/analytics/GoogleTagPageViewTracker';
 import { MetaPixelPageViewTracker } from '@/components/analytics/MetaPixelPageViewTracker';
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { getBusinessOffer } from '@/lib/business-platform-billing';
@@ -37,6 +38,7 @@ export default async function StudioOfferRoutePage() {
     <>
       <PageViewTracker event="studio_offer_page_view" />
       <MetaPixelPageViewTracker contentName="studio_offer" />
+      <GoogleTagPageViewTracker contentName="studio_offer" />
       <StudioOfferPage
         offer={offer}
         stats={{
