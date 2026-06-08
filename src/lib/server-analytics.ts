@@ -15,12 +15,17 @@ export async function trackServerEvent({
   studioId,
   metadata,
 }: TrackServerEventInput) {
-  await prisma.analyticsEvent.create({
-    data: {
-      event_name: eventName,
-      user_id: userId ?? null,
-      studio_id: studioId ?? null,
-      metadata: metadata ?? undefined,
-    },
-  });
+  try {
+    await prisma.analyticsEvent.create({
+      data: {
+        event_name: eventName,
+        user_id: userId ?? null,
+        studio_id: studioId ?? null,
+        metadata: metadata ?? undefined,
+      },
+    });
+  } catch (error) {
+    // Analytics must not break pages or API routes when the DB pool is busy.
+    console.error('[analytics] failed to track event', eventName, error);
+  }
 }

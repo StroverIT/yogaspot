@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { GripVertical, Palmtree, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { Retreat, Studio } from '@/data/mock-data';
-import { GOOGLE_MAPS_LIBRARIES } from '@/lib/google-maps-config';
 
 type RetreatImageUrlSlot = { kind: 'url'; id: string; url: string };
 type RetreatImageFileSlot = { kind: 'file'; id: string; file: File; previewUrl: string };
@@ -74,12 +74,7 @@ export function RetreatModal({
   const [saving, setSaving] = useState(false);
   const suppressAutocompleteRef = useRef(false);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
-  const { isLoaded } = useJsApiLoader({
-    id: 'retreat-map-script',
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded, apiKey } = useGoogleMapsLoader();
 
   const mapCenter = useMemo(() => coords ?? { lat: 42.6977, lng: 23.3219 }, [coords]);
 

@@ -174,21 +174,18 @@ export async function getPublicStudioCorePayload(
   }
 
   if (options?.trackView) {
-    void Promise.all([
-      trackServerEvent({
-        eventName: 'studio_view',
-        userId: loaded.userId,
-        studioId: loaded.payload.studio.id,
-      }),
-      trackServerEvent({
+    const studioId = loaded.payload.studio.id;
+    const userId = loaded.userId;
+    const scheduleEntries = loaded.payload.schedule.length;
+    void (async () => {
+      await trackServerEvent({ eventName: 'studio_view', userId, studioId });
+      await trackServerEvent({
         eventName: 'schedule_view',
-        userId: loaded.userId,
-        studioId: loaded.payload.studio.id,
-        metadata: {
-          scheduleEntries: loaded.payload.schedule.length,
-        },
-      }),
-    ]);
+        userId,
+        studioId,
+        metadata: { scheduleEntries },
+      });
+    })();
   }
 
   return loaded.payload;

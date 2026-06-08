@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
-import { GOOGLE_MAPS_LIBRARIES } from '@/lib/google-maps-config';
+import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import type { Studio } from '@/data/mock-data';
 
 function hasStudioCoords(studio: Studio) {
@@ -13,12 +13,7 @@ function hasStudioCoords(studio: Studio) {
 }
 
 export function StudioDetailMap({ studio }: { studio: Studio }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded, apiKey } = useGoogleMapsLoader();
 
   const coords = useMemo(() => {
     if (!hasStudioCoords(studio)) return null;

@@ -15,8 +15,8 @@ import type { DashboardStudioListItem } from '@/lib/dashboard-studios-data';
 import { MAX_STUDIO_IMAGE_BYTES, MAX_STUDIO_IMAGE_SIZE_LABEL } from '@/lib/studio-image-limits';
 import { cn } from '@/lib/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
-import { GOOGLE_MAPS_LIBRARIES } from '@/lib/google-maps-config';
+import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { Check, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
 
 type StudioModalProps = {
@@ -69,12 +69,7 @@ export function StudioModal({
   const skipNextAddressGeocodeRef = useRef(false);
   const suppressAutocompleteRef = useRef(false);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded, apiKey } = useGoogleMapsLoader();
 
   const mapCenter = useMemo(() => coords ?? { lat: 42.6977, lng: 23.3219 }, [coords]);
 
