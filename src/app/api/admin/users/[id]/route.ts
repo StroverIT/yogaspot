@@ -45,3 +45,30 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
   return NextResponse.json({ user: updated });
 }
+
+export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const gate = await requireRole('admin');
+  if (!gate.ok) return gate.response;
+
+  const { id } = await ctx.params;
+
+  if (gate.user.id === id) {
+    return jsonError('Не можете да изтриете собствения си акаунт.', 400);
+  }
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) {
+    return jsonError('Потребителят не е намерен.', 404);
+  }
+
+  if (existing.role === 'admin') {
+    const adminCount = await prisma.user.count({ where: { role: 'admin' } });
+    if (adminCount <= 1) {
+      return jsonError('Не можете да изтриете последния администратор.', 400);
+    }
+  }
+
+  await prisma.user.delete({ where: { id } });
+
+  return NextResponse.json({ ok: true });
+}
