@@ -3,16 +3,19 @@
 import { useState } from "react";
 import {
   ArrowRight,
+  Bell,
   Building2,
   Calendar,
   CalendarDays,
   Globe,
   MapPin,
   Megaphone,
+  MessageCircle,
   PhoneOff,
   Star,
   UserPlus,
   Users,
+  Video,
   X,
   Check,
 } from "lucide-react";
@@ -42,7 +45,9 @@ export type StudioOfferStats = {
 
 const FINAL_SECTION_ID = "studio-offer-final-cta";
 
-const benefits = [
+type TeachingMode = "physical" | "online";
+
+const physicalBenefits = [
   {
     icon: Calendar,
     title: "Онлайн записвания",
@@ -80,7 +85,75 @@ const benefits = [
   },
 ];
 
-const steps = [
+const onlineBenefits = [
+  {
+    icon: Video,
+    title: "Класове на живо",
+    outcome: "Практиката е реална, не запис",
+    desc: "Водите през Zoom - практикуващите ви виждат и чуват в реално време, сякаш сте в една стая.",
+    featured: true,
+  },
+  {
+    icon: MessageCircle,
+    title: "Групов чат",
+    outcome: "Общност, която остава след класа",
+    desc: "Всеки записан влиза в чат с останалите - въпроси, подкрепа и мотивация между сесиите.",
+    featured: false,
+  },
+  {
+    icon: Calendar,
+    title: "Автоматичен Google Calendar",
+    outcome: "Линк, дата и час - без ръчна работа",
+    desc: "След запис практикуващият получава покана в календара си с Zoom линка - готов за един клик.",
+    featured: false,
+  },
+  {
+    icon: Bell,
+    title: "Напомняния преди класа",
+    outcome: "По-малко пропуснати сесии",
+    desc: "Известие един ден и един час преди старта - хората не забравят и не търсят линка в последния момент.",
+    featured: false,
+  },
+  {
+    icon: Megaphone,
+    title: "Достигате отвъд града си",
+    outcome: "Без нова зала, без нов наем",
+    desc: "Млади практикуващи от цяла България ви откриват в Zenno - вие водите от вкъщи или студио, те се включват отвсякъде.",
+    featured: false,
+  },
+];
+
+const physicalComparison = {
+  without: [
+    "Трудно достигате до младата аудитория",
+    "Реклама и социални мрежи - от вас",
+    "Телефони и съобщения за всеки запис",
+    "Ръчно управление на резервации",
+  ],
+  with: [
+    "Виждат ви млади практикуващи в приложението",
+    "Ние привличаме новата аудитория",
+    "Онлайн записвания денонощно",
+    "Готово табло за студио, инструктори и класове",
+  ],
+};
+
+const onlineComparison = {
+  without: [
+    "Линкове и покани в календара - ръчно за всеки",
+    "Практикуващите забравят часа и линка",
+    "Няма място за общност между класовете",
+    "Онлайн аудиторията ви не ви намира",
+  ],
+  with: [
+    "Zoom среща + Google Calendar - автоматично след запис",
+    "Напомняния един ден и един час преди класа",
+    "Групов чат за всеки клас",
+    "Видими сте за млади практикуващи в цялата страна",
+  ],
+};
+
+const physicalSteps = [
   {
     step: "1",
     icon: UserPlus,
@@ -107,22 +180,34 @@ const steps = [
   },
 ];
 
-const comparison = {
-  without: [
-    "Трудно достигате до младата аудитория",
-    "Реклама и социални мрежи - от вас",
-    "Телефони и съобщения за всеки запис",
-    "Ръчно управление на резервации",
-  ],
-  with: [
-    "Виждат ви млади практикуващи в приложението",
-    "Ние привличаме новата аудитория",
-    "Онлайн записвания денонощно",
-    "Готово табло за студио, инструктори и класове",
-  ],
-};
+const onlineSteps = [
+  {
+    step: "1",
+    icon: UserPlus,
+    title: "Създайте акаунт",
+    desc: "Регистрацията отнема секунди - с имейл или Google.",
+  },
+  {
+    step: "2",
+    icon: Building2,
+    title: "Добавете студиото",
+    desc: "Име, снимки, описание - профилът ви е готов за онлайн класове.",
+  },
+  {
+    step: "3",
+    icon: Video,
+    title: "Свържете Zoom",
+    desc: "Свързвате акаунта си - всяка среща се създава автоматично при публикуване на клас.",
+  },
+  {
+    step: "4",
+    icon: CalendarDays,
+    title: "Публикувайте онлайн график",
+    desc: "Задайте час - записванията, календарът и напомнянията тръгват сами.",
+  },
+];
 
-const faqItems = [
+const physicalFaqItems = [
   {
     q: "Каква е каузата на Zenno?",
     a: "Създадохме Zenno, за да направим йогата достъпна за млади хора в България. Като партньорско студио вие давате място за практика - ние ви помагаме да достигнете до тази аудитория.",
@@ -141,6 +226,25 @@ const faqItems = [
   },
 ];
 
+const onlineFaqItems = [
+  {
+    q: "Как работят онлайн класовете?",
+    a: "Публикувате график в Zenno - при всяка сесия се създава Zoom среща на живо. Записалите се получават линк в Google Calendar и напомняния един ден и един час преди старта.",
+  },
+  {
+    q: "Трябва ли ми физическа зала?",
+    a: "Не. Можете да водите от вкъщи или от студио - важното е практикуващите да ви виждат и чуват на живо през Zoom.",
+  },
+  {
+    q: "Какво е груповият чат?",
+    a: "Всеки записан за клас влиза в чат с останалите участници - за въпроси, обратна връзка и подкрепа между сесиите.",
+  },
+  {
+    q: "Колко струва?",
+    a: "Първите партньорски студиа получават пробен период, след което месечна абонаментна такса. Цената е актуална на тази страница - без скрити такси за записвания.",
+  },
+];
+
 export function StudioOfferPage({
   offer,
   stats,
@@ -149,7 +253,14 @@ export function StudioOfferPage({
   stats: StudioOfferStats;
 }) {
   const [mobileStickyVisible, setMobileStickyVisible] = useState(false);
+  const [teachingMode, setTeachingMode] = useState<TeachingMode>("physical");
   const fmt = (n: number) => n.toLocaleString("bg-BG");
+
+  const isPhysical = teachingMode === "physical";
+  const benefits = isPhysical ? physicalBenefits : onlineBenefits;
+  const comparison = isPhysical ? physicalComparison : onlineComparison;
+  const steps = isPhysical ? physicalSteps : onlineSteps;
+  const faqItems = isPhysical ? physicalFaqItems : onlineFaqItems;
 
   const heroStats: {
     value: string;
@@ -225,14 +336,65 @@ export function StudioOfferPage({
           </div>
         </section>
 
+        <section className="border-b border-border bg-background py-10 md:py-14">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-display text-xl font-bold text-foreground md:text-2xl">
+                Как преподавате?
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground md:text-base">
+                Изберете формата си - ще ви покажем какво Zenno прави за вас
+              </p>
+              <div
+                className="mt-6 inline-flex w-full max-w-md rounded-2xl border border-border bg-muted/40 p-1.5"
+                role="tablist"
+                aria-label="Формат на преподаване"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={isPhysical}
+                  onClick={() => setTeachingMode("physical")}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all md:text-base",
+                    isPhysical
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  В студио
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!isPhysical}
+                  onClick={() => setTeachingMode("online")}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all md:text-base",
+                    !isPhysical
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Video className="h-4 w-4 shrink-0" />
+                  Онлайн
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section data-offer-section className="border-b border-border py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="offer-section-head mb-10 text-center">
               <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-                Преди и след Zenno
+                {isPhysical ? "Преди и след Zenno" : "Онлайн йога без главоболие"}
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Когато студиото ви е в Zenno, помагате на млади хора да намерят пътя си към практиката
+                {isPhysical
+                  ? "Когато студиото ви е в Zenno, помагате на млади хора да намерят пътя си към практиката"
+                  : "Записвания, Zoom на живо, календар и напомняния - всичко тръгва само, вие се фокусирате върху класа"}
               </p>
             </div>
             <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2 md:gap-6">
@@ -272,10 +434,12 @@ export function StudioOfferPage({
           <div className="container mx-auto px-4">
             <div className="offer-section-head mb-8 text-center md:mb-10">
               <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">
-                Защо студиата се присъединяват
+                {isPhysical ? "Защо студиата се присъединяват" : "Защо онлайн инструкторите избират Zenno"}
               </h2>
               <p className="mt-3 text-lg text-muted-foreground">
-                Практични инструменти за вас. По-добър достъп до йога за младите.
+                {isPhysical
+                  ? "Практични инструменти за вас. По-добър достъп до йога за младите."
+                  : "Живи класове, общност и автоматизация - без да сте постоянно в съобщения и имейли."}
               </p>
             </div>
             <div className="mx-auto max-w-6xl space-y-4">
@@ -331,7 +495,11 @@ export function StudioOfferPage({
               <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">
                 Как да започнете
               </h2>
-              <p className="mt-3 text-lg text-muted-foreground">Четири стъпки - и сте част от общността</p>
+              <p className="mt-3 text-lg text-muted-foreground">
+                {isPhysical
+                  ? "Четири стъпки - и сте част от общността"
+                  : "Четири стъпки до първия ви онлайн клас на живо"}
+              </p>
             </div>
 
             <div className="relative mx-auto max-w-5xl">
@@ -362,9 +530,19 @@ export function StudioOfferPage({
             </div>
 
             <p className="offer-animate mx-auto mt-12 max-w-2xl text-center text-muted-foreground">
-              След регистрация получавате{" "}
-              <span className="font-medium text-foreground">„Ръководство за настройка“</span> в
-              таблото - стъпка по стъпка до първия записан клас.
+              {isPhysical ? (
+                <>
+                  След регистрация получавате{" "}
+                  <span className="font-medium text-foreground">„Ръководство за настройка“</span> в
+                  таблото - стъпка по стъпка до първия записан клас.
+                </>
+              ) : (
+                <>
+                  След първия публикуван клас практикуващите получават{" "}
+                  <span className="font-medium text-foreground">Zoom линк в Google Calendar</span> и
+                  напомняния автоматично - вие само отваряте срещата и водите.
+                </>
+              )}
             </p>
           </div>
         </section>
@@ -440,8 +618,9 @@ export function StudioOfferPage({
                   Готови ли сте да станете част от това?
                 </h2>
                 <p className="mt-2 max-w-md text-muted-foreground">
-                  Регистрирайте студиото си и помогнете на млади хора да започнат практиката си - отнема
-                  около 2 минути.
+                  {isPhysical
+                    ? "Регистрирайте студиото си и помогнете на млади хора да започнат практиката си - отнема около 2 минути."
+                    : "Регистрирайте се и пуснете първия си онлайн клас на живо - отнема около 2 минути."}
                 </p>
               </div>
               <div className="offer-animate shrink-0">
