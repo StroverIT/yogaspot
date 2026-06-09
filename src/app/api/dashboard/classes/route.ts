@@ -7,7 +7,7 @@ import { trackServerEvent } from '@/lib/server-analytics';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { assertStudioReadyForClassPublish } from '@/lib/studio-online-gate';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
-import { validateYogaClassMaxCapacity, validateYogaClassPrice } from '@/lib/validate-yoga-class-fields';
+import { validateYogaClassMaxCapacity, validateYogaClassPrice, resolveAcceptsMultisport } from '@/lib/validate-yoga-class-fields';
 
 export const runtime = 'nodejs';
 
@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     difficulty?: string;
     cancellationPolicy?: string;
     waitingList?: string[];
+    acceptsMultisport?: boolean;
   };
   try {
     body = await request.json();
@@ -116,6 +117,7 @@ export async function POST(request: Request) {
       difficulty: typeof body.difficulty === 'string' ? body.difficulty : 'начинаещ',
       cancellationPolicy: typeof body.cancellationPolicy === 'string' ? body.cancellationPolicy : '',
       waitingList: Array.isArray(body.waitingList) ? body.waitingList.filter((x) => typeof x === 'string') : [],
+      acceptsMultisport: resolveAcceptsMultisport(body.acceptsMultisport, teachingMode),
     },
   });
 

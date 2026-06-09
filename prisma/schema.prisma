@@ -284,6 +284,7 @@ model YogaClass {
   difficulty          String
   cancellationPolicy  String
   waitingList         String[] @default([])
+  acceptsMultisport   Boolean  @default(false)
 
   attendances UserClassAttendance[]
   bookings    Booking[]
@@ -336,8 +337,9 @@ model ScheduleEntry {
   endTime     String
   maxCapacity Int
   enrolled    Int      @default(0)
-  price       Float
-  isRecurring Boolean  @default(true)
+  price             Float
+  isRecurring       Boolean  @default(true)
+  acceptsMultisport Boolean  @default(false)
 
   bookings ScheduleEntryBooking[]
 

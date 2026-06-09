@@ -102,6 +102,7 @@ export default function DashboardSchedulePage() {
           maxCapacity: payload.maxCapacity,
           price: payload.price,
           isRecurring: true,
+          acceptsMultisport: payload.acceptsMultisport === true,
         }),
       });
 

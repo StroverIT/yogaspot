@@ -435,7 +435,10 @@ function AdminScheduleContent({
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
-                <p className="text-xs text-muted-foreground">{entry.maxCapacity} места</p>
+                <p className="text-xs text-muted-foreground">
+                  {entry.maxCapacity} места
+                  {entry.acceptsMultisport ? ' · MultiSport' : ''}
+                </p>
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(entry)}>
@@ -553,6 +556,7 @@ function UserScheduleContent({
                 <p className="text-sm font-semibold text-foreground">{formatClassPriceDisplay(entry.price)}</p>
                 <p className="text-xs text-muted-foreground">
                   {isUnlimitedClassCapacity(entry.maxCapacity) ? capacityLabel : `${capacityLabel} места`}
+                  {entry.acceptsMultisport ? ' · MultiSport' : ''}
                 </p>
               </div>
               <Button

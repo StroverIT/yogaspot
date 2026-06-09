@@ -59,6 +59,7 @@ export interface YogaClass {
   difficulty: 'начинаещ' | 'среден' | 'напреднал';
   cancellationPolicy: string;
   waitingList: string[];
+  acceptsMultisport?: boolean;
 }
 
 export interface Review {
@@ -100,6 +101,7 @@ export interface ScheduleEntry {
   enrolled: number;
   price: number;
   isRecurring: boolean; // true = weekly recurring
+  acceptsMultisport?: boolean;
 }
 
 export interface Retreat {

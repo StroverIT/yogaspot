@@ -44,6 +44,7 @@ export type ClassModalPayload = {
   difficulty: string;
   cancellationPolicy: string;
   waitingList?: string[];
+  acceptsMultisport?: boolean;
 };
 
 export function ClassModal({
@@ -83,6 +84,7 @@ export function ClassModal({
   const [cancellationPolicy, setCancellationPolicy] = useState('');
   const [noCapacityLimit, setNoCapacityLimit] = useState(false);
   const [isFreeClass, setIsFreeClass] = useState(false);
+  const [acceptsMultisport, setAcceptsMultisport] = useState(false);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
   const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
@@ -128,6 +130,7 @@ export function ClassModal({
       setMaxCapacity(unlimited ? '' : String(classToEdit.maxCapacity));
       setPrice(free ? '' : formatEurInputFromBgn(classToEdit.price));
       setCancellationPolicy(classToEdit.cancellationPolicy);
+      setAcceptsMultisport(classToEdit.acceptsMultisport === true);
       return;
     }
     setClassName('');
@@ -143,12 +146,15 @@ export function ClassModal({
     setCancellationPolicy('');
     setNoCapacityLimit(false);
     setIsFreeClass(false);
+    setAcceptsMultisport(false);
   }, [open, classToEdit]);
 
   useEffect(() => {
-    if (!isOnlineStudio) {
-      setNoCapacityLimit(false);
+    if (isOnlineStudio) {
+      setAcceptsMultisport(false);
+      return;
     }
+    setNoCapacityLimit(false);
   }, [isOnlineStudio]);
 
   useEffect(() => {
@@ -224,6 +230,7 @@ export function ClassModal({
           difficulty,
           cancellationPolicy: cancellationPolicy.trim(),
           waitingList: classToEdit?.waitingList,
+          acceptsMultisport: !isOnlineStudio && acceptsMultisport,
         }),
       );
     } finally {
@@ -441,6 +448,15 @@ export function ClassModal({
               className="mt-1"
             />
           </div>
+          {!isOnlineStudio ? (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+              <Checkbox
+                checked={acceptsMultisport}
+                onCheckedChange={checked => setAcceptsMultisport(checked === true)}
+              />
+              Приема MultiSport
+            </label>
+          ) : null}
           {selectedStudio?.teachingMode === 'online' ? (
             <p className="text-sm text-muted-foreground">
               Онлайн клас - практикуващите получават Zoom линк след запис.

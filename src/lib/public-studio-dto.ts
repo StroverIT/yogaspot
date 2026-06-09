@@ -78,6 +78,7 @@ export function yogaClassToDto(c: PrismaYogaClass): YogaClass {
     difficulty: c.difficulty as YogaClass['difficulty'],
     cancellationPolicy: c.cancellationPolicy,
     waitingList: c.waitingList ?? [],
+    acceptsMultisport: c.acceptsMultisport,
   };
 }
 
@@ -96,6 +97,7 @@ export function scheduleEntryToDto(s: PrismaScheduleEntry): ScheduleEntry {
     enrolled: s.enrolled,
     price: s.price,
     isRecurring: s.isRecurring,
+    acceptsMultisport: s.acceptsMultisport,
   };
 }
 

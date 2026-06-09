@@ -19,4 +19,12 @@ export function validateYogaClassPrice(price: number, _teachingMode?: TeachingMo
   return null;
 }
 
+export function resolveAcceptsMultisport(
+  acceptsMultisport: unknown,
+  teachingMode: TeachingModeDto,
+): boolean {
+  if (teachingMode === 'online') return false;
+  return acceptsMultisport === true;
+}
+
 export { UNLIMITED_CLASS_CAPACITY };

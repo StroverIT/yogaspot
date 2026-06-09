@@ -42,6 +42,7 @@ export type ScheduleModalPayload = {
   endTime: string;
   maxCapacity: number;
   price: number;
+  acceptsMultisport?: boolean;
 };
 
 type TimeSlot = {
@@ -81,6 +82,7 @@ export function ScheduleModal({
   const [price, setPrice] = useState('');
   const [noCapacityLimit, setNoCapacityLimit] = useState(false);
   const [isFreeClass, setIsFreeClass] = useState(false);
+  const [acceptsMultisport, setAcceptsMultisport] = useState(false);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([{ day: '', startTime: '', endTime: '' }]);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
@@ -126,6 +128,7 @@ export function ScheduleModal({
       setIsFreeClass(free);
       setMaxCapacity(unlimited ? '' : String(entry.maxCapacity));
       setPrice(free ? '' : formatEurInputFromBgn(entry.price));
+      setAcceptsMultisport(entry.acceptsMultisport === true);
       return;
     }
     setClassName('');
@@ -137,13 +140,16 @@ export function ScheduleModal({
     setPrice('');
     setNoCapacityLimit(false);
     setIsFreeClass(false);
+    setAcceptsMultisport(false);
     setTimeSlots([{ day: '', startTime: '', endTime: '' }]);
   }, [open, entry]);
 
   useEffect(() => {
-    if (!isOnlineStudio) {
-      setNoCapacityLimit(false);
+    if (isOnlineStudio) {
+      setAcceptsMultisport(false);
+      return;
     }
+    setNoCapacityLimit(false);
   }, [isOnlineStudio]);
 
   useEffect(() => {
@@ -224,6 +230,7 @@ export function ScheduleModal({
       endTime: slot.endTime,
       maxCapacity: resolvedCapacity,
       price: pr,
+      acceptsMultisport: !isOnlineStudio && acceptsMultisport,
     }));
 
     setSaving(true);
@@ -483,6 +490,15 @@ export function ScheduleModal({
                   ) : null}
                 </div>
               </div>
+              {!isOnlineStudio ? (
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox
+                    checked={acceptsMultisport}
+                    onCheckedChange={checked => setAcceptsMultisport(checked === true)}
+                  />
+                  Приема MultiSport
+                </label>
+              ) : null}
               {selectedStudio?.teachingMode === 'online' ? (
                 <p className="text-sm text-muted-foreground">
                   Онлайн разписание - практикуващите получават Zoom линк след запис.

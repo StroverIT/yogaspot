@@ -4,7 +4,7 @@ import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, require
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
-import { validateYogaClassMaxCapacity, validateYogaClassPrice } from '@/lib/validate-yoga-class-fields';
+import { validateYogaClassMaxCapacity, validateYogaClassPrice, resolveAcceptsMultisport } from '@/lib/validate-yoga-class-fields';
 
 export const runtime = 'nodejs';
 
@@ -36,6 +36,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     waitingList: string[];
     instructorId: string;
     studioId: string;
+    acceptsMultisport: boolean;
   }>;
   try {
     body = await request.json();
@@ -59,6 +60,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (typeof body.difficulty === 'string') data.difficulty = body.difficulty;
   if (typeof body.cancellationPolicy === 'string') data.cancellationPolicy = body.cancellationPolicy;
   if (Array.isArray(body.waitingList)) data.waitingList = body.waitingList.filter((x) => typeof x === 'string');
+  if (typeof body.acceptsMultisport === 'boolean') data.acceptsMultisport = body.acceptsMultisport;
 
   let nextStudioId = existing.studioId;
   if (typeof body.studioId === 'string') {
@@ -89,7 +91,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
 
-  if (typeof data.maxCapacity === 'number' || typeof data.price === 'number') {
+  if (typeof data.maxCapacity === 'number' || typeof data.price === 'number' || typeof data.acceptsMultisport === 'boolean') {
     const studio = await prisma.studio.findUnique({
       where: { id: nextStudioId },
       select: { teachingMode: true },
@@ -104,6 +106,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (typeof data.price === 'number') {
       const priceError = validateYogaClassPrice(data.price, teachingMode);
       if (priceError) return jsonError(priceError, 400);
+    }
+    if (typeof data.acceptsMultisport === 'boolean') {
+      data.acceptsMultisport = resolveAcceptsMultisport(data.acceptsMultisport, teachingMode);
     }
   }
 

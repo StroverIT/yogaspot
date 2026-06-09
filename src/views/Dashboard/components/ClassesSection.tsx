@@ -156,6 +156,11 @@ export function ClassesSection({
                         {cls.yogaType}
                       </Badge>
                       <DifficultyBadge difficulty={cls.difficulty} />
+                      {cls.acceptsMultisport ? (
+                        <Badge variant="outline" className="text-xs">
+                          MultiSport
+                        </Badge>
+                      ) : null}
                       {isFull && (
                         <Badge variant="destructive" className="gap-1 text-xs">
                           <AlertCircle className="h-3 w-3" /> Пълен

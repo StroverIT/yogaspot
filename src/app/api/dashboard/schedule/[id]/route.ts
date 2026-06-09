@@ -4,7 +4,7 @@ import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, require
 import { scheduleEntryToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
-import { validateYogaClassMaxCapacity, validateYogaClassPrice } from '@/lib/validate-yoga-class-fields';
+import { validateYogaClassMaxCapacity, validateYogaClassPrice, resolveAcceptsMultisport } from '@/lib/validate-yoga-class-fields';
 
 export const runtime = 'nodejs';
 
@@ -34,6 +34,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     isRecurring: boolean;
     instructorId: string;
     studioId: string;
+    acceptsMultisport: boolean;
   }>;
   try {
     body = await request.json();
@@ -51,6 +52,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (typeof body.maxCapacity === 'number') data.maxCapacity = body.maxCapacity;
   if (typeof body.price === 'number') data.price = body.price;
   if (typeof body.isRecurring === 'boolean') data.isRecurring = body.isRecurring;
+  if (typeof body.acceptsMultisport === 'boolean') data.acceptsMultisport = body.acceptsMultisport;
 
   let nextStudioId = existing.studioId;
   if (typeof body.studioId === 'string') {
@@ -81,7 +83,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
 
-  if (typeof data.maxCapacity === 'number' || typeof data.price === 'number') {
+  if (typeof data.maxCapacity === 'number' || typeof data.price === 'number' || typeof data.acceptsMultisport === 'boolean') {
     const studio = await prisma.studio.findUnique({
       where: { id: nextStudioId },
       select: { teachingMode: true },
@@ -96,6 +98,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     if (typeof data.price === 'number') {
       const priceError = validateYogaClassPrice(data.price, teachingMode);
       if (priceError) return jsonError(priceError, 400);
+    }
+    if (typeof data.acceptsMultisport === 'boolean') {
+      data.acceptsMultisport = resolveAcceptsMultisport(data.acceptsMultisport, teachingMode);
     }
   }
 

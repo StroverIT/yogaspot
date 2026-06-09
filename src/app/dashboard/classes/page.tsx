@@ -99,6 +99,7 @@ export default function DashboardClassesPage() {
         difficulty: payload.difficulty,
         cancellationPolicy: payload.cancellationPolicy,
         ...(isEdit && payload.waitingList !== undefined ? { waitingList: payload.waitingList } : {}),
+        acceptsMultisport: payload.acceptsMultisport === true,
         ...(!isEdit ? { enrolled: 0 } : {}),
       }),
     });

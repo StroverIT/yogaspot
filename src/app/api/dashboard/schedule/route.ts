@@ -7,7 +7,7 @@ import { trackServerEvent } from '@/lib/server-analytics';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { assertStudioReadyForClassPublish } from '@/lib/studio-online-gate';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
-import { validateYogaClassMaxCapacity, validateYogaClassPrice } from '@/lib/validate-yoga-class-fields';
+import { validateYogaClassMaxCapacity, validateYogaClassPrice, resolveAcceptsMultisport } from '@/lib/validate-yoga-class-fields';
 
 export const runtime = 'nodejs';
 
@@ -54,6 +54,7 @@ export async function POST(request: Request) {
     maxCapacity?: number;
     price?: number;
     isRecurring?: boolean;
+    acceptsMultisport?: boolean;
   };
   try {
     body = await request.json();
@@ -110,6 +111,7 @@ export async function POST(request: Request) {
       maxCapacity,
       price,
       isRecurring: typeof body.isRecurring === 'boolean' ? body.isRecurring : true,
+      acceptsMultisport: resolveAcceptsMultisport(body.acceptsMultisport, teachingMode),
     },
   });
 
