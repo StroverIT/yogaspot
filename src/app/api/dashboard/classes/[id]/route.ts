@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
+import { teachingModeFromPrisma } from '@/lib/teaching-mode';
+import { validateYogaClassMaxCapacity, validateYogaClassPrice } from '@/lib/validate-yoga-class-fields';
 
 export const runtime = 'nodejs';
 
@@ -86,6 +88,24 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   }
 
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
+
+  if (typeof data.maxCapacity === 'number' || typeof data.price === 'number') {
+    const studio = await prisma.studio.findUnique({
+      where: { id: nextStudioId },
+      select: { teachingMode: true },
+    });
+    if (!studio) return jsonError('Studio not found', 404);
+    const teachingMode = teachingModeFromPrisma(studio.teachingMode);
+
+    if (typeof data.maxCapacity === 'number') {
+      const capacityError = validateYogaClassMaxCapacity(data.maxCapacity, teachingMode);
+      if (capacityError) return jsonError(capacityError, 400);
+    }
+    if (typeof data.price === 'number') {
+      const priceError = validateYogaClassPrice(data.price, teachingMode);
+      if (priceError) return jsonError(priceError, 400);
+    }
+  }
 
   const updated = await prisma.yogaClass.update({ where: { id }, data });
   invalidateAfterCatalogChange();

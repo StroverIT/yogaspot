@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import type { ScheduleEntry, YogaClass } from '@/data/mock-data';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount } from '@/lib/payments';
+import { formatClassPriceDisplay, isFreeClassPrice } from '@/lib/yoga-class-limits';
 import { toast } from 'sonner';
 
 export type CheckoutModalTarget =
@@ -45,7 +46,9 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
         : '';
 
   const basePrice = target?.kind === 'class' ? target.yogaClass.price : target?.kind === 'schedule' ? target.entry.price : 0;
-  const finalPrice = onlinePayments ? calculateFinalCustomerAmount(basePrice) : basePrice;
+  const isFreeClassBooking = target?.kind === 'class' && isFreeClassPrice(basePrice);
+  const useStripeCheckout = onlinePayments && !isFreeClassBooking;
+  const finalPrice = useStripeCheckout ? calculateFinalCustomerAmount(basePrice) : basePrice;
 
   const handlePay = async () => {
     if (!target) return;
@@ -118,7 +121,7 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">
-            {onlinePayments ? 'Потвърждение и плащане' : 'Записване'}
+            {useStripeCheckout ? 'Потвърждение и плащане' : 'Записване'}
           </DialogTitle>
           <DialogDescription asChild>
             <div className="space-y-2 text-left text-sm text-muted-foreground">
@@ -129,7 +132,11 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
                 <p className="text-foreground/90">Желаете ли да се запишете за часа / събитието?</p>
                 <p>
                   Цена:{' '}
-                  <span className="font-semibold text-foreground">{formatPriceDualFromBgn(onlinePayments ? finalPrice : basePrice)}</span>
+                  <span className="font-semibold text-foreground">
+                    {isFreeClassBooking
+                      ? formatClassPriceDisplay(0)
+                      : formatPriceDualFromBgn(useStripeCheckout ? finalPrice : basePrice)}
+                  </span>
                 </p>
               </>
             </div>
@@ -139,7 +146,7 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
           <Button type="button" variant="outline" onClick={onClose} disabled={paying}>
             Отказ
           </Button>
-          {onlinePayments ? (
+          {useStripeCheckout ? (
             <Button type="button" onClick={() => void handlePay()} disabled={paying || !target}>
               {paying ? 'Зареждане…' : 'Плащане в Stripe'}
             </Button>

@@ -4,7 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
-import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import {
+  formatClassCapacityDisplay,
+  formatClassPriceDisplay,
+  isClassAtCapacity,
+  isUnlimitedClassCapacity,
+} from '@/lib/yoga-class-limits';
 import { AlertCircle, Building2, Clock, Edit, GraduationCap, Plus, Trash2 } from 'lucide-react';
 
 import { dashboardCardClass } from '../dashboardUi';
@@ -73,7 +78,7 @@ export function ClassesSection({
         {classes.map((cls) => {
           const instr = instructors.find(ins => ins.id === cls.instructorId);
           const studio = studios.find(s => s.id === cls.studioId);
-          const isFull = cls.enrolled >= cls.maxCapacity;
+          const isFull = isClassAtCapacity(cls.enrolled, cls.maxCapacity);
 
           return (
             <div key={cls.id} className={`group ${dashboardCardClass} p-5`}>
@@ -141,7 +146,7 @@ export function ClassesSection({
                       </div>
                       <div className="shrink-0 min-[480px]:text-right">
                         <span className="font-display text-lg font-bold tabular-nums text-primary md:text-xl">
-                          {formatPriceDualFromBgn(cls.price)}
+                          {formatClassPriceDisplay(cls.price)}
                         </span>
                       </div>
                     </div>
@@ -161,16 +166,24 @@ export function ClassesSection({
                     <div className="mt-auto flex items-center gap-3 border-t border-border/40 pt-3">
                       <DashboardOccupancyBar
                         percent={
-                          cls.maxCapacity > 0
-                            ? (cls.enrolled / cls.maxCapacity) * 100
-                            : 0
+                          isUnlimitedClassCapacity(cls.maxCapacity)
+                            ? cls.enrolled > 0
+                              ? 50
+                              : 0
+                            : isClassAtCapacity(cls.enrolled, cls.maxCapacity)
+                              ? 100
+                              : cls.maxCapacity > 0
+                                ? (cls.enrolled / cls.maxCapacity) * 100
+                                : 0
                         }
-                        ariaLabel={`Заетост: ${cls.enrolled} от ${cls.maxCapacity} места`}
+                        ariaLabel={`Заетост: ${formatClassCapacityDisplay(cls.enrolled, cls.maxCapacity)}`}
                         ariaValueNow={cls.enrolled}
-                        ariaValueMax={cls.maxCapacity}
+                        ariaValueMax={
+                          isUnlimitedClassCapacity(cls.maxCapacity) ? cls.enrolled || 1 : cls.maxCapacity
+                        }
                       />
                       <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                        {cls.enrolled}/{cls.maxCapacity}
+                        {formatClassCapacityDisplay(cls.enrolled, cls.maxCapacity)}
                       </span>
                     </div>
                   </div>

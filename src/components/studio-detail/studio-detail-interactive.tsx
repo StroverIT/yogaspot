@@ -13,6 +13,7 @@ import type {
   PublicStudioExtras,
   PublicStudioPayload,
 } from '@/lib/get-public-studio';
+import { isClassAtCapacity } from '@/lib/yoga-class-limits';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
 
@@ -140,7 +141,7 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
     }
     const cls = studioClasses.find((c) => c.id === classId);
     if (!cls) return;
-    if (cls.enrolled >= cls.maxCapacity) {
+    if (isClassAtCapacity(cls.enrolled, cls.maxCapacity)) {
       toast.info('Класът е пълен. Добавени сте в списъка на изчакване.');
       return;
     }

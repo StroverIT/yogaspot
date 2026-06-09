@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +20,11 @@ import {
 import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 import { ONLINE_STUDIO_ZOOM_REQUIRED_MSG } from '@/lib/studio-online-gate';
 import { onlineStudioMissingZoom } from '@/lib/teaching-mode';
+import {
+  isFreeClassPrice,
+  isUnlimitedClassCapacity,
+  resolveClassMaxCapacity,
+} from '@/lib/yoga-class-limits';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете всички опции (инструктор, студио, тип йога, ниво) преди запазване.';
@@ -68,6 +74,8 @@ export function ClassModal({
   const [maxCapacity, setMaxCapacity] = useState('');
   const [price, setPrice] = useState('');
   const [cancellationPolicy, setCancellationPolicy] = useState('');
+  const [noCapacityLimit, setNoCapacityLimit] = useState(false);
+  const [isFreeClass, setIsFreeClass] = useState(false);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
   const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
@@ -81,6 +89,8 @@ export function ClassModal({
     () => studios.find(s => s.id === studioId) ?? null,
     [studios, studioId],
   );
+
+  const isOnlineStudio = selectedStudio?.teachingMode === 'online';
 
   const onlineStudioBlocked = useMemo(
     () =>
@@ -104,8 +114,12 @@ export function ClassModal({
       setEndTime(classToEdit.endTime);
       setYogaType(classToEdit.yogaType);
       setDifficulty(classToEdit.difficulty);
-      setMaxCapacity(String(classToEdit.maxCapacity));
-      setPrice(formatEurInputFromBgn(classToEdit.price));
+      const unlimited = isUnlimitedClassCapacity(classToEdit.maxCapacity);
+      const free = isFreeClassPrice(classToEdit.price);
+      setNoCapacityLimit(unlimited);
+      setIsFreeClass(free);
+      setMaxCapacity(unlimited ? '' : String(classToEdit.maxCapacity));
+      setPrice(free ? '' : formatEurInputFromBgn(classToEdit.price));
       setCancellationPolicy(classToEdit.cancellationPolicy);
       return;
     }
@@ -120,7 +134,16 @@ export function ClassModal({
     setMaxCapacity('');
     setPrice('');
     setCancellationPolicy('');
+    setNoCapacityLimit(false);
+    setIsFreeClass(false);
   }, [open, classToEdit]);
+
+  useEffect(() => {
+    if (!isOnlineStudio) {
+      setNoCapacityLimit(false);
+      setIsFreeClass(false);
+    }
+  }, [isOnlineStudio]);
 
   useEffect(() => {
     if (!studioId || !instructorId) return;
@@ -130,8 +153,22 @@ export function ClassModal({
   }, [studioId, instructorId, instructors]);
 
   const handleSave = async () => {
-    const cap = Number(maxCapacity);
-    const pr = classPriceBgnFromEur(parseEurInput(price));
+    const capRaw = Number(maxCapacity);
+    const resolvedCapacity = isOnlineStudio && noCapacityLimit
+      ? resolveClassMaxCapacity(0, true)
+      : capRaw;
+    const pr = isOnlineStudio && isFreeClass ? 0 : classPriceBgnFromEur(parseEurInput(price));
+
+    const capacityIncomplete =
+      isOnlineStudio && noCapacityLimit
+        ? false
+        : !maxCapacity.trim() || !Number.isFinite(capRaw) || capRaw <= 0;
+
+    const priceIncomplete =
+      isOnlineStudio && isFreeClass
+        ? false
+        : !price.trim() || !Number.isFinite(parseEurInput(price)) || parseEurInput(price) < 0;
+
     if (onlineStudioBlocked) {
       toast.error(ONLINE_STUDIO_ZOOM_REQUIRED_MSG);
       return;
@@ -145,12 +182,8 @@ export function ClassModal({
       || !endTime
       || !yogaType
       || !difficulty
-      || !maxCapacity.trim()
-      || !Number.isFinite(cap)
-      || cap <= 0
-      || !price.trim()
-      || !Number.isFinite(parseEurInput(price))
-      || parseEurInput(price) < 0
+      || capacityIncomplete
+      || priceIncomplete
       || !cancellationPolicy.trim()
     ) {
       toast.error(INCOMPLETE_MSG);
@@ -167,7 +200,7 @@ export function ClassModal({
           date,
           startTime,
           endTime,
-          maxCapacity: cap,
+          maxCapacity: resolvedCapacity,
           price: pr,
           yogaType,
           difficulty,
@@ -292,8 +325,22 @@ export function ClassModal({
                 placeholder="20"
                 value={maxCapacity}
                 onChange={e => setMaxCapacity(e.target.value)}
+                disabled={isOnlineStudio && noCapacityLimit}
                 className="mt-1"
               />
+              {isOnlineStudio ? (
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox
+                    checked={noCapacityLimit}
+                    onCheckedChange={checked => {
+                      const on = checked === true;
+                      setNoCapacityLimit(on);
+                      if (on) setMaxCapacity('');
+                    }}
+                  />
+                  Няма лимит
+                </label>
+              ) : null}
             </div>
             <div>
               <Label>Цена (€)</Label>
@@ -303,14 +350,31 @@ export function ClassModal({
                 placeholder="12,77"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
+                disabled={isOnlineStudio && isFreeClass}
                 className="mt-1"
               />
-              {onlinePayments ? (
+              {isOnlineStudio ? (
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <Checkbox
+                    checked={isFreeClass}
+                    onCheckedChange={checked => {
+                      const on = checked === true;
+                      setIsFreeClass(on);
+                      if (on) setPrice('');
+                    }}
+                  />
+                  Безплатно
+                </label>
+              ) : null}
+              {onlinePayments && !(isOnlineStudio && isFreeClass) ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {hasValidBasePrice
                     ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`
                     : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
                 </p>
+              ) : null}
+              {isOnlineStudio && isFreeClass ? (
+                <p className="mt-1 text-xs text-muted-foreground">Класът е безплатен за практикуващите.</p>
               ) : null}
             </div>
           </div>

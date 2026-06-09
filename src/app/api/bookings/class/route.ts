@@ -3,6 +3,8 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { enrollUserInYogaClassOffline } from '@/lib/offline-booking';
 import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
+import { prisma } from '@/lib/prisma';
+import { isFreeClassPrice } from '@/lib/yoga-class-limits';
 import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
@@ -10,10 +12,6 @@ export const runtime = 'nodejs';
 export async function POST(request: Request) {
   const gate = await requireSession();
   if (!gate.ok) return gate.response;
-
-  if (isOnlinePaymentsEnabled()) {
-    return jsonError('Офлайн записване е налично само когато онлайн плащанията са изключени.', 403);
-  }
 
   let body: { classId?: string };
   try {
@@ -24,6 +22,17 @@ export async function POST(request: Request) {
 
   const classId = typeof body.classId === 'string' ? body.classId.trim() : '';
   if (!classId) return jsonError('Missing classId', 400);
+
+  if (isOnlinePaymentsEnabled()) {
+    const yogaClass = await prisma.yogaClass.findUnique({
+      where: { id: classId },
+      select: { price: true },
+    });
+    if (!yogaClass) return jsonError('Класът не е намерен.', 404);
+    if (!isFreeClassPrice(yogaClass.price)) {
+      return jsonError('Офлайн записване е налично само когато онлайн плащанията са изключени.', 403);
+    }
+  }
 
   try {
     const { studioId, bookingId, classDetail } = await enrollUserInYogaClassOffline(gate.user.id, classId);

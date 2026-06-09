@@ -1,7 +1,11 @@
 import { CalendarRange, Clock, Users } from 'lucide-react';
 import type { Instructor, TeachingMode, YogaClass } from '@/data/mock-data';
 import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
-import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import {
+  formatClassCapacityDisplay,
+  formatClassPriceDisplay,
+  isClassAtCapacity,
+} from '@/lib/yoga-class-limits';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
@@ -34,7 +38,7 @@ export function EventsTabContent({
       )}
       {studioClasses.map((cls) => {
         const instructor = instructors.find((i) => i.id === cls.instructorId);
-        const isFull = cls.enrolled >= cls.maxCapacity;
+        const isFull = isClassAtCapacity(cls.enrolled, cls.maxCapacity);
         const bookingInFlight = checkoutModalOpen;
         const alreadyBooked = isAuthenticated && bookedClassIds.includes(cls.id);
         return (
@@ -51,7 +55,7 @@ export function EventsTabContent({
                 </span>
                 <span className="flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" />
-                  {cls.enrolled}/{cls.maxCapacity}
+                  {formatClassCapacityDisplay(cls.enrolled, cls.maxCapacity)}
                 </span>
               </div>
               <div className="mt-2 flex gap-2">
@@ -62,7 +66,7 @@ export function EventsTabContent({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-xl font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(cls.price)}</span>
+              <span className="text-xl font-semibold text-foreground leading-snug">{formatClassPriceDisplay(cls.price)}</span>
               <Button
                 onClick={() => onBookClass(cls.id)}
                 variant={alreadyBooked || isFull ? 'outline' : 'default'}

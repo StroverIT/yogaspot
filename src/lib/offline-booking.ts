@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { isClassAtCapacity } from '@/lib/yoga-class-limits';
 
 export type ClassSnapshot = {
   studioId: string;
@@ -75,7 +76,7 @@ export async function enrollUserInYogaClassOffline(
     if (!cls) {
       throw new Error('CLASS_NOT_FOUND');
     }
-    if (cls.enrolled >= cls.maxCapacity) {
+    if (isClassAtCapacity(cls.enrolled, cls.maxCapacity)) {
       throw new Error('CLASS_FULL');
     }
 
