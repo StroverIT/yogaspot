@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   Bell,
@@ -46,6 +47,10 @@ export type StudioOfferStats = {
 const FINAL_SECTION_ID = "studio-offer-final-cta";
 
 type TeachingMode = "physical" | "online";
+
+function teachingModeFromParam(value: string | null): TeachingMode {
+  return value === "online" ? "online" : "physical";
+}
 
 const physicalBenefits = [
   {
@@ -252,9 +257,26 @@ export function StudioOfferPage({
   offer: BusinessOfferDto;
   stats: StudioOfferStats;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [mobileStickyVisible, setMobileStickyVisible] = useState(false);
-  const [teachingMode, setTeachingMode] = useState<TeachingMode>("physical");
   const fmt = (n: number) => n.toLocaleString("bg-BG");
+
+  const teachingMode = teachingModeFromParam(searchParams.get("mode"));
+  const setTeachingMode = useCallback(
+    (mode: TeachingMode) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (mode === "online") {
+        params.set("mode", "online");
+      } else {
+        params.delete("mode");
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
   const isPhysical = teachingMode === "physical";
   const benefits = isPhysical ? physicalBenefits : onlineBenefits;
