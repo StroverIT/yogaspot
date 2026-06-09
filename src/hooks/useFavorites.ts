@@ -38,17 +38,22 @@ function subscribe(onStoreChange: () => void) {
 }
 
 async function fetchFavoritesFromApi(signal?: AbortSignal) {
-  const res = await fetch("/api/favorites", { credentials: "same-origin", signal });
-  if (!res.ok) {
-    if (!signal?.aborted) replaceFavorites([]);
-    return;
+  try {
+    const res = await fetch("/api/favorites", { credentials: "same-origin", signal });
+    if (!res.ok) {
+      if (!signal?.aborted) replaceFavorites([]);
+      return;
+    }
+    const data = (await res.json()) as { studioIds?: unknown };
+    if (signal?.aborted) return;
+    const ids = Array.isArray(data.studioIds)
+      ? data.studioIds.filter((id): id is string => typeof id === "string")
+      : [];
+    replaceFavorites(ids);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    throw error;
   }
-  const data = (await res.json()) as { studioIds?: unknown };
-  if (signal?.aborted) return;
-  const ids = Array.isArray(data.studioIds)
-    ? data.studioIds.filter((id): id is string => typeof id === "string")
-    : [];
-  replaceFavorites(ids);
 }
 
 async function persistFavoritesPut(next: string[]) {

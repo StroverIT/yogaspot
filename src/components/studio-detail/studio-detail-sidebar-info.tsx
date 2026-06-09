@@ -30,7 +30,7 @@ export function StudioDetailSidebarInfo({
       <h3 className="mb-4 font-display text-lg font-semibold text-foreground">Информация</h3>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <TeachingModePill mode={studio.teachingMode} />
-        {showMultisport ? <MultisportBadge size="sm" /> : null}
+        {showMultisport ? <MultisportBadge size="lg" /> : null}
       </div>
       <div className="space-y-3 text-sm">
         {studio.teachingMode === 'online' ? (

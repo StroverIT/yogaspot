@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 const SIZE_CLASS = {
   sm: 'h-7 w-[4.5rem]',
   md: 'h-9 w-[5.75rem]',
-  lg: 'h-11 w-[7rem]',
+  lg: 'h-12 w-32',
+  xl: 'h-16 w-40',
 } as const;
 
 export function MultisportBadge({

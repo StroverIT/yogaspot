@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { MultisportBadge } from '@/components/multisport/multisport-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

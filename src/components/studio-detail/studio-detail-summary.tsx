@@ -30,7 +30,7 @@ export function StudioDetailSummary({
 
       {showMultisport ? (
         <div className="mt-4">
-          <MultisportBadge size="md" />
+          <MultisportBadge size="xl" />
         </div>
       ) : null}
 
