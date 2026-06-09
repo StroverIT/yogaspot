@@ -257,7 +257,7 @@ export function AdminOverviewClient({
                     {subscriptionStatusBadge(req.status)}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {req.ownerName || '—'}
+                    {req.ownerName || '-'}
                     {req.ownerEmail ? ` · ${req.ownerEmail}` : ''}
                   </p>
                   <p className="text-sm font-medium text-foreground mt-1 truncate">{req.name}</p>
@@ -303,7 +303,7 @@ export function AdminOverviewClient({
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{row.ownerName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{row.ownerEmail || '—'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{row.ownerEmail || '-'}</p>
                     </div>
                     <p className="text-sm font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.gross)}</p>
                   </div>

@@ -79,7 +79,7 @@ export function SubscriptionRequestFormModal({
         <DialogHeader>
           <DialogTitle className="font-display text-xl">Заявка за месечен абонамент</DialogTitle>
           <DialogDescription>
-            Студио: <span className="font-medium text-foreground">{studioName}</span>. Попълнете предложените условия —
+            Студио: <span className="font-medium text-foreground">{studioName}</span>. Попълнете предложените условия -
             след одобрение от администратор абонаментът ще се появи публично.
           </DialogDescription>
         </DialogHeader>

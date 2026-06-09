@@ -5,6 +5,7 @@ export type BookingBuyerEmailProps = {
   headline: string;
   lines: string[];
   calendarUrl?: string;
+  icsCalendarUrl?: string;
   paymentMode: 'online' | 'offline';
   /** Single formatted end price (EUR · BGN); no fee/tax breakdown for online. */
   endPriceDual?: string | null;
@@ -15,6 +16,7 @@ export function BookingBuyerEmail({
   headline,
   lines,
   calendarUrl,
+  icsCalendarUrl,
   paymentMode,
   endPriceDual,
 }: BookingBuyerEmailProps) {
@@ -48,6 +50,18 @@ export function BookingBuyerEmail({
                   Добави в Google Календар
                 </Link>
               </Text>
+            ) : null}
+            {icsCalendarUrl ? (
+              <>
+                <Text style={{ marginTop: '12px' }}>
+                  <Link href={icsCalendarUrl} style={{ color: '#2563eb' }} download="zenno-class.ics">
+                    Изтегли календар (.ics) с напомняния
+                  </Link>
+                </Text>
+                <Text style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+                  .ics файлът включва напомняния един ден и един час преди класа.
+                </Text>
+              </>
             ) : null}
             <Text style={{ fontSize: '14px', color: '#666', marginTop: '24px' }}>Благодарим ви!</Text>
           </Section>

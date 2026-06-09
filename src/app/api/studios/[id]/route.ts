@@ -4,11 +4,18 @@ import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
+import { mapStudioResponse } from '@/lib/dashboard-studios-data';
+import {
+  isValidZoomMeetingUrl,
+  teachingModeToPrisma,
+} from '@/lib/teaching-mode';
 
 export const runtime = 'nodejs';
 
 type PatchBody = {
   name?: string;
+  teachingMode?: string;
+  zoomMeetingUrl?: string | null;
   address?: string;
   description?: string;
   phone?: string;
@@ -72,31 +79,6 @@ async function uploadStudioImageFile(
   return { ok: true, publicUrl: publicUrlData.publicUrl };
 }
 
-function mapStudioResponse(s: Awaited<ReturnType<typeof prisma.studio.findUnique>>) {
-  if (!s) return null;
-  return {
-    id: s.id,
-    name: s.name,
-    address: s.address,
-    lat: s.lat ?? 0,
-    lng: s.lng ?? 0,
-    images: s.images ?? [],
-    description: s.description,
-    phone: s.phone,
-    email: s.email,
-    rating: s.rating ?? 0,
-    reviewCount: s.reviewCount ?? 0,
-    businessId: s.businessId,
-    amenities: {
-      parking: s.amenitiesParking,
-      shower: s.amenitiesShower,
-      changingRoom: s.amenitiesChangingRoom,
-      equipmentRental: s.amenitiesEquipmentRental,
-    },
-    yogaTypes: s.yogaTypes ?? [],
-  };
-}
-
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
   const gate = await requireRole(['business', 'admin']);
   if (!gate.ok) return gate.response;
@@ -118,13 +100,18 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     const formData = await request.formData();
 
     const name = String(formData.get('name') ?? '').trim();
-    const address = String(formData.get('address') ?? '').trim();
+    const teachingModeRaw = String(formData.get('teachingMode') ?? 'physical').trim();
+    const teachingMode = teachingModeToPrisma(teachingModeRaw);
+    const isOnline = teachingMode === 'ONLINE';
+    const zoomMeetingUrlRaw = String(formData.get('zoomMeetingUrl') ?? '').trim();
+    const zoomMeetingUrl = zoomMeetingUrlRaw || null;
+    let address = String(formData.get('address') ?? '').trim();
     const description = String(formData.get('description') ?? '').trim();
     const phone = String(formData.get('phone') ?? '').trim();
     const email = String(formData.get('email') ?? '').trim();
 
-    const lat = parseNumberOrNull(formData.get('lat'));
-    const lng = parseNumberOrNull(formData.get('lng'));
+    let lat = parseNumberOrNull(formData.get('lat'));
+    let lng = parseNumberOrNull(formData.get('lng'));
 
     const amenitiesParking = toBoolean(formData.get('amenitiesParking'));
     const amenitiesShower = toBoolean(formData.get('amenitiesShower'));
@@ -143,9 +130,30 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     const imageOrderMode = String(formData.get('imageOrderMode') ?? '');
     const imageSlotEntries = formData.getAll('imageSlot').filter((v): v is string => typeof v === 'string');
 
-    if (!name || !address || !description) {
-      const missing = [(!name && 'име'), (!address && 'адрес'), (!description && 'описание')].filter(Boolean).join(', ');
+    if (isOnline && !address) {
+      address = 'Онлайн';
+      lat = null;
+      lng = null;
+    }
+
+    if (!name || !description) {
+      const missing = [(!name && 'име'), (!description && 'описание')].filter(Boolean).join(', ');
       return NextResponse.json({ error: `Липсват задължителни полета: ${missing}.` }, { status: 400 });
+    }
+
+    if (!isOnline && !address) {
+      return NextResponse.json({ error: 'Липсват задължителни полета: адрес.' }, { status: 400 });
+    }
+
+    if (!isOnline && (lat == null || lng == null)) {
+      return NextResponse.json(
+        { error: 'Потвърдете адреса на картата (изберете предложение или поставете маркер).' },
+        { status: 400 },
+      );
+    }
+
+    if (isOnline && zoomMeetingUrl && !isValidZoomMeetingUrl(zoomMeetingUrl)) {
+      return NextResponse.json({ error: 'Въведете валиден Zoom линк (https://...).' }, { status: 400 });
     }
 
     if (!phone || !email) {
@@ -208,6 +216,8 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       where: { id },
       data: {
         name,
+        teachingMode,
+        zoomMeetingUrl,
         address,
         lat,
         lng,
@@ -236,6 +246,14 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 
   const data: Record<string, unknown> = {};
   if (typeof body.name === 'string') data.name = body.name.trim();
+  if (typeof body.teachingMode === 'string') data.teachingMode = teachingModeToPrisma(body.teachingMode);
+  if (body.zoomMeetingUrl === null || typeof body.zoomMeetingUrl === 'string') {
+    const zoom = body.zoomMeetingUrl?.trim() || null;
+    if (zoom && !isValidZoomMeetingUrl(zoom)) {
+      return jsonError('Invalid zoomMeetingUrl', 400);
+    }
+    data.zoomMeetingUrl = zoom;
+  }
   if (typeof body.address === 'string') data.address = body.address.trim();
   if (typeof body.description === 'string') data.description = body.description.trim();
   if (typeof body.phone === 'string') data.phone = body.phone.trim();

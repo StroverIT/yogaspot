@@ -30,7 +30,7 @@ export function DashboardMobileNav({
               href={DASHBOARD_PATHS[item.key]}
               className={`relative flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'
                 }`}
-              aria-label={showSetupDot ? `${item.label} — незавършена стъпка от настройката` : undefined}
+              aria-label={showSetupDot ? `${item.label} - незавършена стъпка от настройката` : undefined}
             >
               <span className="relative">
                 <item.icon className={`h-5 w-5 ${active ? 'text-primary' : ''}`} />

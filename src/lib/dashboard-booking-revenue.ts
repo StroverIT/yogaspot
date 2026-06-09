@@ -7,7 +7,7 @@ export type DashboardBookingRevenue = {
   fromScheduleBookingsBgn: number;
   /** studioId → realized booking revenue (BGN) */
   perStudio: Record<string, { classBookingsBgn: number; scheduleBookingsBgn: number }>;
-  /** Per dated event (YogaClass), from actual bookings — newest first */
+  /** Per dated event (YogaClass), from actual bookings - newest first */
   classEventsSales: Array<{ id: string; name: string; date: string; gross: number; bookingCount: number }>;
 };
 

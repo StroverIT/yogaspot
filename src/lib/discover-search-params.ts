@@ -1,5 +1,5 @@
 import type { DiscoverFiltersState } from '@/types/discover-filters';
-import type { YogaLevel, YogaType } from '@/types/studio-discovery';
+import type { DiscoverTeachingFormat, YogaLevel, YogaType } from '@/types/studio-discovery';
 import { YOGA_TYPES } from '@/types/studio-discovery';
 
 const yogaTypeSet = new Set<string>(YOGA_TYPES);
@@ -25,10 +25,16 @@ export function parseDiscoverFiltersFromSearchParams(
     yogaTypes,
     ratingSort: (searchParams.get('ratingSort') as 'asc' | 'desc') || null,
     nearMe: searchParams.get('nearMe') === 'true',
+    format: parseTeachingFormat(searchParams.get('format')),
   };
 }
 
-/** Only when nearMe is set — avoids orphan lat/lng affecting the grid. */
+function parseTeachingFormat(raw: string | null): DiscoverTeachingFormat {
+  if (raw === 'online' || raw === 'physical') return raw;
+  return 'all';
+}
+
+/** Only when nearMe is set - avoids orphan lat/lng affecting the grid. */
 export function parseUserLocationFromSearchParams(
   searchParams: URLSearchParams,
 ): { lat: number; lng: number } | null {
@@ -50,6 +56,7 @@ export function stringifyDiscoverQuery(
   if (filters.levelSort) params.set('levelSort', filters.levelSort);
   if (filters.yogaTypes.length > 0) params.set('yogaTypes', filters.yogaTypes.join(','));
   if (filters.ratingSort) params.set('ratingSort', filters.ratingSort);
+  if (filters.format !== 'all') params.set('format', filters.format);
   if (filters.nearMe) params.set('nearMe', 'true');
   if (filters.nearMe && options.userLocation) {
     params.set('userLat', String(options.userLocation.lat));

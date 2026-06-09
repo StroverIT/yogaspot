@@ -151,8 +151,8 @@ export default function DashboardSchedulePage() {
         onWorkspaceReload={() => void ws.reload()}
         instructors={myInstructors}
         onAdd={() => {
-          if (myStudios.length === 0) {
-            toast.info('Първо създайте студио в раздел Студиа.');
+          if (myInstructors.length === 0) {
+            toast.info('Първо добавете инструктор в раздел Инструктори.');
             return;
           }
           setEditingSchedule(null);

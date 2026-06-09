@@ -10,7 +10,7 @@ import { StudioOfferPage } from '@/views/StudioOfferPage/StudioOfferPage';
 
 const title = 'Zenno за йога студиа';
 const description =
-  'Управлявайте йога студиото си в Zenno — разписание, записвания и откриваемост без собствен сайт или рекламен бюджет.';
+  'Управлявайте йога студиото си в Zenno - разписание, записвания и откриваемост без собствен сайт или рекламен бюджет.';
 
 export const metadata: Metadata = {
   title,

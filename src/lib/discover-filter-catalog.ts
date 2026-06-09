@@ -51,16 +51,24 @@ export function applyDiscoverFilters(
     result = result.filter((s) => filters.yogaTypes.some((type) => s.styles.includes(type)));
   }
 
+  if (filters.format !== 'all') {
+    result = result.filter((s) => s.teachingMode === filters.format);
+  }
+
   type WithDistance = DiscoverStudio & { calculatedDistance?: number };
 
   if (userLocation) {
     result = result.map((s) => ({
       ...s,
-      calculatedDistance: calculateDistance(userLocation.lat, userLocation.lng, s.lat, s.lng),
+      calculatedDistance:
+        s.teachingMode === 'online'
+          ? undefined
+          : calculateDistance(userLocation.lat, userLocation.lng, s.lat, s.lng),
     }));
   }
 
   if (filters.nearMe && userLocation) {
+    result = result.filter((s) => s.teachingMode !== 'online');
     result.sort(
       (a, b) => (a as WithDistance).calculatedDistance! - (b as WithDistance).calculatedDistance!,
     );
@@ -78,7 +86,10 @@ export function applyDiscoverFilters(
   if (userLocation) {
     result = result.map((s) => ({
       ...s,
-      distance: `${(s as WithDistance).calculatedDistance?.toFixed(1) || '?'} км`,
+      distance:
+        s.teachingMode === 'online'
+          ? undefined
+          : `${(s as WithDistance).calculatedDistance?.toFixed(1) || '?'} км`,
     }));
   }
 

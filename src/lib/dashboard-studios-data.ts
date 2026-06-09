@@ -1,11 +1,14 @@
 import type { Role } from '@prisma/client';
-import type { Studio } from '@/data/mock-data';
+import type { Studio, TeachingMode } from '@/data/mock-data';
 import { prisma } from '@/lib/prisma';
 import type { SessionUser } from '@/lib/api-auth';
+import { teachingModeFromPrisma } from '@/lib/teaching-mode';
 
 export type DashboardStudioListItem = {
   id: string;
   name: string;
+  teachingMode: TeachingMode;
+  zoomMeetingUrl: string | null;
   address: string;
   lat: number;
   lng: number;
@@ -29,6 +32,8 @@ export function studioDtoToDashboardListItem(s: Studio): DashboardStudioListItem
   return {
     id: s.id,
     name: s.name,
+    teachingMode: s.teachingMode,
+    zoomMeetingUrl: s.zoomMeetingUrl ?? null,
     address: s.address,
     lat: s.lat,
     lng: s.lng,
@@ -47,6 +52,8 @@ export function studioDtoToDashboardListItem(s: Studio): DashboardStudioListItem
 export function mapStudioResponse(s: {
   id: string;
   name: string;
+  teachingMode: string;
+  zoomMeetingUrl: string | null;
   address: string;
   lat: number | null;
   lng: number | null;
@@ -66,6 +73,8 @@ export function mapStudioResponse(s: {
   return {
     id: s.id,
     name: s.name,
+    teachingMode: teachingModeFromPrisma(s.teachingMode),
+    zoomMeetingUrl: s.zoomMeetingUrl,
     address: s.address,
     lat: s.lat ?? 0,
     lng: s.lng ?? 0,

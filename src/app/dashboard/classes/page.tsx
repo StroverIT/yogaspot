@@ -94,9 +94,8 @@ export default function DashboardClassesPage() {
   if (ws.loading) return <div className="text-muted-foreground">Зареждане…</div>;
   if (ws.error) return <div className="text-destructive">{ws.error}</div>;
 
-  const noStudios = myStudios.length === 0;
   const noInstructors = myInstructors.length === 0;
-  const addClassDisabled = noStudios || noInstructors;
+  const addClassDisabled = noInstructors;
 
   return (
     <div>
@@ -105,38 +104,21 @@ export default function DashboardClassesPage() {
         studios={myStudios}
         instructors={myInstructors}
         addDisabled={addClassDisabled}
-        addDisabledTooltip={
-          noStudios
-            ? 'Първо създайте студио в раздел Студиа.'
-            : 'Добавете поне един инструктор преди да създавате класове.'
-        }
+        addDisabledTooltip="Добавете поне един инструктор преди да създавате класове."
         addDisabledHint={
-          noStudios ? (
-            <>
-              Първо създайте студио в раздел{' '}
-              <Link href="/dashboard/studios" className="font-medium text-primary underline-offset-4 hover:underline">
-                Студиа
-              </Link>
-              .
-            </>
-          ) : (
-            <>
-              Добавете поне един инструктор в раздел{' '}
-              <Link
-                href="/dashboard/instructors"
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Инструктори
-              </Link>
-              .
-            </>
-          )
+          <>
+            Добавете инструктор в раздел{' '}
+            <Link
+              href="/dashboard/instructors"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Инструктори
+            </Link>
+            {' '}
+            - за онлайн не е нужно отделно студио.
+          </>
         }
         onAdd={() => {
-          if (myStudios.length === 0) {
-            toast.info('Първо създайте студио в раздел Студиа.');
-            return;
-          }
           if (myInstructors.length === 0) {
             toast.info('Добавете поне един инструктор преди да създавате класове.');
             return;

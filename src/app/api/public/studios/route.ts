@@ -5,7 +5,7 @@ import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = "nodejs";
 
-/** Public catalog — guests and all roles. Includes flat `classes` for discover/home maps. */
+/** Public catalog - guests and all roles. Includes flat `classes` for discover/home maps. */
 export async function GET() {
   const sessionUser = await getSessionUser();
   const { studios, classes } = await getPublicCatalog();

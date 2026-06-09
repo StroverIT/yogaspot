@@ -66,7 +66,7 @@ export function OverviewSection({
     <div className="space-y-8">
       <DashboardPageHeader
         title="Преглед"
-        description="Обобщена информация за вашия бизнес — рейтинг, записвания, класове и приход."
+        description="Обобщена информация за вашия бизнес - рейтинг, записвания, класове и приход."
       />
 
       {/* Stat cards */}
@@ -201,7 +201,7 @@ export function OverviewSection({
         <div className={`${dashboardCardClass} p-6`}>
           <h3 className="font-display mb-2 font-semibold text-foreground">Последни записвания</h3>
           <p className="mb-4 text-sm text-muted-foreground">
-            Платени през Stripe и офлайн записвания към вашите студиа — събития и разписание.
+            Платени през Stripe и офлайн записвания към вашите студиа - събития и разписание.
           </p>
           <div className="space-y-2">
             {recentSignups.map((row) => (

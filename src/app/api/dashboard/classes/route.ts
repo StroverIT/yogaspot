@@ -5,6 +5,7 @@ import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
+import { assertStudioReadyForClassPublish } from '@/lib/studio-online-gate';
 
 export const runtime = 'nodejs';
 
@@ -63,6 +64,12 @@ export async function POST(request: Request) {
   if (!body.studioId || !allowed.has(body.studioId)) {
     return jsonError('Invalid or forbidden studioId', 400);
   }
+
+  const studioGate = await assertStudioReadyForClassPublish(body.studioId);
+  if (!studioGate.ok) {
+    return jsonError(studioGate.message, 400);
+  }
+
   if (!body.instructorId) return jsonError('Missing instructorId', 400);
 
   const instructor = await prisma.instructor.findFirst({

@@ -4,13 +4,13 @@ import nodemailer from 'nodemailer';
  * Outbound mail (nodemailer). **If `SMTP_HOST` is set, SMTP is used** (even when Google OAuth
  * env vars exist for NextAuth) so login credentials do not accidentally hijack mail transport.
  *
- * **SMTP** — when `SMTP_HOST` + `EMAIL_FROM` are set:
+ * **SMTP** - when `SMTP_HOST` + `EMAIL_FROM` are set:
  * - `SMTP_PORT` (default 587), `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`
  *
- * **Gmail / Google Workspace (OAuth2)** — only when `SMTP_HOST` is **not** set and all of:
+ * **Gmail / Google Workspace (OAuth2)** - only when `SMTP_HOST` is **not** set and all of:
  * - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `REFRESH_TOKEN` (refresh token must include a
  *   Gmail send scope, e.g. `https://mail.google.com/`)
- * - `EMAIL_FROM` — From header; mailbox address must match the Google account for `REFRESH_TOKEN`
+ * - `EMAIL_FROM` - From header; mailbox address must match the Google account for `REFRESH_TOKEN`
  *
  * Gmail sends obtain a fresh access token via Google’s token endpoint (more reliable than
  * relying on nodemailer’s implicit refresh alone).

@@ -1,4 +1,5 @@
-import { Globe, Mail, MapPin, Navigation, Phone } from 'lucide-react';
+import { Globe, Mail, MapPin, Navigation, Phone, Video } from 'lucide-react';
+import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
 import { Button } from '@/components/ui/button';
 import type { Studio } from '@/data/mock-data';
 
@@ -20,11 +21,21 @@ export function StudioDetailSidebarInfo({ studio }: { studio: Studio }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
       <h3 className="mb-4 font-display text-lg font-semibold text-foreground">Информация</h3>
+      <div className="mb-4">
+        <TeachingModePill mode={studio.teachingMode} />
+      </div>
       <div className="space-y-3 text-sm">
-        <div className="flex items-start gap-3">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <span>{studio.address}</span>
-        </div>
+        {studio.teachingMode === 'online' ? (
+          <div className="flex items-start gap-3">
+            <Video className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>Онлайн класове - Zoom линк след запис</span>
+          </div>
+        ) : (
+          <div className="flex items-start gap-3">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>{studio.address}</span>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <Phone className="h-4 w-4 shrink-0 text-primary" />
           <span>{studio.phone}</span>
@@ -42,7 +53,7 @@ export function StudioDetailSidebarInfo({ studio }: { studio: Studio }) {
           </div>
         )}
       </div>
-      {coords ? (
+      {studio.teachingMode !== 'online' && coords ? (
         <Button variant="outline" className="mt-4 w-full" asChild>
           <a href={googleMapsDirectionsUrl(coords.lat, coords.lng)} target="_blank" rel="noopener noreferrer">
             <Navigation className="h-4 w-4" />

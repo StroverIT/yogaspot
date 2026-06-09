@@ -1,10 +1,12 @@
 import { prisma } from '@/lib/prisma';
 import { sendBookingConfirmationEmails, type ClassEmailDetail, type ScheduleEmailDetail } from '@/lib/booking-email';
+import { teachingModeFromPrisma } from '@/lib/teaching-mode';
 
 export type BookingNotificationPayload = {
   kind: 'class' | 'schedule';
   userId: string;
   studioId: string;
+  bookingId: string;
   amountMinor: number;
   currency: string;
   paymentMode: 'online' | 'offline';
@@ -22,6 +24,8 @@ export async function runBookingNotifications(payload: BookingNotificationPayloa
           name: true,
           address: true,
           email: true,
+          teachingMode: true,
+          zoomMeetingUrl: true,
           business: { select: { owner: { select: { email: true, name: true } } } },
         },
       }),
@@ -47,15 +51,19 @@ export async function runBookingNotifications(payload: BookingNotificationPayloa
       },
     });
 
+    const teachingMode = teachingModeFromPrisma(studio.teachingMode);
     await sendBookingConfirmationEmails({
       kind: payload.kind,
       paymentMode: payload.paymentMode,
+      bookingId: payload.bookingId,
       buyerEmail: buyer?.email,
       buyerName: buyer?.name,
       studioEmail: studio.email,
       ownerEmail: studio.business.owner?.email,
       studioName: studio.name,
       studioAddress: studio.address,
+      studioTeachingMode: teachingMode,
+      zoomMeetingUrl: studio.zoomMeetingUrl,
       amountMinor: payload.amountMinor,
       currency: payload.currency,
       classDetail: payload.classDetail,

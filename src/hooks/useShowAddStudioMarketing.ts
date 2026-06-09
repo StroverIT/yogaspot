@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 
-/** Hero / home: “add your studio” promos — only for guests or business accounts. */
+/** Hero / home: “add your studio” promos - only for guests or business accounts. */
 export function useShowAddStudioMarketing(): boolean {
   const { status, data: session } = useSession();
   if (status === "loading") return false;

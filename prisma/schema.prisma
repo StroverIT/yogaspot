@@ -26,6 +26,11 @@ enum SubscriptionRequestStatus {
   DECLINED
 }
 
+enum TeachingMode {
+  PHYSICAL
+  ONLINE
+}
+
 enum PaymentStatus {
   pending
   paid
@@ -54,8 +59,10 @@ model User {
   passwordHash  String?
   role          Role      @default(client)
   image         String?
-  /// Set when the business user dismisses the dashboard onboarding modal (shown once).
+  /// Set when the business user completes the teaching-mode onboarding modal.
   dashboardOnboardingDismissedAt DateTime?
+  /// Chosen in the first-visit dashboard modal; drives onboarding steps (online vs physical).
+  dashboardOnboardingTeachingMode TeachingMode?
   /// Setup guide widget: closed to sidebar vs floating (bottom-right).
   dashboardSetupGuideDocked      Boolean @default(false)
   /// Setup guide widget: minimized to chip vs expanded panel.
@@ -168,10 +175,12 @@ model Studio {
   businessId  String
   business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
-  name        String
-  address     String
-  lat         Float?
-  lng         Float?
+  name             String
+  teachingMode     TeachingMode @default(PHYSICAL)
+  zoomMeetingUrl   String?
+  address          String
+  lat              Float?
+  lng              Float?
   description String
   phone       String
   email       String

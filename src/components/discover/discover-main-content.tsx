@@ -6,7 +6,7 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-/** SSR catalog + grid — only this region suspends (grid skeleton, not aside). */
+/** SSR catalog + grid - only this region suspends (grid skeleton, not aside). */
 export function DiscoverMainContent({ searchParams }: Props) {
   return (
     <Suspense fallback={<DiscoverGridSkeleton />}>

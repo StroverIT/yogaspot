@@ -4,7 +4,7 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 
 export const runtime = 'nodejs';
 
-/** Authenticated users only — own favorites. */
+/** Authenticated users only - own favorites. */
 export async function GET() {
   const gate = await requireSession();
   if (!gate.ok) return gate.response;

@@ -26,6 +26,7 @@ import {
   subscriptionToDto,
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
+import type { Studio as PrismaStudio } from '@prisma/client';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
 
 export type DashboardWorkspaceData = {
@@ -43,6 +44,15 @@ export type DashboardWorkspaceData = {
 };
 
 type WorkspaceActor = SessionUser & { id: string; role: Role };
+
+function studioToDashboardDto(
+  s: PrismaStudio & { business?: { ownerUserId: string } },
+): Studio {
+  return {
+    ...studioToDto(s),
+    zoomMeetingUrl: s.zoomMeetingUrl ?? null,
+  };
+}
 
 export const getDashboardWorkspaceData = cache(async function getDashboardWorkspaceData(
   user: WorkspaceActor,
@@ -111,7 +121,7 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
   ]);
 
   return {
-    studios: studios.map(studioToDto),
+    studios: studios.map(studioToDashboardDto),
     instructors: instructors.map(instructorToDto),
     classes: classes.map(yogaClassToDto),
     retreats: retreats.map(retreatToDto),

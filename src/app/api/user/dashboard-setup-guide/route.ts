@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/api-auth';
+import { inferDashboardOnboardingTeachingMode } from '@/lib/infer-dashboard-onboarding-mode';
+import { teachingModeFromPrisma, teachingModeToPrisma, type TeachingModeDto } from '@/lib/teaching-mode';
+
+function modeFromDb(value: string | null | undefined): TeachingModeDto | null {
+  if (!value) return null;
+  return teachingModeFromPrisma(value);
+}
 
 export async function GET() {
   const gate = await requireRole('business');
@@ -11,16 +18,38 @@ export async function GET() {
     select: {
       dashboardSetupGuideDocked: true,
       dashboardSetupGuideMinimized: true,
+      dashboardOnboardingTeachingMode: true,
     },
   });
 
   if (!row) {
-    return NextResponse.json({ docked: false, minimized: false });
+    return NextResponse.json({
+      docked: false,
+      minimized: false,
+      onboardingTeachingMode: null,
+    });
+  }
+
+  let onboardingTeachingMode = modeFromDb(row.dashboardOnboardingTeachingMode);
+
+  if (!onboardingTeachingMode) {
+    const inferred = await inferDashboardOnboardingTeachingMode(gate.user.id);
+    if (inferred) {
+      onboardingTeachingMode = teachingModeFromPrisma(inferred);
+      await prisma.user.update({
+        where: { id: gate.user.id },
+        data: {
+          dashboardOnboardingTeachingMode: inferred,
+          dashboardOnboardingDismissedAt: new Date(),
+        },
+      });
+    }
   }
 
   return NextResponse.json({
     docked: row.dashboardSetupGuideDocked,
     minimized: row.dashboardSetupGuideMinimized,
+    onboardingTeachingMode,
   });
 }
 
@@ -36,7 +65,12 @@ export async function PATCH(request: Request) {
   }
 
   const b = body as Record<string, unknown>;
-  const patch: { dashboardSetupGuideDocked?: boolean; dashboardSetupGuideMinimized?: boolean } = {};
+  const patch: {
+    dashboardSetupGuideDocked?: boolean;
+    dashboardSetupGuideMinimized?: boolean;
+    dashboardOnboardingTeachingMode?: 'PHYSICAL' | 'ONLINE';
+    dashboardOnboardingDismissedAt?: Date;
+  } = {};
 
   if ('docked' in b) {
     if (typeof b.docked !== 'boolean') {
@@ -50,6 +84,13 @@ export async function PATCH(request: Request) {
     }
     patch.dashboardSetupGuideMinimized = b.minimized;
   }
+  if ('onboardingTeachingMode' in b) {
+    if (b.onboardingTeachingMode !== 'physical' && b.onboardingTeachingMode !== 'online') {
+      return NextResponse.json({ error: 'onboardingTeachingMode must be physical or online' }, { status: 400 });
+    }
+    patch.dashboardOnboardingTeachingMode = teachingModeToPrisma(b.onboardingTeachingMode);
+    patch.dashboardOnboardingDismissedAt = new Date();
+  }
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: 'No valid fields' }, { status: 400 });
@@ -61,11 +102,13 @@ export async function PATCH(request: Request) {
     select: {
       dashboardSetupGuideDocked: true,
       dashboardSetupGuideMinimized: true,
+      dashboardOnboardingTeachingMode: true,
     },
   });
 
   return NextResponse.json({
     docked: updated.dashboardSetupGuideDocked,
     minimized: updated.dashboardSetupGuideMinimized,
+    onboardingTeachingMode: modeFromDb(updated.dashboardOnboardingTeachingMode),
   });
 }

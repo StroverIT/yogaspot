@@ -185,6 +185,7 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
       <StudioDetailTabs
         key={studio.id}
         studioId={studio.id}
+        studioTeachingMode={studio.teachingMode}
         studioOwnerUserId={studio.ownerUserId}
         studioSchedule={schedule}
         subscription={subscription ?? undefined}

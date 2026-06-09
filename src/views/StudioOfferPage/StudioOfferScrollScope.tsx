@@ -14,7 +14,7 @@ function motionOk(): boolean {
 /**
  * Completes section timelines that ScrollTrigger cannot reach.
  * - unreachable: last sections on tall viewports where max scroll never hits the trigger
- * - includePassed: on mount/refresh only — sections already past their trigger (restored scroll)
+ * - includePassed: on mount/refresh only - sections already past their trigger (restored scroll)
  */
 function finishStuckSectionTriggers(
   timelines: gsap.core.Timeline[],

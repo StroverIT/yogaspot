@@ -1,11 +1,13 @@
 import { CalendarRange, Clock, Users } from 'lucide-react';
-import type { Instructor, YogaClass } from '@/data/mock-data';
+import type { Instructor, TeachingMode, YogaClass } from '@/data/mock-data';
+import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 
 export function EventsTabContent({
+  studioTeachingMode,
   studioClasses,
   instructors,
   checkoutModalOpen,
@@ -13,6 +15,7 @@ export function EventsTabContent({
   isAuthenticated,
   bookedClassIds,
 }: {
+  studioTeachingMode: TeachingMode;
   studioClasses: YogaClass[];
   instructors: Instructor[];
   checkoutModalOpen: boolean;
@@ -54,6 +57,7 @@ export function EventsTabContent({
               <div className="mt-2 flex gap-2">
                 <Badge variant="outline">{cls.yogaType}</Badge>
                 <Badge variant="outline">{cls.difficulty}</Badge>
+                {studioTeachingMode === 'online' ? <TeachingModePill mode="online" /> : null}
                 {instructor && <span className="text-sm text-muted-foreground">с {instructor.name}</span>}
               </div>
             </div>

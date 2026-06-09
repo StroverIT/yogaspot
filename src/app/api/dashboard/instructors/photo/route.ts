@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 
 import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
+import { ensureOnlineStudioForUpload } from '@/lib/ensure-online-studio-for-upload';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
@@ -20,8 +21,18 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData();
-  const studioId = String(formData.get('studioId') ?? '').trim();
+  let studioId = String(formData.get('studioId') ?? '').trim();
   const file = formData.get('file');
+  const onlineProfile = String(formData.get('onlineProfile') ?? '') === 'true';
+
+  if (!studioId && onlineProfile) {
+    const provisioned = await ensureOnlineStudioForUpload(gate.user, {
+      instructorName: String(formData.get('instructorName') ?? '').trim(),
+      zoomMeetingUrl: String(formData.get('zoomMeetingUrl') ?? '').trim(),
+    });
+    if (!provisioned.ok) return jsonError(provisioned.error, 400);
+    studioId = provisioned.studioId;
+  }
 
   if (!studioId) return jsonError('Missing studioId', 400);
   if (!(file instanceof File) || !file.size) return jsonError('Missing file', 400);
@@ -60,5 +71,5 @@ export async function POST(request: Request) {
   }
 
   const { data: publicUrlData } = supabaseAdmin.storage.from(bucket).getPublicUrl(uploadData.path);
-  return NextResponse.json({ url: publicUrlData.publicUrl });
+  return NextResponse.json({ url: publicUrlData.publicUrl, studioId });
 }

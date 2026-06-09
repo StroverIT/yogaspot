@@ -1,9 +1,19 @@
 import { render } from '@react-email/render';
 import { BookingBuyerEmail } from '@/emails/booking-buyer-email';
 import { BookingOwnerEmail } from '@/emails/booking-owner-email';
-import { googleCalendarUrlForScheduleEntry, googleCalendarUrlForYogaClass } from '@/lib/google-calendar-link';
+import {
+  googleCalendarUrlForScheduleEntry,
+  googleCalendarUrlForYogaClass,
+  nextCalendarDateForWeekdayBg,
+} from '@/lib/google-calendar-link';
+import {
+  icsCalendarDataUrl,
+  icsForScheduleEntryBooking,
+  icsForYogaClassBooking,
+} from '@/lib/ics-calendar';
 import { describeMailConfigGap, isMailConfigured, sendHtmlEmail } from '@/lib/mailer';
 import { eurToBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import { isOnlineTeachingMode, type TeachingModeDto } from '@/lib/teaching-mode';
 
 export type BookingEmailKind = 'class' | 'schedule';
 
@@ -12,7 +22,7 @@ export type ClassEmailDetail = {
   date: Date;
   startTime: string;
   endTime: string;
-  /** BGN list price — offline emails use this as the end amount (на място). */
+  /** BGN list price - offline emails use this as the end amount (на място). */
   basePriceBgn?: number;
 };
 
@@ -21,7 +31,7 @@ export type ScheduleEmailDetail = {
   day: string;
   startTime: string;
   endTime: string;
-  /** BGN list price — offline emails use this as the end amount (на място). */
+  /** BGN list price - offline emails use this as the end amount (на място). */
   basePriceBgn?: number;
 };
 
@@ -31,6 +41,7 @@ export type ScheduleEmailDetail = {
 export async function sendBookingConfirmationEmails(params: {
   kind: BookingEmailKind;
   paymentMode: 'online' | 'offline';
+  bookingId: string;
   buyerEmail: string | null | undefined;
   buyerName: string | null | undefined;
   /** Studio inbox from `Studio.email` */
@@ -39,6 +50,8 @@ export async function sendBookingConfirmationEmails(params: {
   ownerEmail: string | null | undefined;
   studioName: string;
   studioAddress: string;
+  studioTeachingMode: TeachingModeDto;
+  zoomMeetingUrl?: string | null;
   amountMinor: number;
   currency: string;
   classDetail?: ClassEmailDetail;
@@ -51,8 +64,11 @@ export async function sendBookingConfirmationEmails(params: {
   }
 
   const buyerName = params.buyerName?.trim() || 'Клиент';
+  const isOnlineStudio = isOnlineTeachingMode(params.studioTeachingMode);
+  const zoom = params.zoomMeetingUrl?.trim() || null;
 
   let calendarUrl: string | undefined;
+  let icsUrl: string | undefined;
   let subjectBuyer = '';
   let buyerLines: string[] = [];
   let ownerLines: string[] = [];
@@ -64,14 +80,30 @@ export async function sendBookingConfirmationEmails(params: {
       className: c.name,
       studioName: params.studioName,
       address: params.studioAddress,
+      zoomMeetingUrl: zoom,
+      isOnline: isOnlineStudio,
       classDate: c.date,
       startTime: c.startTime,
       endTime: c.endTime,
     });
+    if (isOnlineStudio && zoom) {
+      icsUrl = icsCalendarDataUrl(
+        icsForYogaClassBooking({
+          className: c.name,
+          studioName: params.studioName,
+          classDate: c.date,
+          startTime: c.startTime,
+          endTime: c.endTime,
+          zoomMeetingUrl: zoom,
+          bookingId: params.bookingId,
+        }),
+      );
+    }
     buyerLines = [
       `Клас: ${c.name}`,
       `Дата: ${c.date.toISOString().slice(0, 10)}, ${c.startTime}–${c.endTime}`,
       `Студио: ${params.studioName}`,
+      ...(isOnlineStudio && zoom ? [`Zoom: ${zoom}`] : []),
     ];
     ownerLines = [
       `Клас: ${c.name}`,
@@ -80,6 +112,7 @@ export async function sendBookingConfirmationEmails(params: {
     ];
   } else if (params.kind === 'schedule' && params.scheduleDetail) {
     const s = params.scheduleDetail;
+    const dateYmd = nextCalendarDateForWeekdayBg(s.day);
     subjectBuyer = `Потвърдена резервация: ${s.className}`;
     calendarUrl = googleCalendarUrlForScheduleEntry({
       className: s.className,
@@ -88,11 +121,28 @@ export async function sendBookingConfirmationEmails(params: {
       endTime: s.endTime,
       studioName: params.studioName,
       address: params.studioAddress,
+      zoomMeetingUrl: zoom,
+      isOnline: isOnlineStudio,
     });
+    if (isOnlineStudio && zoom) {
+      icsUrl = icsCalendarDataUrl(
+        icsForScheduleEntryBooking({
+          className: s.className,
+          dayLabel: s.day,
+          studioName: params.studioName,
+          dateYmd,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          zoomMeetingUrl: zoom,
+          bookingId: params.bookingId,
+        }),
+      );
+    }
     buyerLines = [
       `Час от разписание: ${s.className}`,
       `Ден: ${s.day}, ${s.startTime}–${s.endTime}`,
       `Студио: ${params.studioName}`,
+      ...(isOnlineStudio && zoom ? [`Zoom: ${zoom}`] : []),
     ];
     ownerLines = [
       `Разписание: ${s.className}`,
@@ -126,6 +176,7 @@ export async function sendBookingConfirmationEmails(params: {
           headline={subjectBuyer}
           lines={buyerLines}
           calendarUrl={calendarUrl}
+          icsCalendarUrl={icsUrl}
           paymentMode={params.paymentMode}
           endPriceDual={endPriceDual}
         />,
@@ -136,7 +187,7 @@ export async function sendBookingConfirmationEmails(params: {
     }
   }
 
-  const studioSubject = `Нова резервация — ${params.studioName}`;
+  const studioSubject = `Нова резервация - ${params.studioName}`;
   const buyerToDisplay = buyerToOriginal || 'няма имейл';
   if (studioToRaw && studioTo !== buyerTo) {
     try {

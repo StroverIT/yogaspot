@@ -28,7 +28,7 @@ export function bgnFromStripeEurTotalMinor(amountMinor: number): number {
 
 /** "12,50 € · 24,48 лв." */
 export function formatPriceDualFromBgn(bgnAmount: number): string {
-  if (!Number.isFinite(bgnAmount)) return '—';
+  if (!Number.isFinite(bgnAmount)) return '-';
   const eur = roundMoney(bgnToEur(bgnAmount), 2);
   const bgn = roundMoney(bgnAmount, 2);
   const eurStr = new Intl.NumberFormat('bg-BG', {

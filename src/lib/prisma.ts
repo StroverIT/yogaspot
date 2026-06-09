@@ -30,7 +30,7 @@ let productionClient: PrismaClient | undefined;
 function getClient(): PrismaClient {
   if (process.env.NODE_ENV === 'production') {
     if (!productionClient || !isDelegateReady(productionClient)) {
-      if (productionClient) void productionClient.$disconnect().catch(() => {});
+      if (productionClient) void productionClient.$disconnect().catch(() => { });
       productionClient = createPrismaClient();
     }
     return productionClient;
@@ -38,7 +38,7 @@ function getClient(): PrismaClient {
 
   let client = globalForPrisma.prisma;
   if (client && !isDelegateReady(client)) {
-    void client.$disconnect().catch(() => {});
+    void client.$disconnect().catch(() => { });
     client = undefined;
     globalForPrisma.prisma = undefined;
   }
@@ -56,7 +56,7 @@ function getClient(): PrismaClient {
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
     const client = getClient();
-    // Must use `client` as Reflect receiver — Prisma delegates rely on correct `this`;
+    // Must use `client` as Reflect receiver - Prisma delegates rely on correct `this`;
     // passing the Proxy breaks accessors and yields `undefined` (e.g. `yogaClass`).
     const value = Reflect.get(client, prop, client) as unknown;
     return typeof value === 'function' ? (value as (...a: unknown[]) => unknown).bind(client) : value;

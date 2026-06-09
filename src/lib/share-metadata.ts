@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 
 /**
  * Default Open Graph image for link previews (Facebook, Instagram, Viber, etc.).
- * 1920×1080 — wide ratio reads well in messenger and social crawlers; avoid square logos as the only preview image.
+ * 1920×1080 - wide ratio reads well in messenger and social crawlers; avoid square logos as the only preview image.
  */
 export const defaultShareOgImage = {
   url: '/homepage/hero-yoga.jpg',
   width: 1920,
   height: 1080,
   type: 'image/jpeg',
-  alt: 'Йога практика — открий студиа и запази клас онлайн',
+  alt: 'Йога практика - открий студиа и запази клас онлайн',
 } as const;
 
 export const defaultShareOgImages = [defaultShareOgImage];

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   if (!studioId) return jsonError('Missing studioId', 400);
 
   try {
-    const { studioId: resolvedStudioId, scheduleDetail } = await enrollUserInScheduleOffline(
+    const { studioId: resolvedStudioId, bookingId, scheduleDetail } = await enrollUserInScheduleOffline(
       gate.user.id,
       scheduleEntryId,
       studioId,
@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       paymentMode: 'offline',
       userId: gate.user.id,
       studioId: resolvedStudioId,
+      bookingId,
       amountMinor: 0,
       currency: 'eur',
       scheduleDetail: {

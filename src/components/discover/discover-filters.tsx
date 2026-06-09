@@ -61,6 +61,13 @@ export function DiscoverFilters({
     onFiltersChange({ ...filters, yogaTypes: newTypes });
   };
 
+  const handleFormatChange = (value: string) => {
+    onFiltersChange({
+      ...filters,
+      format: value === 'online' || value === 'physical' ? value : 'all',
+    });
+  };
+
   const clearFilters = () => {
     onFiltersChange({
       search: "",
@@ -69,6 +76,7 @@ export function DiscoverFilters({
       yogaTypes: [],
       ratingSort: null,
       nearMe: false,
+      format: "all",
     });
   };
 
@@ -78,7 +86,8 @@ export function DiscoverFilters({
     filters.yogaTypes.length > 0 ||
     filters.ratingSort !== null ||
     filters.levelSort !== null ||
-    filters.nearMe;
+    filters.nearMe ||
+    filters.format !== "all";
 
   return (
     <div className="space-y-4">
@@ -91,6 +100,20 @@ export function DiscoverFilters({
           onChange={(e) => handleSearchChange(e.target.value)}
           className="pl-10 h-11 bg-yoga-surface border-yoga-accent-soft focus:border-yoga-accent text-yoga-text"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-yoga-text">Формат</label>
+        <Select value={filters.format} onValueChange={handleFormatChange}>
+          <SelectTrigger className="w-full border-yoga-accent-soft text-yoga-text">
+            <SelectValue placeholder="Всички формати" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Всички формати</SelectItem>
+            <SelectItem value="physical">В студио</SelectItem>
+            <SelectItem value="online">Онлайн</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Button

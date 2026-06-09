@@ -32,9 +32,12 @@ export type Amenity =
   | "Магазин"
   | "Детски кът";
 
+export type DiscoverTeachingFormat = "online" | "physical" | "all";
+
 export interface DiscoverStudio {
   id: string;
   name: string;
+  teachingMode: "physical" | "online";
   image: string;
   rating: number;
   reviewCount: number;

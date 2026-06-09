@@ -90,7 +90,7 @@ export function AdminSubscriptionRequestsSectionClient({ requests: initialReques
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Собственик: {req.ownerName || '—'}
+                      Собственик: {req.ownerName || '-'}
                       {req.ownerEmail ? ` · ${req.ownerEmail}` : ''}
                     </p>
                     <div className="mt-3 flex items-start gap-2 text-sm">
@@ -143,7 +143,7 @@ export function AdminSubscriptionRequestsSectionClient({ requests: initialReques
             <AlertDialogDescription>
               {declineTarget ? (
                 <>
-                  Студио <span className="font-medium text-foreground">{declineTarget.studioName}</span> —{' '}
+                  Студио <span className="font-medium text-foreground">{declineTarget.studioName}</span> -{' '}
                   {declineTarget.name}
                 </>
               ) : null}

@@ -2,7 +2,7 @@ import { WEEKDAYS } from '@/data/mock-data';
 
 const TZ_LABEL = 'Europe/Sofia';
 
-/** Google Calendar "floating" local times (no Z suffix) — interpreted in the user's calendar locale. */
+/** Google Calendar "floating" local times (no Z suffix) - interpreted in the user's calendar locale. */
 function floatingRangeOnDate(ymd: string, startHm: string, endHm: string): string {
   const d = ymd.replace(/-/g, '');
   const [sh, sm = '0'] = startHm.split(':');
@@ -57,16 +57,22 @@ export function googleCalendarUrlForYogaClass(params: {
   className: string;
   studioName: string;
   address?: string;
+  zoomMeetingUrl?: string | null;
+  isOnline?: boolean;
   /** Prisma @db.Date */
   classDate: Date;
   startTime: string;
   endTime: string;
 }): string {
   const ymd = params.classDate.toISOString().slice(0, 10);
+  const zoom = params.zoomMeetingUrl?.trim();
+  const online = params.isOnline && !!zoom;
   return googleCalendarTemplateUrl({
-    title: `${params.className} — ${params.studioName}`,
-    details: `Йога клас в ${params.studioName}.`,
-    location: params.address,
+    title: `${params.className} - ${params.studioName}`,
+    details: online
+      ? `Онлайн йога клас в ${params.studioName}.\n\nZoom: ${zoom}`
+      : `Йога клас в ${params.studioName}.`,
+    location: online ? zoom : params.address,
     dateYmd: ymd,
     startHm: params.startTime,
     endHm: params.endTime,
@@ -80,12 +86,18 @@ export function googleCalendarUrlForScheduleEntry(params: {
   endTime: string;
   studioName: string;
   address?: string;
+  zoomMeetingUrl?: string | null;
+  isOnline?: boolean;
 }): string {
   const dateYmd = nextCalendarDateForWeekdayBg(params.dayLabel);
+  const zoom = params.zoomMeetingUrl?.trim();
+  const online = params.isOnline && !!zoom;
   return googleCalendarTemplateUrl({
-    title: `${params.className} (${params.dayLabel}) — ${params.studioName}`,
-    details: `Седмично разписание: всеки ${params.dayLabel}, ${params.startTime}–${params.endTime}. ${params.studioName}.`,
-    location: params.address,
+    title: `${params.className} (${params.dayLabel}) - ${params.studioName}`,
+    details: online
+      ? `Онлайн час от разписанието на ${params.studioName}.\n\nZoom: ${zoom}`
+      : `Седмично разписание: всеки ${params.dayLabel}, ${params.startTime}–${params.endTime}. ${params.studioName}.`,
+    location: online ? zoom : params.address,
     dateYmd,
     startHm: params.startTime,
     endHm: params.endTime,

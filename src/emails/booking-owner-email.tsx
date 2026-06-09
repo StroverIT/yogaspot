@@ -32,11 +32,11 @@ export function BookingOwnerEmail({ preview, buyerLine, lines, paymentMode, endP
               </Text>
             ) : paymentMode === 'offline' ? (
               <Text style={{ fontSize: '14px', color: '#444', marginTop: '12px' }}>
-                Записване без онлайн плащане — уговорете сумата и плащането директно с клиента на място.
+                Записване без онлайн плащане - уговорете сумата и плащането директно с клиента на място.
               </Text>
             ) : (
               <Text style={{ fontSize: '14px', color: '#444', marginTop: '12px' }}>
-                Онлайн плащане — детайлите са в потвърждението към клиента.
+                Онлайн плащане - детайлите са в потвърждението към клиента.
               </Text>
             )}
           </Section>

@@ -7,6 +7,10 @@ import { provisionPlatformSubscription } from '@/lib/business-platform-billing';
 import { getDashboardStudiosListForUser, mapStudioResponse } from '@/lib/dashboard-studios-data';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
+import {
+  isValidZoomMeetingUrl,
+  teachingModeToPrisma,
+} from '@/lib/teaching-mode';
 
 export const runtime = 'nodejs';
 
@@ -47,13 +51,18 @@ export async function POST(request: Request) {
   const formData = await request.formData();
 
   const name = String(formData.get('name') ?? '').trim();
-  const address = String(formData.get('address') ?? '').trim();
+  const teachingModeRaw = String(formData.get('teachingMode') ?? 'physical').trim();
+  const teachingMode = teachingModeToPrisma(teachingModeRaw);
+  const isOnline = teachingMode === 'ONLINE';
+  const zoomMeetingUrlRaw = String(formData.get('zoomMeetingUrl') ?? '').trim();
+  const zoomMeetingUrl = zoomMeetingUrlRaw || null;
+  let address = String(formData.get('address') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
   const phone = String(formData.get('phone') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
 
-  const lat = parseNumberOrNull(formData.get('lat'));
-  const lng = parseNumberOrNull(formData.get('lng'));
+  let lat = parseNumberOrNull(formData.get('lat'));
+  let lng = parseNumberOrNull(formData.get('lng'));
 
   const amenitiesParking = toBoolean(formData.get('amenitiesParking'));
   const amenitiesShower = toBoolean(formData.get('amenitiesShower'));
@@ -63,11 +72,33 @@ export async function POST(request: Request) {
   const yogaTypes = formData.getAll('yogaTypes').filter((v): v is string => typeof v === 'string' && !!v);
   const uniqueYogaTypes = Array.from(new Set(yogaTypes));
 
-  if (!name || !address || !description) {
-    const missing = [(!name && 'име'), (!address && 'адрес'), (!description && 'описание')].filter(Boolean).join(', ');
+  if (isOnline && !address) {
+    address = 'Онлайн';
+    lat = null;
+    lng = null;
+  }
+
+  if (!name || !description) {
+    const missing = [(!name && 'име'), (!description && 'описание')].filter(Boolean).join(', ');
     const error = `Липсват задължителни полета: ${missing}.`;
     if (process.env.NODE_ENV === 'development') console.error('[POST /api/studios] Validation:', error);
     return NextResponse.json({ error }, { status: 400 });
+  }
+
+  if (!isOnline && !address) {
+    const error = 'Липсват задължителни полета: адрес.';
+    return NextResponse.json({ error }, { status: 400 });
+  }
+
+  if (!isOnline && (lat == null || lng == null)) {
+    return NextResponse.json(
+      { error: 'Потвърдете адреса на картата (изберете предложение или поставете маркер).' },
+      { status: 400 },
+    );
+  }
+
+  if (isOnline && zoomMeetingUrl && !isValidZoomMeetingUrl(zoomMeetingUrl)) {
+    return NextResponse.json({ error: 'Въведете валиден Zoom линк (https://...).' }, { status: 400 });
   }
 
   if (!phone || !email) {
@@ -148,6 +179,8 @@ export async function POST(request: Request) {
     data: {
       businessId: business.id,
       name,
+      teachingMode,
+      zoomMeetingUrl,
       address,
       lat,
       lng,

@@ -44,7 +44,7 @@ export function InstructorsSection({
     <div className="space-y-6">
       <DashboardPageHeader
         title="Инструктори"
-        description={`${instructors.length} инструктора — рейтинг, стилове и студио.`}
+        description={`${instructors.length} инструктора - рейтинг, стилове и студио.`}
         actions={
           <div className="flex max-w-md flex-col items-stretch gap-2 sm:items-end">
             {addDisabled && addDisabledTooltip ? (

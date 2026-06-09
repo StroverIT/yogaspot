@@ -1,6 +1,11 @@
+export type TeachingMode = 'physical' | 'online';
+
 export interface Studio {
   id: string;
   name: string;
+  teachingMode: TeachingMode;
+  /** Dashboard only - never exposed on public studio pages. */
+  zoomMeetingUrl?: string | null;
   address: string;
   lat: number;
   lng: number;
@@ -18,11 +23,11 @@ export interface Studio {
   rating: number;
   reviewCount: number;
   businessId: string;
-  /** User id of the business owner — used to hide “add review” for own studios. */
+  /** User id of the business owner - used to hide “add review” for own studios. */
   ownerUserId: string;
   /** Admin visibility flag for public pages. */
   isHidden: boolean;
-  /** ISO date — за сортиране „най-нови първи“ в админ преглед */
+  /** ISO date - за сортиране „най-нови първи“ в админ преглед */
   createdAt: string;
   /** Dashboard studio editor */
   yogaTypes?: string[];
@@ -150,6 +155,7 @@ export const mockStudios: Studio[] = [
   {
     id: 's1',
     name: 'Лотос Йога Студио',
+    teachingMode: 'physical',
     address: 'ул. Витоша 45, София',
     lat: 42.6977,
     lng: 23.3219,
@@ -169,6 +175,7 @@ export const mockStudios: Studio[] = [
   {
     id: 's2',
     name: 'Шанти Йога Център',
+    teachingMode: 'physical',
     address: 'бул. Цариградско шосе 120, София',
     lat: 42.6700,
     lng: 23.3500,
@@ -187,6 +194,7 @@ export const mockStudios: Studio[] = [
   {
     id: 's3',
     name: 'Прана Студио',
+    teachingMode: 'physical',
     address: 'ул. Граф Игнатиев 18, София',
     lat: 42.6930,
     lng: 23.3280,
@@ -205,6 +213,7 @@ export const mockStudios: Studio[] = [
   {
     id: 's4',
     name: 'Асана Фит',
+    teachingMode: 'physical',
     address: 'ул. Пиротска 52, София',
     lat: 42.6990,
     lng: 23.3100,

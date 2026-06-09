@@ -17,7 +17,9 @@ import { cn } from '@/lib/utils';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
-import { Check, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, GripVertical, MapPin, Video, X } from 'lucide-react';
+import type { TeachingMode } from '@/data/mock-data';
+import { isValidZoomMeetingUrl } from '@/lib/teaching-mode';
 
 type StudioModalProps = {
   open: boolean;
@@ -46,6 +48,8 @@ export function StudioModal({
   onSave,
   initialStudio = null,
 }: StudioModalProps) {
+  const [teachingMode, setTeachingMode] = useState<TeachingMode>('physical');
+  const [zoomMeetingUrl, setZoomMeetingUrl] = useState('');
   const [address, setAddress] = useState('');
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -150,6 +154,8 @@ export function StudioModal({
       skipNextAddressGeocodeRef.current = true;
       suppressAutocompleteRef.current = true;
       setName(initialStudio.name);
+      setTeachingMode(initialStudio.teachingMode ?? 'physical');
+      setZoomMeetingUrl(initialStudio.zoomMeetingUrl ?? '');
       setDescription(initialStudio.description);
       setPhone(initialStudio.phone);
       setEmail(initialStudio.email);
@@ -171,6 +177,8 @@ export function StudioModal({
     }
 
     setName('');
+    setTeachingMode('physical');
+    setZoomMeetingUrl('');
     setDescription('');
     setPhone('');
     setEmail('');
@@ -179,6 +187,8 @@ export function StudioModal({
     setCoords(null);
     setAddress('');
   }, [open, initialStudio]);
+
+  const isOnlineStudio = teachingMode === 'online';
 
   useEffect(() => {
     if (skipNextAddressGeocodeRef.current) {
@@ -377,21 +387,32 @@ export function StudioModal({
       toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете име на студио.' });
       return;
     }
-    if (!address.trim()) {
-      toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете адрес.' });
-      return;
-    }
-    if (!coords) {
-      toast({
-        variant: 'destructive',
-        title: 'Непълни данни',
-        description: 'Моля, потвърдете адреса на картата (изберете предложение или поставете маркер).',
-      });
-      return;
-    }
-    if (addressError) {
-      toast({ variant: 'destructive', title: 'Непълни данни', description: addressError });
-      return;
+    if (isOnlineStudio) {
+      if (zoomMeetingUrl.trim() && !isValidZoomMeetingUrl(zoomMeetingUrl)) {
+        toast({
+          variant: 'destructive',
+          title: 'Невалиден Zoom линк',
+          description: 'Въведете пълен адрес, започващ с https://',
+        });
+        return;
+      }
+    } else {
+      if (!address.trim()) {
+        toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете адрес.' });
+        return;
+      }
+      if (!coords) {
+        toast({
+          variant: 'destructive',
+          title: 'Непълни данни',
+          description: 'Моля, потвърдете адреса на картата (изберете предложение или поставете маркер).',
+        });
+        return;
+      }
+      if (addressError) {
+        toast({ variant: 'destructive', title: 'Непълни данни', description: addressError });
+        return;
+      }
     }
     if (!description.trim()) {
       toast({ variant: 'destructive', title: 'Непълни данни', description: 'Моля, въведете описание.' });
@@ -435,11 +456,13 @@ export function StudioModal({
     try {
       const formData = new FormData();
       formData.append('name', name);
-      formData.append('address', address);
+      formData.append('teachingMode', teachingMode);
+      formData.append('zoomMeetingUrl', zoomMeetingUrl.trim());
+      formData.append('address', isOnlineStudio ? address.trim() || 'Онлайн' : address);
       formData.append('description', description);
       formData.append('phone', phone);
       formData.append('email', email);
-      if (coords) {
+      if (!isOnlineStudio && coords) {
         formData.append('lat', String(coords.lat));
         formData.append('lng', String(coords.lng));
       }
@@ -548,6 +571,53 @@ export function StudioModal({
               className="mt-1 h-12 text-lg md:text-lg"
             />
           </div>
+          <div>
+            <Label className="mb-2 block">Как преподавате?</Label>
+            <div className="inline-flex w-full rounded-2xl border border-border bg-muted/40 p-1.5">
+              <button
+                type="button"
+                onClick={() => setTeachingMode('physical')}
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all sm:text-base',
+                  !isOnlineStudio
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <MapPin className="h-4 w-4 shrink-0" />
+                В студио
+              </button>
+              <button
+                type="button"
+                onClick={() => setTeachingMode('online')}
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all sm:text-base',
+                  isOnlineStudio
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Video className="h-4 w-4 shrink-0" />
+                Онлайн
+              </button>
+            </div>
+          </div>
+          {isOnlineStudio ? (
+            <div>
+              <Label>Zoom линк за класовете</Label>
+              <Input
+                value={zoomMeetingUrl}
+                onChange={e => setZoomMeetingUrl(e.target.value)}
+                placeholder="https://zoom.us/j/..."
+                className="mt-1 h-12 text-lg md:text-lg"
+              />
+              <p className="mt-2 text-sm text-muted-foreground">
+                Задължителен преди да публикувате график или събитие. Практикуващите получават линка след
+                запис.
+              </p>
+            </div>
+          ) : null}
+          {!isOnlineStudio ? (
           <div className="space-y-2">
             <div>
               <Label>Адрес</Label>
@@ -653,6 +723,7 @@ export function StudioModal({
 
             {addressError ? <p className="text-base text-destructive">{addressError}</p> : null}
           </div>
+          ) : null}
           <div>
             <Label>Описание</Label>
             <Textarea
@@ -833,6 +904,7 @@ export function StudioModal({
               />
             </div>
           </div>
+          {!isOnlineStudio ? (
           <div>
             <Label className="mb-2 block">Удобства</Label>
             <div className="grid grid-cols-2 gap-3">
@@ -856,6 +928,7 @@ export function StudioModal({
               ))}
             </div>
           </div>
+          ) : null}
 
           <div>
             <Label className="mb-2 block">Типове йога</Label>

@@ -11,87 +11,46 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { DASHBOARD_PATHS } from '@/views/Dashboard/dashboardTypes';
-import { dashboardCardClass } from '@/views/Dashboard/dashboardUi';
 import type { DashboardSetupGuidePrefs } from '@/hooks/useDashboardSetupGuidePrefs';
+import type { TeachingModeDto } from '@/lib/teaching-mode';
+import {
+  getOnboardingDoneCount,
+  getOnboardingTaskTotal,
+  getOnboardingTasks,
+  type OnboardingCounts,
+} from '@/lib/dashboard-onboarding';
+import { dashboardCardClass } from '@/views/Dashboard/dashboardUi';
 import { CheckCircle2, Circle, ListChecks, Maximize2, Minimize2, X } from 'lucide-react';
-
-const TASK_TOTAL = 4;
-
-type TaskDef = {
-  id: string;
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-  done: boolean;
-};
 
 export function DashboardSetupGuide({
   visible,
   loading,
-  studiosCount,
-  instructorsCount,
-  classesCount,
-  scheduleCount,
+  onboardingTeachingMode,
+  counts,
   prefs,
   setPrefs,
   hydrated,
 }: {
   visible: boolean;
   loading: boolean;
-  studiosCount: number;
-  instructorsCount: number;
-  classesCount: number;
-  scheduleCount: number;
+  onboardingTeachingMode: TeachingModeDto;
+  counts: OnboardingCounts;
   prefs: DashboardSetupGuidePrefs;
   setPrefs: (next: DashboardSetupGuidePrefs | ((p: DashboardSetupGuidePrefs) => DashboardSetupGuidePrefs)) => void;
   hydrated: boolean;
 }) {
-  const tasks = useMemo<TaskDef[]>(
-    () => [
-      {
-        id: 'studio',
-        title: 'Създайте студио',
-        description: 'Добавете поне едно студио с адрес и основни данни.',
-        href: DASHBOARD_PATHS.studios,
-        cta: 'Към студиа',
-        done: studiosCount >= 1,
-      },
-      {
-        id: 'instructor',
-        title: 'Добавете инструктор',
-        description: 'Създайте поне един инструктор, свързан с вашето студио.',
-        href: DASHBOARD_PATHS.instructors,
-        cta: 'Към инструктори',
-        done: instructorsCount >= 1,
-      },
-      {
-        id: 'schedule',
-        title: 'Добавете час в разписание',
-        description: 'Задайте поне един повтарящ се час в седмичното разписание.',
-        href: DASHBOARD_PATHS.schedule,
-        cta: 'Към разписание',
-        done: scheduleCount >= 1,
-      },
-      {
-        id: 'class',
-        title: 'Създайте клас',
-        description: 'Добавете поне един клас с дата, час и капацитет.',
-        href: DASHBOARD_PATHS.classes,
-        cta: 'Към класове',
-        done: classesCount >= 1,
-      },
-    ],
-    [studiosCount, instructorsCount, scheduleCount, classesCount],
+  const tasks = useMemo(
+    () => getOnboardingTasks(onboardingTeachingMode, counts),
+    [onboardingTeachingMode, counts],
   );
 
-  const doneCount = tasks.filter(t => t.done).length;
-  const progressPct = (doneCount / TASK_TOTAL) * 100;
+  const taskTotal = getOnboardingTaskTotal(onboardingTeachingMode);
+  const doneCount = getOnboardingDoneCount(onboardingTeachingMode, counts);
+  const progressPct = (doneCount / taskTotal) * 100;
 
   const defaultAccordion = useMemo(() => {
     const first = tasks.find(t => !t.done);
-    return first?.id ?? 'studio';
+    return first?.id ?? tasks[0]?.id ?? 'instructor';
   }, [tasks]);
 
   if (!visible || !hydrated) return null;
@@ -119,7 +78,7 @@ export function DashboardSetupGuide({
                 }}
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-card text-[11px] font-bold tabular-nums text-foreground">
-                  {doneCount}/{TASK_TOTAL}
+                  {doneCount}/{taskTotal}
                 </span>
               </div>
               <div className="min-w-0 flex-1">
@@ -138,7 +97,9 @@ export function DashboardSetupGuide({
             <div className="flex items-start justify-between gap-2 border-b border-border/80 px-4 py-3">
               <div className="min-w-0">
                 <h2 className="font-display text-base font-bold text-foreground leading-tight">Ръководство за настройка</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">Завършете стъпките по-долу</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {onboardingTeachingMode === 'online' ? 'Онлайн преподаване' : 'Преподаване в зала'}
+                </p>
               </div>
               <div className="flex shrink-0 gap-0.5">
                 <Button
@@ -157,7 +118,7 @@ export function DashboardSetupGuide({
                   size="icon"
                   className="h-8 w-8 rounded-lg text-muted-foreground"
                   aria-label="Затвори и премести в менюто"
-                  onClick={() => setPrefs({ docked: true, minimized: false })}
+                  onClick={() => setPrefs({ ...prefs, docked: true, minimized: false })}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -166,7 +127,7 @@ export function DashboardSetupGuide({
             <div className="px-4 pt-3">
               <Progress value={progressPct} className="h-1.5 bg-white" />
               <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
-                {doneCount} от {TASK_TOTAL} готови
+                {doneCount} от {taskTotal} готови
                 {loading ? ' · зареждане…' : ''}
               </p>
             </div>
@@ -219,7 +180,15 @@ export function DashboardSetupGuide({
   );
 }
 
-export function DashboardSetupGuideSidebarNav({ doneCount, onOpen }: { doneCount: number; onOpen: () => void }) {
+export function DashboardSetupGuideSidebarNav({
+  doneCount,
+  taskTotal,
+  onOpen,
+}: {
+  doneCount: number;
+  taskTotal: number;
+  onOpen: () => void;
+}) {
   return (
     <div className="mt-4 space-y-1">
       <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Помощ</p>
@@ -231,7 +200,7 @@ export function DashboardSetupGuideSidebarNav({ doneCount, onOpen }: { doneCount
         <ListChecks className="h-4 w-4 shrink-0" />
         <span className="flex-1 truncate">Ръководство за настройка</span>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {doneCount}/{TASK_TOTAL}
+          {doneCount}/{taskTotal}
         </span>
       </button>
     </div>
@@ -241,10 +210,12 @@ export function DashboardSetupGuideSidebarNav({ doneCount, onOpen }: { doneCount
 export function DashboardSetupGuideMobileDock({
   show,
   doneCount,
+  taskTotal,
   onOpen,
 }: {
   show: boolean;
   doneCount: number;
+  taskTotal: number;
   onOpen: () => void;
 }) {
   if (!show) return null;
@@ -264,7 +235,7 @@ export function DashboardSetupGuideMobileDock({
           <span className="text-sm font-medium text-foreground truncate">Ръководство за настройка</span>
         </span>
         <span className="text-xs font-semibold tabular-nums text-muted-foreground shrink-0">
-          {doneCount}/{TASK_TOTAL}
+          {doneCount}/{taskTotal}
         </span>
       </button>
     </div>

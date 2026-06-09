@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 
 /**
  * Studio favorites for the signed-in user, loaded from Postgres (Supabase DB)
- * via `/api/favorites` — not localStorage.
+ * via `/api/favorites` - not localStorage.
  */
 const EMPTY_FAVORITES: string[] = [];
 

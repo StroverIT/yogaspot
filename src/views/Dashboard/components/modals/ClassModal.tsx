@@ -17,6 +17,8 @@ import {
   eurToBgn,
 } from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
+import { ONLINE_STUDIO_ZOOM_REQUIRED_MSG } from '@/lib/studio-online-gate';
+import { onlineStudioMissingZoom } from '@/lib/teaching-mode';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете всички опции (инструктор, студио, тип йога, ниво) преди запазване.';
@@ -75,6 +77,22 @@ export function ClassModal({
     [instructors, studioId],
   );
 
+  const selectedStudio = useMemo(
+    () => studios.find(s => s.id === studioId) ?? null,
+    [studios, studioId],
+  );
+
+  const onlineStudioBlocked = useMemo(
+    () =>
+      selectedStudio
+        ? onlineStudioMissingZoom({
+          teachingMode: selectedStudio.teachingMode,
+          zoomMeetingUrl: selectedStudio.zoomMeetingUrl,
+        })
+        : false,
+    [selectedStudio],
+  );
+
   useEffect(() => {
     if (!open) return;
     if (classToEdit) {
@@ -114,6 +132,10 @@ export function ClassModal({
   const handleSave = async () => {
     const cap = Number(maxCapacity);
     const pr = classPriceBgnFromEur(parseEurInput(price));
+    if (onlineStudioBlocked) {
+      toast.error(ONLINE_STUDIO_ZOOM_REQUIRED_MSG);
+      return;
+    }
     if (
       !className.trim()
       || !instructorId
@@ -301,12 +323,20 @@ export function ClassModal({
               className="mt-1"
             />
           </div>
+          {selectedStudio?.teachingMode === 'online' ? (
+            <p className="text-sm text-muted-foreground">
+              Онлайн клас - практикуващите получават Zoom линк след запис.
+            </p>
+          ) : null}
+          {onlineStudioBlocked ? (
+            <p className="text-sm text-destructive">{ONLINE_STUDIO_ZOOM_REQUIRED_MSG}</p>
+          ) : null}
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>
-          <Button onClick={() => void handleSave()} disabled={saving}>
+          <Button onClick={() => void handleSave()} disabled={saving || onlineStudioBlocked}>
             {saving ? 'Запазване…' : 'Запази'}
           </Button>
         </DialogFooter>

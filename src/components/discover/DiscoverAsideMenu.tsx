@@ -20,7 +20,7 @@ type Props = {
   variant: DiscoverAsideVariant;
 };
 
-/** Filters + “near me” — URL is the source of truth (searchParams). */
+/** Filters + “near me” - URL is the source of truth (searchParams). */
 export function DiscoverAsideMenu({ variant }: Props) {
   const router = useRouter();
   const pathname = usePathname();

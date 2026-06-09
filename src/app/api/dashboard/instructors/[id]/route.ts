@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
 import { instructorToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
+import { syncOnlineStudioFromInstructor } from '@/lib/online-instructor-studio';
+import { isValidZoomMeetingUrl } from '@/lib/teaching-mode';
 
 export const runtime = 'nodejs';
 
@@ -28,6 +30,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     experienceLevel: string;
     rating: number;
     studioId: string;
+    zoomMeetingUrl?: string | null;
   }>;
   try {
     body = await request.json();
@@ -54,9 +57,35 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     data.studioId = next;
   }
 
-  if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
+  if (body.zoomMeetingUrl !== undefined) {
+    const zoom = body.zoomMeetingUrl?.trim() || null;
+    if (zoom && !isValidZoomMeetingUrl(zoom)) {
+      return jsonError('Invalid zoomMeetingUrl', 400);
+    }
+  }
 
-  const updated = await prisma.instructor.update({ where: { id }, data });
+  if (Object.keys(data).length === 0 && body.zoomMeetingUrl === undefined) {
+    return jsonError('No valid fields', 400);
+  }
+
+  const updated =
+    Object.keys(data).length > 0
+      ? await prisma.instructor.update({ where: { id }, data })
+      : existing;
+
+  const yogaStyles = Array.isArray(body.yogaStyle)
+    ? body.yogaStyle.filter((x) => typeof x === 'string')
+    : updated.yogaStyle;
+
+  await syncOnlineStudioFromInstructor({
+    studioId: updated.studioId,
+    instructorName: typeof body.name === 'string' ? body.name.trim() : updated.name,
+    bio: typeof body.bio === 'string' ? body.bio.trim() : updated.bio,
+    zoomMeetingUrl: body.zoomMeetingUrl,
+    yogaStyles,
+    photoUrl: typeof body.photo === 'string' ? body.photo : undefined,
+  });
+
   invalidateAfterCatalogChange();
   return NextResponse.json({ instructor: instructorToDto(updated) });
 }

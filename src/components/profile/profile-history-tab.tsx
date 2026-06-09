@@ -31,7 +31,7 @@ export const ProfileHistoryTab = ({
       <div className="text-center py-16">
         <Calendar className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
         <h3 className="font-display text-xl font-semibold text-foreground mb-2">Няма записани събития</h3>
-        <p className="text-muted-foreground mb-6">Запишете се за клас от страницата на студиото — ще се покаже тук веднага след записване.</p>
+        <p className="text-muted-foreground mb-6">Запишете се за клас от страницата на студиото - ще се покаже тук веднага след записване.</p>
         <Button asChild variant="outline">
           <Link href="/discover">Открий студио</Link>
         </Button>

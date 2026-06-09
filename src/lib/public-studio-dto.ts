@@ -7,6 +7,7 @@ import type {
   StudioSubscription,
   YogaClass,
 } from '@/data/mock-data';
+import { teachingModeFromPrisma } from '@/lib/teaching-mode';
 import type {
   Instructor as PrismaInstructor,
   Retreat as PrismaRetreat,
@@ -23,6 +24,7 @@ export function studioToDto(s: StudioRowForDto): Studio {
   return {
     id: s.id,
     name: s.name,
+    teachingMode: teachingModeFromPrisma(s.teachingMode),
     address: s.address,
     lat: s.lat ?? 0,
     lng: s.lng ?? 0,

@@ -48,7 +48,7 @@ export function ClassesSection({
     <div className="space-y-6">
       <DashboardPageHeader
         title="Класове"
-        description={`${classes.length} класа — цени, ниво и заетост на един екран.`}
+        description={`${classes.length} класа - цени, ниво и заетост на един екран.`}
         actions={
           <div className="flex max-w-md flex-col items-stretch gap-2 sm:items-end">
             {addDisabled && addDisabledTooltip ? (
@@ -78,7 +78,7 @@ export function ClassesSection({
           return (
             <div key={cls.id} className={`group ${dashboardCardClass} p-5`}>
               <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
-                {/* Date block — desktop sidebar */}
+                {/* Date block - desktop sidebar */}
                 <div className="hidden min-w-[72px] shrink-0 flex-col items-center justify-center self-start rounded-xl border border-primary/15 bg-linear-to-b from-primary/12 to-primary/5 p-3 md:flex">
                   <span className="text-xs font-semibold uppercase tracking-wide text-yoga-secondary-deep">
                     {new Date(cls.date).toLocaleDateString('bg-BG', { month: 'short' })}

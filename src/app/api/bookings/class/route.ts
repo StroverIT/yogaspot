@@ -26,12 +26,13 @@ export async function POST(request: Request) {
   if (!classId) return jsonError('Missing classId', 400);
 
   try {
-    const { studioId, classDetail } = await enrollUserInYogaClassOffline(gate.user.id, classId);
+    const { studioId, bookingId, classDetail } = await enrollUserInYogaClassOffline(gate.user.id, classId);
     await runBookingNotifications({
       kind: 'class',
       paymentMode: 'offline',
       userId: gate.user.id,
       studioId,
+      bookingId,
       amountMinor: 0,
       currency: 'eur',
       classDetail: {

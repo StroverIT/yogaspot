@@ -176,7 +176,7 @@ export function AdminUsersSectionClient({ users }: AdminUsersSectionClientProps)
                         {(u.name ?? u.email ?? '?')[0]}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{u.name ?? '—'}</p>
+                        <p className="font-medium text-foreground">{u.name ?? '-'}</p>
                         <p className="text-xs text-muted-foreground">{u.email}</p>
                       </div>
                     </div>

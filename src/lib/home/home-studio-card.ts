@@ -5,6 +5,7 @@ import { computeTopStudios } from '@/lib/home/home-data';
 export type HomeStudioCard = {
   id: string;
   name: string;
+  teachingMode: Studio['teachingMode'];
   address: string;
   descriptionPreview: string;
   image: string;
@@ -36,6 +37,7 @@ export function buildHomeStudioCards(studios: Studio[], classes: YogaClass[]): H
   return studios.map((studio) => ({
     id: studio.id,
     name: studio.name,
+    teachingMode: studio.teachingMode,
     address: studio.address,
     descriptionPreview: truncateDescription(studio.description),
     image: getStudioCoverSrc(studio),

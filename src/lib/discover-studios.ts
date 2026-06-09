@@ -50,7 +50,7 @@ function amenitiesFromStudio(studio: Studio): DiscoverStudio["amenities"] {
   return out;
 }
 
-/** YYYY-MM-DD in Europe/Sofia — matches stored class dates for “next upcoming” on the server. */
+/** YYYY-MM-DD in Europe/Sofia - matches stored class dates for “next upcoming” on the server. */
 function todayYmdEuropeSofia(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Sofia",
@@ -93,10 +93,11 @@ export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: Yoga
   return studios.map((s, index) => ({
     id: s.id,
     name: s.name,
+    teachingMode: s.teachingMode,
     image: firstUsableImageUrl(s.images, index),
     rating: s.rating,
     reviewCount: s.reviewCount,
-    location: locationFromAddress(s.address),
+    location: s.teachingMode === 'online' ? 'Онлайн' : locationFromAddress(s.address),
     address: s.address,
     styles: stylesForStudio(s.id, classes),
     level: studioLevelFromClasses(s.id, classes),

@@ -250,7 +250,7 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null, variant = '
           <Link
             href={variant === "landing" ? "/studio-offer" : "/"}
             className="flex min-w-0 items-center gap-2 md:gap-3"
-            aria-label="Zenno — начало. По-лесният път към йога"
+            aria-label="Zenno - начало. По-лесният път към йога"
           >
             <div
               ref={logoWrapRef}
@@ -293,98 +293,98 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null, variant = '
             </>
           ) : (
             <>
-          <nav className="hidden md:flex items-center gap-6 font-body text-sm font-medium">
-            <Link
-              href="/discover"
-              className={DESKTOP_NAV_LINK_CLASS}
-            >
-              Открий студио
-            </Link>
-            <Link
-              href="/retreats"
-              className={DESKTOP_NAV_LINK_CLASS}
-            >
-              Рийтрийти
-            </Link>
-            {isAuthenticatedNav && user?.role === 'business' && (
-              <Link
-                href="/dashboard"
-                className={DESKTOP_NAV_LINK_CLASS}
-              >
-                Табло
-              </Link>
-            )}
-            {isAuthenticatedNav && user?.role === 'admin' && (
-              <Link
-                href="/admin"
-                className={DESKTOP_NAV_LINK_CLASS}
-              >
-                Админ панел
-              </Link>
-            )}
-          </nav>
+              <nav className="hidden md:flex items-center gap-6 font-body text-sm font-medium">
+                <Link
+                  href="/discover"
+                  className={DESKTOP_NAV_LINK_CLASS}
+                >
+                  Открий студио
+                </Link>
+                <Link
+                  href="/retreats"
+                  className={DESKTOP_NAV_LINK_CLASS}
+                >
+                  Рийтрийти
+                </Link>
+                {isAuthenticatedNav && user?.role === 'business' && (
+                  <Link
+                    href="/dashboard"
+                    className={DESKTOP_NAV_LINK_CLASS}
+                  >
+                    Табло
+                  </Link>
+                )}
+                {isAuthenticatedNav && user?.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className={DESKTOP_NAV_LINK_CLASS}
+                  >
+                    Админ панел
+                  </Link>
+                )}
+              </nav>
 
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/favorites" onClick={handleFavoritesClick}>
-              <Button
-                variant="ghost"
-                size="icon"
-                hoverType="petalRipple"
-                className={`${ICON_BUTTON_CLASS} ${HEART_ICON_BUTTON_CLASS}`}
-              >
-                <Heart className="h-5 w-5" />
-              </Button>
-            </Link>
-            {isAuthenticatedNav ? (
-              <>
-                <Link href="/profile/history">
+              <div className="hidden md:flex items-center gap-3">
+                <Link href="/favorites" onClick={handleFavoritesClick}>
                   <Button
                     variant="ghost"
                     size="icon"
-                    hoverType="softGlowEnergy"
-                    className={`${ICON_BUTTON_CLASS} ${PROFILE_ICON_BUTTON_CLASS}`}
+                    hoverType="petalRipple"
+                    className={`${ICON_BUTTON_CLASS} ${HEART_ICON_BUTTON_CLASS}`}
                   >
-                    <UserIcon className="h-5 w-5" />
+                    <Heart className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  hoverType="energyLineSweep"
-                  className={`${ICON_BUTTON_CLASS} ${LOGOUT_ICON_BUTTON_CLASS}`}
-                  onClick={() => {
-                    logout();
-                    router.push("/");
-                  }}
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  className={AUTH_GHOST_BUTTON_CLASS}
-                  onClick={() => router.push("/auth")}
-                >
-                  Вход
-                </Button>
-                <Button className={AUTH_PRIMARY_BUTTON_CLASS} onClick={() => router.push("/auth?type=register")}>
-                  Регистрация
-                </Button>
-              </>
-            )}
-          </div>
+                {isAuthenticatedNav ? (
+                  <>
+                    <Link href="/profile/history">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        hoverType="softGlowEnergy"
+                        className={`${ICON_BUTTON_CLASS} ${PROFILE_ICON_BUTTON_CLASS}`}
+                      >
+                        <UserIcon className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      hoverType="energyLineSweep"
+                      className={`${ICON_BUTTON_CLASS} ${LOGOUT_ICON_BUTTON_CLASS}`}
+                      onClick={() => {
+                        logout();
+                        router.push("/");
+                      }}
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className={AUTH_GHOST_BUTTON_CLASS}
+                      onClick={() => router.push("/auth")}
+                    >
+                      Вход
+                    </Button>
+                    <Button className={AUTH_PRIMARY_BUTTON_CLASS} onClick={() => router.push("/auth?type=register")}>
+                      Регистрация
+                    </Button>
+                  </>
+                )}
+              </div>
 
-          <div className="md:hidden text-foreground [&_.hamburger-react]:rounded-md [&_.hamburger-react]:hover:bg-accent [&_.hamburger-react]:hover:text-accent-foreground">
-            <Hamburger
-              toggled={mobileOpen}
-              toggle={setMobileMenuOpen}
-              size={22}
-              label={mobileOpen ? "Затвори менюто" : "Отвори менюто"}
-              color="currentColor"
-            />
-          </div>
+              <div className="md:hidden text-foreground [&_.hamburger-react]:rounded-md [&_.hamburger-react]:hover:bg-accent [&_.hamburger-react]:hover:text-accent-foreground">
+                <Hamburger
+                  toggled={mobileOpen}
+                  toggle={setMobileMenuOpen}
+                  size={22}
+                  label={mobileOpen ? "Затвори менюто" : "Отвори менюто"}
+                  color="currentColor"
+                />
+              </div>
             </>
           )}
         </div>

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin } from "lucide-react";
+import { Star, MapPin, Video } from "lucide-react";
+import { TeachingModePill } from "@/components/studio/teaching-mode-badge";
 import type { DiscoverStudio } from "@/types/studio-discovery";
 
 interface DiscoverStudioCardProps {
@@ -31,12 +32,19 @@ export function DiscoverStudioCard({ studio, priority = false }: DiscoverStudioC
           </div>
         </div>
         <CardContent className="p-4">
-          <h3 className="font-serif text-lg font-semibold text-yoga-text group-hover:text-yoga-accent transition-colors">
-            {studio.name}
-          </h3>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-serif text-lg font-semibold text-yoga-text group-hover:text-yoga-accent transition-colors">
+              {studio.name}
+            </h3>
+            <TeachingModePill mode={studio.teachingMode} className="shrink-0" />
+          </div>
 
           <div className="mt-2 flex items-center gap-1 text-yoga-text-soft text-sm">
-            <MapPin className="w-4 h-4 flex-shrink-0" />
+            {studio.teachingMode === "online" ? (
+              <Video className="w-4 h-4 flex-shrink-0 text-yoga-accent" />
+            ) : (
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+            )}
             <span className="truncate">{studio.location}</span>
             {studio.distance && (
               <span className="ml-1 text-yoga-secondary font-medium flex-shrink-0">

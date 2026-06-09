@@ -80,6 +80,7 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
 
   const paymentIntentId = paymentIntentIdFromSession(session);
   let classSnapshot: ClassLocked | null = null;
+  let bookingId = '';
   let fulfilled = false;
 
   try {
@@ -119,6 +120,7 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
       const booking = await tx.booking.create({
         data: { userId: md.userId, yogaClassId: cls.id },
       });
+      bookingId = booking.id;
 
       await tx.payment.create({
         data: {
@@ -144,12 +146,13 @@ async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<
     throw err;
   }
 
-  if (fulfilled && classSnapshot) {
+  if (fulfilled && classSnapshot && bookingId) {
     await runBookingNotifications({
       kind: 'class',
       paymentMode: 'online',
       userId: md.userId,
       studioId: md.studioId,
+      bookingId,
       amountMinor: amountTotal,
       currency: (session.currency ?? 'eur').toLowerCase(),
       classDetail: {
@@ -194,6 +197,7 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
 
   const paymentIntentId = paymentIntentIdFromSession(session);
   let entrySnapshot: ScheduleLocked | null = null;
+  let bookingId = '';
   let fulfilled = false;
 
   try {
@@ -233,6 +237,7 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
       const booking = await tx.scheduleEntryBooking.create({
         data: { userId: md.userId, scheduleEntryId: entry.id },
       });
+      bookingId = booking.id;
 
       await tx.payment.create({
         data: {
@@ -258,12 +263,13 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
     throw err;
   }
 
-  if (fulfilled && entrySnapshot) {
+  if (fulfilled && entrySnapshot && bookingId) {
     await runBookingNotifications({
       kind: 'schedule',
       paymentMode: 'online',
       userId: md.userId,
       studioId: md.studioId,
+      bookingId,
       amountMinor: amountTotal,
       currency: (session.currency ?? 'eur').toLowerCase(),
       scheduleDetail: {

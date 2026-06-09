@@ -25,7 +25,7 @@ export function StudioDetailSidebar({ studio }: { studio: Studio }) {
   return (
     <aside className="space-y-6">
       <StudioDetailSidebarInfo studio={studio} />
-      <StudioDetailMapSection studio={studio} />
+      {studio.teachingMode !== 'online' ? <StudioDetailMapSection studio={studio} /> : null}
       <StudioDetailFavoriteButton studioId={studio.id} />
     </aside>
   );

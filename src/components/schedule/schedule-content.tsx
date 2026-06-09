@@ -27,6 +27,8 @@ import { SubscriptionRequestDetailsModal } from '@/views/Dashboard/components/mo
 import { SubscriptionRequestFormModal } from '@/views/Dashboard/components/modals/SubscriptionRequestFormModal';
 import { SubscriptionRequestStatusModal } from '@/views/Dashboard/components/modals/SubscriptionRequestStatusModal';
 import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
+import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
+import type { TeachingMode } from '@/data/mock-data';
 
 export type AdminProps = {
   variant: 'admin';
@@ -50,6 +52,7 @@ type UserProps = {
   checkoutModalOpen: boolean;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
   bookedScheduleEntryIds: string[];
+  studioTeachingMode?: TeachingMode;
 };
 
 export type ScheduleContentProps = AdminProps | UserProps;
@@ -79,6 +82,7 @@ export function ScheduleContent(props: ScheduleContentProps) {
       checkoutModalOpen={props.checkoutModalOpen}
       onRequestScheduleBook={props.onRequestScheduleBook}
       bookedScheduleEntryIds={props.bookedScheduleEntryIds}
+      studioTeachingMode={props.studioTeachingMode}
     />
   );
 }
@@ -95,11 +99,13 @@ function WeeklyScheduleList({
   instructors,
   renderTrailing,
   emptyState,
+  studioTeachingMode,
 }: {
   scheduleByDay: Record<Weekday, ScheduleEntry[]>;
   instructors: Instructor[];
   renderTrailing: (entry: ScheduleEntry) => ReactNode;
   emptyState: { title: string; subtitle?: string };
+  studioTeachingMode?: TeachingMode;
 }) {
   const totalEntries = WEEKDAYS.reduce((n, day) => n + scheduleByDay[day].length, 0);
 
@@ -136,6 +142,9 @@ function WeeklyScheduleList({
                               {entry.yogaType}
                             </Badge>
                             <DifficultyBadge difficulty={entry.difficulty} />
+                            {studioTeachingMode === 'online' ? (
+                              <TeachingModePill mode="online" />
+                            ) : null}
                             {instructor && <span className="text-xs text-muted-foreground">с {instructor.name}</span>}
                           </div>
                         </div>
@@ -494,6 +503,7 @@ function UserScheduleContent({
   checkoutModalOpen,
   onRequestScheduleBook,
   bookedScheduleEntryIds,
+  studioTeachingMode,
 }: {
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
@@ -502,6 +512,7 @@ function UserScheduleContent({
   checkoutModalOpen: boolean;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
   bookedScheduleEntryIds: string[];
+  studioTeachingMode?: TeachingMode;
 }) {
   const scheduleByDay = buildScheduleByDay(studioSchedule);
 
@@ -525,6 +536,7 @@ function UserScheduleContent({
       <WeeklyScheduleList
         scheduleByDay={scheduleByDay}
         instructors={instructors}
+        studioTeachingMode={studioTeachingMode}
         renderTrailing={entry => {
           const alreadyBooked = isAuthenticated && bookedScheduleEntryIds.includes(entry.id);
           const isFull = entry.enrolled >= entry.maxCapacity;

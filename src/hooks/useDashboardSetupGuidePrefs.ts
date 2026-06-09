@@ -3,16 +3,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import type { TeachingModeDto } from '@/lib/teaching-mode';
+
 export type DashboardSetupGuidePrefs = {
   docked: boolean;
   minimized: boolean;
+  onboardingTeachingMode: TeachingModeDto | null;
 };
 
-const defaultPrefs: DashboardSetupGuidePrefs = { docked: false, minimized: false };
+const defaultPrefs: DashboardSetupGuidePrefs = {
+  docked: false,
+  minimized: false,
+  onboardingTeachingMode: null,
+};
 
 const legacyStorageKey = (userId: string) => `zenno.dashboardSetupGuide.${userId}`;
 
-async function patchPrefs(body: DashboardSetupGuidePrefs): Promise<DashboardSetupGuidePrefs | null> {
+async function patchPrefs(
+  body: Partial<DashboardSetupGuidePrefs>,
+): Promise<DashboardSetupGuidePrefs | null> {
   const res = await fetch('/api/user/dashboard-setup-guide', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -52,6 +61,10 @@ export function useDashboardSetupGuidePrefs(userId: string | undefined) {
         let data = (await res.json()) as Partial<DashboardSetupGuidePrefs>;
         let docked = Boolean(data.docked);
         let minimized = Boolean(data.minimized);
+        const onboardingTeachingMode =
+          data.onboardingTeachingMode === 'physical' || data.onboardingTeachingMode === 'online'
+            ? data.onboardingTeachingMode
+            : null;
 
         if (!docked && !minimized && typeof window !== 'undefined') {
           try {
@@ -75,7 +88,7 @@ export function useDashboardSetupGuidePrefs(userId: string | undefined) {
         }
 
         if (!cancelled) {
-          setPrefsState({ docked, minimized });
+          setPrefsState({ docked, minimized, onboardingTeachingMode });
         }
       } catch {
         if (!cancelled) {
@@ -94,7 +107,10 @@ export function useDashboardSetupGuidePrefs(userId: string | undefined) {
   const setPrefs = useCallback(
     (next: DashboardSetupGuidePrefs | ((prev: DashboardSetupGuidePrefs) => DashboardSetupGuidePrefs)) => {
       setPrefsState(prev => {
-        const resolved = typeof next === 'function' ? (next as (p: DashboardSetupGuidePrefs) => DashboardSetupGuidePrefs)(prev) : next;
+        const resolved =
+          typeof next === 'function'
+            ? (next as (p: DashboardSetupGuidePrefs) => DashboardSetupGuidePrefs)(prev)
+            : next;
         const previous = prev;
 
         if (!userId) {
@@ -116,5 +132,19 @@ export function useDashboardSetupGuidePrefs(userId: string | undefined) {
     [userId],
   );
 
-  return { prefs, setPrefs, hydrated };
+  const setOnboardingTeachingMode = useCallback(
+    async (mode: TeachingModeDto): Promise<boolean> => {
+      const saved = await patchPrefs({
+        onboardingTeachingMode: mode,
+        docked: false,
+        minimized: false,
+      });
+      if (saved === null) return false;
+      setPrefsState(saved);
+      return true;
+    },
+    [],
+  );
+
+  return { prefs, setPrefs, setOnboardingTeachingMode, hydrated };
 }

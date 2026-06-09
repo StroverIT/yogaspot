@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ImagePlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -12,12 +12,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { Instructor } from '@/data/mock-data';
+import type { Instructor, TeachingMode } from '@/data/mock-data';
 import { mockStudios, YOGA_TYPES } from '@/data/mock-data';
+import { isValidZoomMeetingUrl } from '@/lib/teaching-mode';
 import { cn } from '@/lib/utils';
+import { Building2, Video } from 'lucide-react';
 
-const INCOMPLETE_MSG =
+const INCOMPLETE_PHYSICAL_MSG =
   'Попълнете всички полета, изберете ниво на опит, поне един стил йога и студио преди запазване.';
+const INCOMPLETE_ONLINE_MSG =
+  'Попълнете всички полета, изберете ниво и стил йога, и добавете валиден Zoom линк.';
 
 export type InstructorModalPayload = {
   /** When set, server updates this instructor (PATCH). */
@@ -25,7 +29,9 @@ export type InstructorModalPayload = {
   name: string;
   bio: string;
   experienceLevel: string;
-  studioId: string;
+  studioId?: string;
+  teachingMode: TeachingMode;
+  zoomMeetingUrl?: string;
   yogaStyle: string[];
   /** Public image URL (Supabase or external). */
   photo?: string;
@@ -48,6 +54,8 @@ export function InstructorModal({
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('');
+  const [teachingMode, setTeachingMode] = useState<TeachingMode>('online');
+  const [zoomMeetingUrl, setZoomMeetingUrl] = useState('');
   const [studioId, setStudioId] = useState('');
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [photo, setPhoto] = useState('');
@@ -55,12 +63,24 @@ export function InstructorModal({
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const physicalStudios = useMemo(
+    () => studios.filter(s => s.teachingMode !== 'online'),
+    [studios],
+  );
+  const isOnlineMode = teachingMode === 'online';
+  const linkedStudio = instructorToEdit
+    ? studios.find(s => s.id === instructorToEdit.studioId)
+    : null;
+
   useEffect(() => {
     if (!open) return;
     if (instructorToEdit) {
+      const mode = linkedStudio?.teachingMode ?? 'physical';
       setName(instructorToEdit.name);
       setBio(instructorToEdit.bio);
       setExperienceLevel(instructorToEdit.experienceLevel);
+      setTeachingMode(mode);
+      setZoomMeetingUrl(linkedStudio?.zoomMeetingUrl ?? '');
       setStudioId(instructorToEdit.studioId);
       setSelectedStyles([...instructorToEdit.yogaStyle]);
       setPhoto(instructorToEdit.photo?.trim() ?? '');
@@ -69,22 +89,34 @@ export function InstructorModal({
     setName('');
     setBio('');
     setExperienceLevel('');
-    setStudioId('');
+    setTeachingMode(physicalStudios.length > 0 ? 'physical' : 'online');
+    setZoomMeetingUrl('');
+    setStudioId(physicalStudios[0]?.id ?? '');
     setSelectedStyles([]);
     setPhoto('');
-  }, [open, instructorToEdit]);
+  }, [open, instructorToEdit, linkedStudio, physicalStudios]);
+
+  useEffect(() => {
+    if (!open || instructorToEdit) return;
+    if (!isOnlineMode && physicalStudios.length > 0 && !studioId) {
+      setStudioId(physicalStudios[0].id);
+    }
+  }, [open, instructorToEdit, isOnlineMode, physicalStudios, studioId]);
 
   const handleSave = async () => {
-    if (
-      !name.trim()
-      || !bio.trim()
-      || !experienceLevel
-      || selectedStyles.length === 0
-      || !studioId
-    ) {
-      toast.error(INCOMPLETE_MSG);
+    const baseIncomplete =
+      !name.trim() || !bio.trim() || !experienceLevel || selectedStyles.length === 0;
+
+    if (isOnlineMode) {
+      if (baseIncomplete || !isValidZoomMeetingUrl(zoomMeetingUrl)) {
+        toast.error(INCOMPLETE_ONLINE_MSG);
+        return;
+      }
+    } else if (baseIncomplete || !studioId) {
+      toast.error(INCOMPLETE_PHYSICAL_MSG);
       return;
     }
+
     setSaving(true);
     try {
       await Promise.resolve(
@@ -93,7 +125,9 @@ export function InstructorModal({
           name: name.trim(),
           bio: bio.trim(),
           experienceLevel,
-          studioId,
+          teachingMode,
+          zoomMeetingUrl: isOnlineMode ? zoomMeetingUrl.trim() : undefined,
+          studioId: isOnlineMode ? instructorToEdit?.studioId ?? studioId : studioId,
           yogaStyle: [...selectedStyles],
           photo: photo.trim(),
         }),
@@ -113,10 +147,50 @@ export function InstructorModal({
           <DialogDescription>
             {instructorToEdit
               ? 'Променете данните и запазете.'
-              : 'Добавете данните за новия инструктор.'}
+              : 'Създайте онлайн профил или добавете инструктор към студио в зала.'}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          {!instructorToEdit ? (
+            <div>
+              <Label className="mb-2 block">Как преподавате?</Label>
+              <div className="inline-flex w-full rounded-2xl border border-border bg-muted/40 p-1.5">
+                <button
+                  type="button"
+                  onClick={() => setTeachingMode('physical')}
+                  disabled={physicalStudios.length === 0}
+                  className={cn(
+                    'flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all',
+                    !isOnlineMode
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                    physicalStudios.length === 0 && 'opacity-50',
+                  )}
+                >
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  В студио
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTeachingMode('online')}
+                  className={cn(
+                    'flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all',
+                    isOnlineMode
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <Video className="h-4 w-4 shrink-0" />
+                  Онлайн
+                </button>
+              </div>
+              {physicalStudios.length === 0 ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Нямате физическо студио - създайте директно онлайн профил.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <div>
             <Label>Име</Label>
             <Input
@@ -186,21 +260,36 @@ export function InstructorModal({
               })}
             </div>
           </div>
-          <div>
-            <Label>Назначено студио</Label>
-            <Select value={studioId || undefined} onValueChange={setStudioId}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Изберете студио" />
-              </SelectTrigger>
-              <SelectContent>
-                {studios.map(s => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {isOnlineMode ? (
+            <div>
+              <Label>Zoom линк за класовете</Label>
+              <Input
+                value={zoomMeetingUrl}
+                onChange={e => setZoomMeetingUrl(e.target.value)}
+                placeholder="https://zoom.us/j/..."
+                className="mt-1"
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Задължителен за онлайн класове. Практикуващите получават линка след запис.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <Label>Назначено студио</Label>
+              <Select value={studioId || undefined} onValueChange={setStudioId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Изберете студио" />
+                </SelectTrigger>
+                <SelectContent>
+                  {physicalStudios.map(s => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label>Профилна снимка</Label>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -212,12 +301,12 @@ export function InstructorModal({
                 <AvatarFallback className="bg-muted text-sm font-medium text-muted-foreground">
                   {name.trim()
                     ? name
-                        .trim()
-                        .split(/\s+/)
-                        .map(part => part[0])
-                        .join('')
-                        .slice(0, 2)
-                    : '—'}
+                      .trim()
+                      .split(/\s+/)
+                      .map(part => part[0])
+                      .join('')
+                      .slice(0, 2)
+                    : '-'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-wrap gap-2">
@@ -231,23 +320,41 @@ export function InstructorModal({
                     e.target.value = '';
                     if (!f) return;
                     void (async () => {
-                      if (!studioId) {
+                      if (!isOnlineMode && !studioId) {
                         toast.error('Първо изберете студио, за да качите снимка.');
+                        return;
+                      }
+                      if (isOnlineMode && (!name.trim() || !isValidZoomMeetingUrl(zoomMeetingUrl))) {
+                        toast.error('Въведете име и валиден Zoom линк, за да качите снимка.');
                         return;
                       }
                       setPhotoUploading(true);
                       try {
                         const fd = new FormData();
-                        fd.append('studioId', studioId);
+                        if (isOnlineMode) {
+                          fd.append('onlineProfile', 'true');
+                          fd.append('instructorName', name.trim());
+                          fd.append('zoomMeetingUrl', zoomMeetingUrl.trim());
+                          if (studioId) fd.append('studioId', studioId);
+                        } else {
+                          fd.append('studioId', studioId);
+                        }
                         fd.append('file', f);
                         const res = await fetch('/api/dashboard/instructors/photo', { method: 'POST', body: fd });
-                        const j = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+                        const j = (await res.json().catch(() => ({}))) as {
+                          url?: string;
+                          studioId?: string;
+                          error?: string;
+                        };
                         if (!res.ok) {
                           toast.error(typeof j.error === 'string' ? j.error : `Качването не успя (${res.status})`);
                           return;
                         }
                         if (typeof j.url === 'string' && j.url) {
                           setPhoto(j.url);
+                          if (isOnlineMode && typeof j.studioId === 'string') {
+                            setStudioId(j.studioId);
+                          }
                           toast.success('Снимката е качена.');
                         }
                       } finally {

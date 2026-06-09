@@ -145,7 +145,7 @@ export default function ProfileHistoryPage() {
         <div className="mb-6 rounded-2xl border border-border bg-card p-5">
           <h3 className="font-display text-lg font-semibold text-foreground">Потвърдени резервации</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Онлайн плащания през Stripe и записвания без онлайн такса — събития и разписание.
+            Онлайн плащания през Stripe и записвания без онлайн такса - събития и разписание.
           </p>
           <ul className="mt-4 space-y-2">
             {confirmedReservations.map((row) => (

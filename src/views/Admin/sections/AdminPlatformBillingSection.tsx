@@ -5,7 +5,7 @@ import type { AdminPlatformBillingRow } from '@/lib/admin-queries';
 import { CreditCard } from 'lucide-react';
 
 function formatWhen(iso: string | null) {
-  if (!iso) return '—';
+  if (!iso) return '-';
   return new Date(iso).toLocaleString('bg-BG', {
     day: 'numeric',
     month: 'short',
@@ -87,9 +87,9 @@ export function AdminPlatformBillingSectionClient({ rows }: AdminPlatformBilling
                 rows.map((row) => (
                   <tr key={row.businessId} className="border-b border-border align-top">
                     <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">{row.businessName ?? '—'}</div>
-                      <div className="text-muted-foreground">{row.ownerName ?? '—'}</div>
-                      <div className="text-xs text-muted-foreground">{row.ownerEmail ?? '—'}</div>
+                      <div className="font-medium text-foreground">{row.businessName ?? '-'}</div>
+                      <div className="text-muted-foreground">{row.ownerName ?? '-'}</div>
+                      <div className="text-xs text-muted-foreground">{row.ownerEmail ?? '-'}</div>
                       {row.isEarlyAdopter ? (
                         <Badge variant="secondary" className="mt-2">
                           Първи 20
@@ -105,7 +105,7 @@ export function AdminPlatformBillingSectionClient({ rows }: AdminPlatformBilling
                     <td className="px-4 py-4 whitespace-nowrap">{row.monthlyAmountEur} €/мес.</td>
                     <td className="px-4 py-4">
                       {row.payments.length === 0 ? (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">-</span>
                       ) : (
                         <ul className="space-y-2">
                           {row.payments.map((p) => (

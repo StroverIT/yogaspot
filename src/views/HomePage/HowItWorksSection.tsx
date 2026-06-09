@@ -6,7 +6,7 @@ const steps = [
   {
     icon: <Eye className="h-7 w-7" />,
     title: "Разгледай",
-    desc: "Преглеждай студиа по стил йога, квартал, ценови клас и ниво — всичко на едно място.",
+    desc: "Преглеждай студиа по стил йога, квартал, ценови клас и ниво - всичко на едно място.",
     step: "1",
   },
   {
@@ -18,7 +18,7 @@ const steps = [
   {
     icon: <Users className="h-7 w-7" />,
     title: "Запиши се",
-    desc: "Резервирай място онлайн и просто се появи на практика — толкова е лесно.",
+    desc: "Резервирай място онлайн и просто се появи на практика - толкова е лесно.",
     step: "3",
   },
 ];
@@ -29,7 +29,7 @@ export default function HowItWorksSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-14">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">Как да започнеш?</h2>
-          <p className="text-muted-foreground text-lg">От търсене до постелка — само три стъпки</p>
+          <p className="text-muted-foreground text-lg">От търсене до постелка - само три стъпки</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {steps.map((step, i) => (

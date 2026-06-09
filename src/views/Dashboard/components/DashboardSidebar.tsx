@@ -47,7 +47,7 @@ export function DashboardSidebar({
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                 }`}
-              aria-label={showSetupDot ? `${item.label} — незавършена стъпка от настройката` : undefined}
+              aria-label={showSetupDot ? `${item.label} - незавършена стъпка от настройката` : undefined}
             >
               <item.icon className="h-4.5 w-4.5 shrink-0" />
               <span className="flex-1 truncate text-left">{item.label}</span>

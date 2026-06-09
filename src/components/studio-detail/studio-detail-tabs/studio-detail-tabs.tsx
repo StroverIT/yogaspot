@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Instructor, Review, ScheduleEntry, StudioSubscription, YogaClass } from '@/data/mock-data';
+import type { Instructor, Review, ScheduleEntry, StudioSubscription, TeachingMode, YogaClass } from '@/data/mock-data';
 import { useAuth } from '@/contexts/AuthContext';
 import { EventsTabContent } from './events-tab-content';
 import { InstructorsTabContent } from './instructors-tab-content';
@@ -12,6 +12,7 @@ import type { TabKey } from './types';
 
 export function StudioDetailTabs({
   studioId,
+  studioTeachingMode,
   studioOwnerUserId,
   studioSchedule,
   subscription,
@@ -31,6 +32,7 @@ export function StudioDetailTabs({
   bookedScheduleEntryIds,
 }: {
   studioId: string;
+  studioTeachingMode: TeachingMode;
   studioOwnerUserId: string;
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
@@ -83,6 +85,7 @@ export function StudioDetailTabs({
             checkoutModalOpen={checkoutModalOpen}
             onRequestScheduleBook={onRequestScheduleBook}
             bookedScheduleEntryIds={bookedScheduleEntryIds}
+            studioTeachingMode={studioTeachingMode}
           />
         )}
         {activeTab === 'events' &&
@@ -90,6 +93,7 @@ export function StudioDetailTabs({
             <div className="h-48 animate-pulse rounded-2xl border border-border bg-muted/40" />
           ) : (
             <EventsTabContent
+              studioTeachingMode={studioTeachingMode}
               studioClasses={studioClasses}
               instructors={studioInstructors}
               checkoutModalOpen={checkoutModalOpen}

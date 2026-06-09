@@ -48,7 +48,7 @@ type ScheduleLocked = {
 export async function enrollUserInYogaClassOffline(
   userId: string,
   classId: string,
-): Promise<{ studioId: string; classDetail: ClassSnapshot }> {
+): Promise<{ studioId: string; bookingId: string; classDetail: ClassSnapshot }> {
   const existing = await prisma.booking.findUnique({
     where: { userId_yogaClassId: { userId, yogaClassId: classId } },
     select: { id: true },
@@ -60,6 +60,7 @@ export async function enrollUserInYogaClassOffline(
   }
 
   let snapshot: ClassSnapshot | null = null;
+  let bookingId = '';
 
   await prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<ClassLocked[]>(
@@ -83,9 +84,10 @@ export async function enrollUserInYogaClassOffline(
       data: { enrolled: { increment: 1 } },
     });
 
-    await tx.booking.create({
+    const booking = await tx.booking.create({
       data: { userId, yogaClassId: cls.id },
     });
+    bookingId = booking.id;
 
     snapshot = {
       studioId: cls.studioId,
@@ -101,7 +103,7 @@ export async function enrollUserInYogaClassOffline(
     throw new Error('ENROLL_FAILED');
   }
 
-  return { studioId: snapshot.studioId, classDetail: snapshot };
+  return { studioId: snapshot.studioId, bookingId, classDetail: snapshot };
 }
 
 /** Creates ScheduleEntryBooking without Payment; increments ScheduleEntry.enrolled. */
@@ -109,7 +111,7 @@ export async function enrollUserInScheduleOffline(
   userId: string,
   scheduleEntryId: string,
   studioId: string,
-): Promise<{ studioId: string; scheduleDetail: ScheduleSnapshot }> {
+): Promise<{ studioId: string; bookingId: string; scheduleDetail: ScheduleSnapshot }> {
   const existing = await prisma.scheduleEntryBooking.findUnique({
     where: { userId_scheduleEntryId: { userId, scheduleEntryId } },
     select: { id: true },
@@ -121,6 +123,7 @@ export async function enrollUserInScheduleOffline(
   }
 
   let snapshot: ScheduleSnapshot | null = null;
+  let bookingId = '';
 
   await prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<ScheduleLocked[]>(
@@ -144,9 +147,10 @@ export async function enrollUserInScheduleOffline(
       data: { enrolled: { increment: 1 } },
     });
 
-    await tx.scheduleEntryBooking.create({
+    const booking = await tx.scheduleEntryBooking.create({
       data: { userId, scheduleEntryId: entry.id },
     });
+    bookingId = booking.id;
 
     snapshot = {
       studioId: entry.studioId,
@@ -162,5 +166,5 @@ export async function enrollUserInScheduleOffline(
     throw new Error('ENROLL_FAILED');
   }
 
-  return { studioId: snapshot.studioId, scheduleDetail: snapshot };
+  return { studioId: snapshot.studioId, bookingId, scheduleDetail: snapshot };
 }
