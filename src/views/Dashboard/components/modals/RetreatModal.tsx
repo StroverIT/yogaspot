@@ -268,16 +268,17 @@ export function RetreatModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-3xl sm:max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl flex items-center gap-2">
-            <Palmtree className="h-5 w-5 text-primary" /> {retreatToEdit ? 'Редактирай рийтрийт' : 'Нов рийтрийт'}
+      <DialogContent className="flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh] sm:gap-4 sm:overflow-y-auto sm:p-6">
+        <DialogHeader className="shrink-0 space-y-1.5 px-4 pb-2 pt-5 text-left sm:px-0 sm:pt-0 sm:pr-14">
+          <DialogTitle className="font-display flex items-center gap-2 text-xl sm:text-2xl">
+            <Palmtree className="h-5 w-5 shrink-0 text-primary" /> {retreatToEdit ? 'Редактирай рийтрийт' : 'Нов рийтрийт'}
           </DialogTitle>
           <DialogDescription>Добавете събитие с дата, активности, локация и снимки.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 pt-2">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-2 sm:px-0 sm:pb-0">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Студио</Label>
               <select
@@ -317,7 +318,7 @@ export function RetreatModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Максимален капацитет</Label>
               <Input
@@ -368,7 +369,7 @@ export function RetreatModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Начална дата</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1" />
@@ -432,7 +433,7 @@ export function RetreatModal({
               ) : !isLoaded ? (
                 <div className="p-4 text-sm text-muted-foreground">Зареждане на карта…</div>
               ) : (
-                <div className="h-72 w-full">
+                <div className="h-56 w-full sm:h-72">
                   <GoogleMap
                     mapContainerStyle={{ width: '100%', height: '100%' }}
                     center={mapCenter}
@@ -479,7 +480,7 @@ export function RetreatModal({
               }}
             />
             {imageSlots.length ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {imageSlots.map((slot, idx) => {
                   const src = slot.kind === 'url' ? slot.url : slot.previewUrl;
                   return (
@@ -525,8 +526,9 @@ export function RetreatModal({
             <Switch checked={isPublished} onCheckedChange={setIsPublished} />
           </div>
         </div>
+        </div>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-0 shrink-0 gap-3 border-t bg-background px-4 py-4 sm:mt-4 sm:border-t-0 sm:px-0 sm:py-0 [&_button]:w-full sm:[&_button]:w-auto">
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>

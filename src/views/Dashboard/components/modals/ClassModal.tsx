@@ -233,8 +233,8 @@ export function ClassModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-xl sm:max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-w-xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[85vh] sm:gap-4 sm:overflow-y-auto sm:p-6">
+        <DialogHeader className="shrink-0 space-y-1.5 px-4 pb-2 pt-5 text-left sm:px-0 sm:pt-0 sm:pr-14">
           <DialogTitle className="font-display text-xl">
             {classToEdit ? 'Редактирай клас' : 'Нов клас'}
           </DialogTitle>
@@ -244,7 +244,8 @@ export function ClassModal({
               : 'Попълвайте стъпка по стъпка — следващите полета се появяват, когато предишните са готови.'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 pt-2">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-2 sm:px-0 sm:pb-0">
+        <div className="space-y-4">
           <section className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Основни данни</p>
           <div>
@@ -256,7 +257,7 @@ export function ClassModal({
               className="mt-1"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Студио</Label>
               <Select value={studioId || undefined} onValueChange={setStudioId}>
@@ -314,7 +315,7 @@ export function ClassModal({
             )}
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Дата и час</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <Label>Дата</Label>
               <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1" />
@@ -339,7 +340,7 @@ export function ClassModal({
             )}
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Детайли за класа</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Тип йога</Label>
               <Select value={yogaType || undefined} onValueChange={setYogaType}>
@@ -371,7 +372,7 @@ export function ClassModal({
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Максимален капацитет</Label>
               <Input
@@ -451,7 +452,8 @@ export function ClassModal({
           </section>
           ) : null}
         </div>
-        <DialogFooter className="mt-4">
+        </div>
+        <DialogFooter className="mt-0 shrink-0 gap-3 border-t bg-background px-4 py-4 sm:mt-4 sm:border-t-0 sm:px-0 sm:py-0 [&_button]:w-full sm:[&_button]:w-auto">
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>
