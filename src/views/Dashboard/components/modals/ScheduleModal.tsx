@@ -236,7 +236,7 @@ export function ScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-xl sm:max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             {entry ? 'Редактирай час' : 'Добави час в разписание'}

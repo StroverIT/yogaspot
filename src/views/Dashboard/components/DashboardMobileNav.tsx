@@ -19,8 +19,8 @@ export function DashboardMobileNav({
   setupSectionHints?: Partial<Record<Section, boolean>>;
 }) {
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-2 py-2">
-      <div className="flex justify-around">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md py-2">
+      <div className="flex gap-1 overflow-x-auto px-2 scrollbar-none">
         {navItems.map(item => {
           const active = activeSection === item.key;
           const showSetupDot = Boolean(setupSectionHints?.[item.key]);
@@ -28,7 +28,7 @@ export function DashboardMobileNav({
             <Link
               key={item.key}
               href={DASHBOARD_PATHS[item.key]}
-              className={`relative flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${active ? 'text-primary' : 'text-muted-foreground'
+              className={`relative flex shrink-0 flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${active ? 'text-primary' : 'text-muted-foreground'
                 }`}
               aria-label={showSetupDot ? `${item.label} - незавършена стъпка от настройката` : undefined}
             >
