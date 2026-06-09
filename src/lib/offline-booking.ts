@@ -139,7 +139,7 @@ export async function enrollUserInScheduleOffline(
     if (!entry) {
       throw new Error('ENTRY_NOT_FOUND');
     }
-    if (entry.enrolled >= entry.maxCapacity) {
+    if (isClassAtCapacity(entry.enrolled, entry.maxCapacity)) {
       throw new Error('CLASS_FULL');
     }
 

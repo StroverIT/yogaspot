@@ -46,7 +46,8 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
         : '';
 
   const basePrice = target?.kind === 'class' ? target.yogaClass.price : target?.kind === 'schedule' ? target.entry.price : 0;
-  const isFreeClassBooking = target?.kind === 'class' && isFreeClassPrice(basePrice);
+  const isFreeClassBooking =
+    (target?.kind === 'class' || target?.kind === 'schedule') && isFreeClassPrice(basePrice);
   const useStripeCheckout = onlinePayments && !isFreeClassBooking;
   const finalPrice = useStripeCheckout ? calculateFinalCustomerAmount(basePrice) : basePrice;
 

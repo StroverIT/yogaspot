@@ -157,7 +157,7 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
       return;
     }
     if (entry.studioId !== studio.id) return;
-    if (entry.enrolled >= entry.maxCapacity) {
+    if (isClassAtCapacity(entry.enrolled, entry.maxCapacity)) {
       toast.info('Този час е пълен.');
       return;
     }

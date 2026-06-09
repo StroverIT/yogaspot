@@ -4,6 +4,7 @@ import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { prisma } from '@/lib/prisma';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { assertStripeConfigured, classPriceToStripeUnitAmountEurCents, getPublicAppBaseUrl, getStripe } from '@/lib/stripe-server';
+import { isClassAtCapacity, isFreeClassPrice } from '@/lib/yoga-class-limits';
 
 export const runtime = 'nodejs';
 
@@ -52,8 +53,12 @@ export async function POST(request: Request) {
 
   if (!entry) return jsonError('Schedule entry not found', 404);
 
-  if (entry.enrolled >= entry.maxCapacity) {
+  if (isClassAtCapacity(entry.enrolled, entry.maxCapacity)) {
     return jsonError('This time slot is full', 409);
+  }
+
+  if (isFreeClassPrice(entry.price)) {
+    return jsonError('Този час е безплатен — използвайте директно записване.', 400);
   }
 
   const existing = await prisma.scheduleEntryBooking.findUnique({

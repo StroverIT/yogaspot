@@ -6,6 +6,8 @@ import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { assertStudioReadyForClassPublish } from '@/lib/studio-online-gate';
+import { teachingModeFromPrisma } from '@/lib/teaching-mode';
+import { validateYogaClassMaxCapacity, validateYogaClassPrice } from '@/lib/validate-yoga-class-fields';
 
 export const runtime = 'nodejs';
 
@@ -63,6 +65,14 @@ export async function POST(request: Request) {
     return jsonError('Invalid or forbidden studioId', 400);
   }
 
+  const studio = await prisma.studio.findUnique({
+    where: { id: body.studioId },
+    select: { teachingMode: true },
+  });
+  if (!studio) return jsonError('Studio not found', 404);
+
+  const teachingMode = teachingModeFromPrisma(studio.teachingMode);
+
   const studioGate = await assertStudioReadyForClassPublish(body.studioId);
   if (!studioGate.ok) {
     return jsonError(studioGate.message, 400);
@@ -80,7 +90,12 @@ export async function POST(request: Request) {
   }
 
   const maxCapacity = typeof body.maxCapacity === 'number' ? body.maxCapacity : 0;
-  if (maxCapacity <= 0) return jsonError('Invalid maxCapacity', 400);
+  const capacityError = validateYogaClassMaxCapacity(maxCapacity, teachingMode);
+  if (capacityError) return jsonError(capacityError, 400);
+
+  const price = typeof body.price === 'number' ? body.price : 0;
+  const priceError = validateYogaClassPrice(price, teachingMode);
+  if (priceError) return jsonError(priceError, 400);
 
   const created = await prisma.scheduleEntry.create({
     data: {
@@ -93,7 +108,7 @@ export async function POST(request: Request) {
       startTime: body.startTime,
       endTime: body.endTime,
       maxCapacity,
-      price: typeof body.price === 'number' ? body.price : 0,
+      price,
       isRecurring: typeof body.isRecurring === 'boolean' ? body.isRecurring : true,
     },
   });
