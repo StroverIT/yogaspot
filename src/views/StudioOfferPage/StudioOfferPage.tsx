@@ -45,37 +45,37 @@ const FINAL_SECTION_ID = "studio-offer-final-cta";
 const benefits = [
   {
     icon: Calendar,
-    title: "Разписание и записвания",
-    outcome: "Клиентите се записват онлайн",
-    desc: "Публикувате график в приложението - практикуващите резервират място без обаждания и съобщения.",
+    title: "Онлайн записвания",
+    outcome: "Младите записват с един клик",
+    desc: "Публикувате графика в приложението - практикуващите резервират място сами, без обаждания и съобщения.",
     featured: false,
   },
   {
     icon: Megaphone,
-    title: "Без рекламен бюджет за клиенти",
-    outcome: "Zenno привлича практикуващи вместо вас",
-    desc: "Покриваме рекламата към потребителите. Не плащате излишни пари, за да попълвате класовете си.",
+    title: "Носим младата аудитория при вас",
+    outcome: "Без рекламен бюджет от ваша страна",
+    desc: "Създадохме Zenno за млади практикуващи - рекламата и привличането на потребители е наша работа. Вие се фокусирате върху класовете.",
     featured: true,
   },
   {
     icon: MapPin,
-    title: "Откриваемост",
-    outcome: "Намират ви по локация и MultiSport",
-    desc: "Филтри за най-близкото студио и опция за MultiSport - хората знаят всички места, където приемат карта.",
+    title: "Видими сте там, където търсят",
+    outcome: "Локация и MultiSport на едно място",
+    desc: "Младите хора намират най-близкото студио и виждат къде приемате MultiSport - без да търсят из социалните мрежи.",
     featured: false,
   },
   {
     icon: Globe,
     title: "Без собствен сайт",
-    outcome: "Готов профил без хостинг",
-    desc: "Не ви трябва сайт, хостинг или програмист. Профилът ви е в платформата - ние го поддържаме вместо вас.",
+    outcome: "Профил, готов за минути",
+    desc: "Не ви трябва сайт, хостинг или програмист. Профилът ви живее в платформата - ние го поддържаме вместо вас.",
     featured: false,
   },
   {
     icon: PhoneOff,
-    title: "По-малко обаждания",
-    outcome: "Графикът е видим 24/7",
-    desc: "Хората виждат графика и събитията сами. Не сте постоянно на телефона за едни и същи въпроси.",
+    title: "По-малко администрация",
+    outcome: "Графикът е ясен денонощно",
+    desc: "Практикуващите виждат разписание и събития сами - вие не сте постоянно на телефона за едни и същи въпроси.",
     featured: false,
   },
 ];
@@ -85,47 +85,51 @@ const steps = [
     step: "1",
     icon: UserPlus,
     title: "Създайте акаунт",
-    desc: "Регистрирайте се като бизнес - отнема секунди с имейл или Google.",
+    desc: "Регистрацията отнема секунди - с имейл или Google.",
   },
   {
     step: "2",
     icon: Building2,
     title: "Добавете студиото",
-    desc: "Въведете адрес, снимки и описание - профилът ви става видим за практикуващи.",
+    desc: "Адрес, снимки, описание - и сте видими за млади практикуващи в приложението.",
   },
   {
     step: "3",
     icon: Users,
     title: "Добавете инструктори",
-    desc: "Свържете инструкторите със студиото, за да могат да водят класове.",
+    desc: "Свържете екипа със студиото, за да могат да водят класове.",
   },
   {
     step: "4",
     icon: CalendarDays,
     title: "Публикувайте график",
-    desc: "Задайте разписание и класове - практикуващите вече могат да се записват онлайн.",
+    desc: "Задайте разписание - и записванията започват онлайн.",
   },
 ];
 
 const comparison = {
   without: [
-    "Сайт, хостинг и програмист",
-    "Реклама за клиенти от вас",
-    "Обаждания за график и записвания",
+    "Трудно достигате до младата аудитория",
+    "Реклама и социални мрежи - от вас",
+    "Телефони и съобщения за всеки запис",
     "Ръчно управление на резервации",
   ],
   with: [
-    "Готов профил в платформата",
-    "Zenno покрива потребителската реклама",
-    "Онлайн записвания 24/7",
-    "Табло за студио, инструктори и класове",
+    "Виждат ви млади практикуващи в приложението",
+    "Ние привличаме новата аудитория",
+    "Онлайн записвания денонощно",
+    "Готово табло за студио, инструктори и класове",
   ],
 };
 
 const faqItems = [
   {
+    q: "Каква е каузата на Zenno?",
+    a: "Създадохме Zenno, за да направим йогата достъпна за млади хора в България. Като партньорско студио вие давате място за практика - ние ви помагаме да достигнете до тази аудитория.",
+  },
+  {
     q: "Колко струва?",
-    a: "Първите партньорски студиа получават пробен период, след което месечна абонаментна такса. Цената се показва актуално на тази страница - без скрити такси за записвания от практикуващи.",
+    a: "Първите партньорски студиа получават пробен период, след което месечна абонаментна такса. Цената е актуална на тази страница - без скрити такси за записвания от практикуващи.",
   },
   {
     q: "Нужен ли ми е собствен сайт?",
@@ -133,7 +137,7 @@ const faqItems = [
   },
   {
     q: "Колко време отнема настройката?",
-    a: "Регистрацията отнема минути. След това добавяте студио, инструктори и график - onboarding списъкът в таблото ви води стъпка по стъпка.",
+    a: "Регистрацията отнема минути. След това добавяте студио, инструктори и график - списъкът за настройка в таблото ви води стъпка по стъпка.",
   },
 ];
 
@@ -175,14 +179,15 @@ export function StudioOfferPage({
             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
               <div className="offer-hero-intro">
                 <p className="offer-animate mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
-                  За йога студиа
+                  Партньорство с йога студиа
                 </p>
                 <h1 className="offer-animate font-display text-3xl font-bold leading-tight text-foreground md:text-5xl">
-                  Управлявайте студиото си без излишни разходи
+                  Помогнете на младите да открият йогата
                 </h1>
                 <p className="offer-animate mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-                  Zenno свързва практикуващи с йога студиа. Достигнете до нови клиенти,
-                  управлявайте разписание и записвания - всичко от едно табло.
+                  Много млади хора искат да практикуват, но не знаят откъде да започнат. Zenno ги
+                  свързва със студиа като вашето - вие осигурявате пространството, ние носим
+                  аудиторията и всичко останало по управлението.
                 </p>
                 <div className="offer-animate mt-8">
                   <AddStudioCtaButton
@@ -190,7 +195,7 @@ export function StudioOfferPage({
                     size="lg"
                     className="rounded-xl border-0 bg-yoga-accent px-8 py-6 text-base text-white shadow-md shadow-yoga-accent/25 hover:bg-yoga-accent/90"
                   >
-                    Започнете безплатно <ArrowRight className="ml-2 h-5 w-5" />
+                    Запишете студиото <ArrowRight className="ml-2 h-5 w-5" />
                   </AddStudioCtaButton>
                 </div>
                 <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -213,7 +218,7 @@ export function StudioOfferPage({
               <div className="offer-hero-preview">
                 <StudioOfferDashboardPreview />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
-                  Така изглежда таблото ви - разписание, записвания и onboarding на едно място
+                  Таблото ви - разписание, записвания и настройка на едно място
                 </p>
               </div>
             </div>
@@ -227,7 +232,7 @@ export function StudioOfferPage({
                 Преди и след Zenno
               </h2>
               <p className="mt-2 text-muted-foreground">
-                Какво променяме за собствениците на студиа
+                Когато студиото ви е в Zenno, помагате на млади хора да намерят пътя си към практиката
               </p>
             </div>
             <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2 md:gap-6">
@@ -267,10 +272,10 @@ export function StudioOfferPage({
           <div className="container mx-auto px-4">
             <div className="offer-section-head mb-8 text-center md:mb-10">
               <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">
-                Защо студиата избират Zenno
+                Защо студиата се присъединяват
               </h2>
               <p className="mt-3 text-lg text-muted-foreground">
-                Всичко, от което се нуждаете - без допълнителни инструменти и разходи
+                Практични инструменти за вас. По-добър достъп до йога за младите.
               </p>
             </div>
             <div className="mx-auto max-w-6xl space-y-4">
@@ -326,7 +331,7 @@ export function StudioOfferPage({
               <h2 className="font-display text-3xl font-bold text-foreground md:text-4xl">
                 Как да започнете
               </h2>
-              <p className="mt-3 text-lg text-muted-foreground">Четири стъпки - толкова е лесно</p>
+              <p className="mt-3 text-lg text-muted-foreground">Четири стъпки - и сте част от общността</p>
             </div>
 
             <div className="relative mx-auto max-w-5xl">
@@ -359,7 +364,7 @@ export function StudioOfferPage({
             <p className="offer-animate mx-auto mt-12 max-w-2xl text-center text-muted-foreground">
               След регистрация получавате{" "}
               <span className="font-medium text-foreground">„Ръководство за настройка“</span> в
-              таблото - onboarding списък, който ви води стъпка по стъпка до първия записан клас.
+              таблото - стъпка по стъпка до първия записан клас.
             </p>
           </div>
         </section>
@@ -368,7 +373,7 @@ export function StudioOfferPage({
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-sage/15 px-6 py-10 text-center md:px-12 md:py-14">
               <p className="offer-animate text-sm font-semibold uppercase tracking-wide text-primary">
-                Специална оферта
+                Станете част от каузата
               </p>
               {offer.slotsRemaining > 0 ? (
                 <>
@@ -376,7 +381,7 @@ export function StudioOfferPage({
                     {offer.slotsRemaining}
                   </div>
                   <p className="offer-animate mt-2 text-lg font-medium text-foreground">
-                    безплатни места за студиа
+                    безплатни места за партньорски студиа
                   </p>
                   <p className="offer-animate mt-3 text-muted-foreground">
                     {offer.trialDays} дни пробен период · след това {offer.monthlyPriceEur} €/месец
@@ -385,7 +390,7 @@ export function StudioOfferPage({
               ) : (
                 <>
                   <h2 className="offer-animate mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
-                    Присъединете се към Zenno
+                    Станете част от общността
                   </h2>
                   <p className="offer-animate mt-3 text-lg text-muted-foreground">
                     {offer.monthlyPriceEur} €/месец · без пробен период
@@ -394,7 +399,7 @@ export function StudioOfferPage({
               )}
               <div className="offer-animate mt-8">
                 <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
-                  Създайте акаунт <ArrowRight className="ml-2 h-5 w-5" />
+                  Запишете студиото <ArrowRight className="ml-2 h-5 w-5" />
                 </AddStudioCtaButton>
               </div>
             </div>
@@ -432,16 +437,16 @@ export function StudioOfferPage({
             <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-8 md:flex-row">
               <div className="offer-animate text-center md:text-left">
                 <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-                  Готови ли сте да започнете?
+                  Готови ли сте да станете част от това?
                 </h2>
                 <p className="mt-2 max-w-md text-muted-foreground">
-                  Създайте бизнес акаунт, добавете студиото, инструкторите и графиците - за около 2
-                  минути.
+                  Регистрирайте студиото си и помогнете на млади хора да започнат практиката си - отнема
+                  около 2 минути.
                 </p>
               </div>
               <div className="offer-animate shrink-0">
                 <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
-                  Създайте акаунт за 2 минути <ArrowRight className="ml-2 h-5 w-5" />
+                  Запишете студиото за 2 минути <ArrowRight className="ml-2 h-5 w-5" />
                 </AddStudioCtaButton>
               </div>
             </div>
