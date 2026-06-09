@@ -12,7 +12,8 @@ describe('yoga-class-limits', () => {
   it('treats sentinel as unlimited', () => {
     expect(isUnlimitedClassCapacity(UNLIMITED_CLASS_CAPACITY)).toBe(true);
     expect(isClassAtCapacity(100, UNLIMITED_CLASS_CAPACITY)).toBe(false);
-    expect(formatClassCapacityDisplay(5, UNLIMITED_CLASS_CAPACITY)).toBe('5 · без лимит');
+    expect(formatClassCapacityDisplay(5, UNLIMITED_CLASS_CAPACITY)).toBe('5 · неограничено');
+    expect(formatClassCapacityDisplay(0, UNLIMITED_CLASS_CAPACITY)).toBe('неограничено');
   });
 
   it('formats free price', () => {

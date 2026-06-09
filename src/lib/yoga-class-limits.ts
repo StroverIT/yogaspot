@@ -14,7 +14,7 @@ export function isClassAtCapacity(enrolled: number, maxCapacity: number): boolea
 
 export function formatClassCapacityDisplay(enrolled: number, maxCapacity: number): string {
   if (isUnlimitedClassCapacity(maxCapacity)) {
-    return enrolled > 0 ? `${enrolled} · без лимит` : 'Без лимит';
+    return enrolled > 0 ? `${enrolled} · неограничено` : 'неограничено';
   }
   return `${enrolled}/${maxCapacity}`;
 }

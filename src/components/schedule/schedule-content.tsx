@@ -23,6 +23,12 @@ import { toast } from 'sonner';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import {
+  formatClassCapacityDisplay,
+  formatClassPriceDisplay,
+  isClassAtCapacity,
+  isUnlimitedClassCapacity,
+} from '@/lib/yoga-class-limits';
 import { SubscriptionRequestDetailsModal } from '@/views/Dashboard/components/modals/SubscriptionRequestDetailsModal';
 import { SubscriptionRequestFormModal } from '@/views/Dashboard/components/modals/SubscriptionRequestFormModal';
 import { SubscriptionRequestStatusModal } from '@/views/Dashboard/components/modals/SubscriptionRequestStatusModal';
@@ -539,13 +545,14 @@ function UserScheduleContent({
         studioTeachingMode={studioTeachingMode}
         renderTrailing={entry => {
           const alreadyBooked = isAuthenticated && bookedScheduleEntryIds.includes(entry.id);
-          const isFull = entry.enrolled >= entry.maxCapacity;
+          const isFull = isClassAtCapacity(entry.enrolled, entry.maxCapacity);
+          const capacityLabel = formatClassCapacityDisplay(entry.enrolled, entry.maxCapacity);
           return (
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
+                <p className="text-sm font-semibold text-foreground">{formatClassPriceDisplay(entry.price)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {entry.enrolled}/{entry.maxCapacity} места
+                  {isUnlimitedClassCapacity(entry.maxCapacity) ? capacityLabel : `${capacityLabel} места`}
                 </p>
               </div>
               <Button
