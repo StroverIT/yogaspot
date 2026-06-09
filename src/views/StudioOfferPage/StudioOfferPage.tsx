@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
@@ -32,6 +32,7 @@ import {
 import type { BusinessOfferDto } from "@/lib/business-platform-billing";
 import { cn } from "@/lib/utils";
 import { StudioOfferDashboardPreview } from "@/views/StudioOfferPage/StudioOfferDashboardPreview";
+import { StudioOfferModeContentSkeleton } from "@/views/StudioOfferPage/StudioOfferModeContentSkeleton";
 import {
   STUDIO_OFFER_STICKY_OFFSET_CLASS,
   StudioOfferStickyCta,
@@ -261,11 +262,23 @@ export function StudioOfferPage({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mobileStickyVisible, setMobileStickyVisible] = useState(false);
+  const [isModeSwitching, setIsModeSwitching] = useState(false);
+  const [pendingMode, setPendingMode] = useState<TeachingMode | null>(null);
   const fmt = (n: number) => n.toLocaleString("bg-BG");
 
-  const teachingMode = teachingModeFromParam(searchParams.get("mode"));
+  const urlMode = teachingModeFromParam(searchParams.get("mode"));
+  const activeMode = pendingMode ?? urlMode;
+
+  useEffect(() => {
+    setIsModeSwitching(false);
+    setPendingMode(null);
+  }, [urlMode]);
+
   const setTeachingMode = useCallback(
     (mode: TeachingMode) => {
+      if (mode === urlMode) return;
+      setIsModeSwitching(true);
+      setPendingMode(mode);
       const params = new URLSearchParams(searchParams.toString());
       if (mode === "online") {
         params.set("mode", "online");
@@ -275,10 +288,11 @@ export function StudioOfferPage({
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, urlMode],
   );
 
-  const isPhysical = teachingMode === "physical";
+  const isPhysical = urlMode === "physical";
+  const tabIsPhysical = activeMode === "physical";
   const benefits = isPhysical ? physicalBenefits : onlineBenefits;
   const comparison = isPhysical ? physicalComparison : onlineComparison;
   const steps = isPhysical ? physicalSteps : onlineSteps;
@@ -375,13 +389,15 @@ export function StudioOfferPage({
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={isPhysical}
+                  aria-selected={tabIsPhysical}
+                  disabled={isModeSwitching}
                   onClick={() => setTeachingMode("physical")}
                   className={cn(
                     "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all md:text-base",
-                    isPhysical
+                    tabIsPhysical
                       ? "bg-card text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground",
+                    isModeSwitching && "pointer-events-none opacity-70",
                   )}
                 >
                   <MapPin className="h-4 w-4 shrink-0" />
@@ -390,13 +406,15 @@ export function StudioOfferPage({
                 <button
                   type="button"
                   role="tab"
-                  aria-selected={!isPhysical}
+                  aria-selected={!tabIsPhysical}
+                  disabled={isModeSwitching}
                   onClick={() => setTeachingMode("online")}
                   className={cn(
                     "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all md:text-base",
-                    !isPhysical
+                    !tabIsPhysical
                       ? "bg-card text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground",
+                    isModeSwitching && "pointer-events-none opacity-70",
                   )}
                 >
                   <Video className="h-4 w-4 shrink-0" />
@@ -407,6 +425,10 @@ export function StudioOfferPage({
           </div>
         </section>
 
+        {isModeSwitching ? (
+          <StudioOfferModeContentSkeleton />
+        ) : (
+          <>
         <section data-offer-section className="border-b border-border py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="offer-section-head mb-10 text-center">
@@ -437,7 +459,7 @@ export function StudioOfferPage({
               <div className="offer-animate rounded-2xl border border-primary/25 bg-primary/5 p-6 shadow-sm">
                 <h3 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold text-foreground">
                   <Check className="h-5 w-5 text-primary" />
-                  С Zenno
+                  Със Zenno
                 </h3>
                 <ul className="space-y-3">
                   {comparison.with.map((item) => (
@@ -569,43 +591,6 @@ export function StudioOfferPage({
           </div>
         </section>
 
-        <section data-offer-section className="py-16 md:py-20">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-sage/15 px-6 py-10 text-center md:px-12 md:py-14">
-              <p className="offer-animate text-sm font-semibold uppercase tracking-wide text-primary">
-                Станете част от каузата
-              </p>
-              {offer.slotsRemaining > 0 ? (
-                <>
-                  <div className="offer-animate mt-4 font-display text-6xl font-bold text-foreground md:text-7xl">
-                    {offer.slotsRemaining}
-                  </div>
-                  <p className="offer-animate mt-2 text-lg font-medium text-foreground">
-                    безплатни места за партньорски студиа
-                  </p>
-                  <p className="offer-animate mt-3 text-muted-foreground">
-                    {offer.trialDays} дни пробен период · след това {offer.monthlyPriceEur} €/месец
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 className="offer-animate mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
-                    Станете част от общността
-                  </h2>
-                  <p className="offer-animate mt-3 text-lg text-muted-foreground">
-                    {offer.monthlyPriceEur} €/месец · без пробен период
-                  </p>
-                </>
-              )}
-              <div className="offer-animate mt-8">
-                <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
-                  Запишете студиото <ArrowRight className="ml-2 h-5 w-5" />
-                </AddStudioCtaButton>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section data-offer-section className="border-t border-border bg-background py-16 md:py-20 lg:py-24">
           <div className="container mx-auto max-w-2xl px-4 lg:max-w-3xl xl:max-w-4xl">
             <div className="offer-section-head mb-8 text-center lg:mb-10">
@@ -648,6 +633,45 @@ export function StudioOfferPage({
               <div className="offer-animate shrink-0">
                 <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
                   Запишете студиото за 2 минути <ArrowRight className="ml-2 h-5 w-5" />
+                </AddStudioCtaButton>
+              </div>
+            </div>
+          </div>
+        </section>
+          </>
+        )}
+
+        <section data-offer-section className="py-16 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-primary/5 to-sage/15 px-6 py-10 text-center md:px-12 md:py-14">
+              <p className="offer-animate text-sm font-semibold uppercase tracking-wide text-primary">
+                Станете част от каузата
+              </p>
+              {offer.slotsRemaining > 0 ? (
+                <>
+                  <div className="offer-animate mt-4 font-display text-6xl font-bold text-foreground md:text-7xl">
+                    {offer.slotsRemaining}
+                  </div>
+                  <p className="offer-animate mt-2 text-lg font-medium text-foreground">
+                    безплатни места за партньорски студиа
+                  </p>
+                  <p className="offer-animate mt-3 text-muted-foreground">
+                    {offer.trialDays} дни пробен период · след това {offer.monthlyPriceEur} €/месец
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="offer-animate mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
+                    Станете част от общността
+                  </h2>
+                  <p className="offer-animate mt-3 text-lg text-muted-foreground">
+                    {offer.monthlyPriceEur} €/месец · без пробен период
+                  </p>
+                </>
+              )}
+              <div className="offer-animate mt-8">
+                <AddStudioCtaButton next="/dashboard" size="lg" className="rounded-xl px-8 py-6 text-base">
+                  Запишете студиото <ArrowRight className="ml-2 h-5 w-5" />
                 </AddStudioCtaButton>
               </div>
             </div>
