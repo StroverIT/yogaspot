@@ -8,7 +8,7 @@ import { useAuth, type User } from "@/contexts/AuthContext";
 import type { NavUser } from "@/lib/nav-user";
 import { Button } from "@/components/ui/button";
 import { Heart, User as UserIcon, LogOut } from "lucide-react";
-import Hamburger from "hamburger-react";
+import { GsapHamburger } from "@/components/GsapHamburger";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import AuthModal from "@/components/AuthModal";
@@ -377,7 +377,7 @@ const Navigation: React.FC<NavigationProps> = ({ initialUser = null, variant = '
               </div>
 
               <div className="md:hidden text-foreground [&_.hamburger-react]:rounded-md [&_.hamburger-react]:hover:bg-accent [&_.hamburger-react]:hover:text-accent-foreground">
-                <Hamburger
+                <GsapHamburger
                   toggled={mobileOpen}
                   toggle={setMobileMenuOpen}
                   size={22}

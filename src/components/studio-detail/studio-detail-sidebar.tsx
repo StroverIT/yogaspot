@@ -21,16 +21,10 @@ const StudioDetailMapSection = dynamic(
   },
 );
 
-export function StudioDetailSidebar({
-  studio,
-  showMultisport = false,
-}: {
-  studio: Studio;
-  showMultisport?: boolean;
-}) {
+export function StudioDetailSidebar({ studio }: { studio: Studio }) {
   return (
     <aside className="space-y-6">
-      <StudioDetailSidebarInfo studio={studio} showMultisport={showMultisport} />
+      <StudioDetailSidebarInfo studio={studio} />
       {studio.teachingMode !== 'online' ? <StudioDetailMapSection studio={studio} /> : null}
       <StudioDetailFavoriteButton studioId={studio.id} />
     </aside>
