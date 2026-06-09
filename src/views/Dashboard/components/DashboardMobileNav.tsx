@@ -20,7 +20,7 @@ export function DashboardMobileNav({
 }) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md py-2">
-      <div className="flex gap-1 overflow-x-auto px-2 scrollbar-none">
+      <div className="flex w-full gap-1 overflow-x-auto px-2 scrollbar-none sm:justify-between sm:overflow-x-visible sm:px-4">
         {navItems.map(item => {
           const active = activeSection === item.key;
           const showSetupDot = Boolean(setupSectionHints?.[item.key]);
