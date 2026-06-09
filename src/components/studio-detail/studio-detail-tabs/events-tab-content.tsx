@@ -5,6 +5,7 @@ import {
   formatClassCapacityDisplay,
   formatClassPriceDisplay,
   isClassAtCapacity,
+  isUnlimitedClassCapacity,
 } from '@/lib/yoga-class-limits';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,44 +42,44 @@ export function EventsTabContent({
         const isFull = isClassAtCapacity(cls.enrolled, cls.maxCapacity);
         const bookingInFlight = checkoutModalOpen;
         const alreadyBooked = isAuthenticated && bookedClassIds.includes(cls.id);
+        const capacityLabel = formatClassCapacityDisplay(cls.enrolled, cls.maxCapacity);
         return (
           <div
             key={cls.id}
-            className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-5 md:flex-row md:items-center"
+            className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5"
           >
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <h4 className="font-display text-lg font-semibold text-foreground">{cls.name}</h4>
-              <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
                   {cls.date} | {cls.startTime}–{cls.endTime}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" />
-                  {formatClassCapacityDisplay(cls.enrolled, cls.maxCapacity)}
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  {isUnlimitedClassCapacity(cls.maxCapacity) ? capacityLabel : `${capacityLabel} места`}
                 </span>
+                <span className="font-semibold text-foreground">{formatClassPriceDisplay(cls.price)}</span>
               </div>
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 <Badge variant="outline">{cls.yogaType}</Badge>
                 <Badge variant="outline">{cls.difficulty}</Badge>
                 {studioTeachingMode === 'online' ? <TeachingModePill mode="online" /> : null}
                 {instructor && <span className="text-sm text-muted-foreground">с {instructor.name}</span>}
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-xl font-semibold text-foreground leading-snug">{formatClassPriceDisplay(cls.price)}</span>
-              <Button
-                onClick={() => onBookClass(cls.id)}
-                variant={alreadyBooked || isFull ? 'outline' : 'default'}
-                disabled={bookingInFlight || alreadyBooked}
-              >
-                {alreadyBooked
-                  ? 'Вече сте записани'
-                  : isFull
-                    ? 'Списък за изчакване'
-                    : 'Запиши се'}
-              </Button>
-            </div>
+            <Button
+              className="w-full sm:w-auto sm:self-end"
+              onClick={() => onBookClass(cls.id)}
+              variant={alreadyBooked || isFull ? 'outline' : 'default'}
+              disabled={bookingInFlight || alreadyBooked}
+            >
+              {alreadyBooked
+                ? 'Вече сте записани'
+                : isFull
+                  ? 'Списък за изчакване'
+                  : 'Запиши се'}
+            </Button>
           </div>
         );
       })}

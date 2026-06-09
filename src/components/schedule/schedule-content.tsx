@@ -133,9 +133,9 @@ function WeeklyScheduleList({
                   return (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/25"
+                      className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-muted/25 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                     >
-                      <div className="flex items-center gap-4 min-w-0">
+                      <div className="flex min-w-0 items-center gap-4">
                         <div className="min-w-[56px] shrink-0 rounded-lg bg-primary/8 px-2 py-1 text-center">
                           <p className="text-sm font-bold tabular-nums text-primary">{entry.startTime}</p>
                           <p className="text-xs text-muted-foreground">{entry.endTime}</p>
@@ -548,8 +548,8 @@ function UserScheduleContent({
           const isFull = isClassAtCapacity(entry.enrolled, entry.maxCapacity);
           const capacityLabel = formatClassCapacityDisplay(entry.enrolled, entry.maxCapacity);
           return (
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="text-right hidden sm:block">
+            <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:shrink-0 sm:justify-end">
+              <div className="min-w-0 text-left sm:text-right">
                 <p className="text-sm font-semibold text-foreground">{formatClassPriceDisplay(entry.price)}</p>
                 <p className="text-xs text-muted-foreground">
                   {isUnlimitedClassCapacity(entry.maxCapacity) ? capacityLabel : `${capacityLabel} места`}
@@ -557,7 +557,7 @@ function UserScheduleContent({
               </div>
               <Button
                 size="sm"
-                className="rounded-lg shrink-0"
+                className="shrink-0 rounded-lg"
                 variant={alreadyBooked ? 'outline' : 'default'}
                 disabled={checkoutModalOpen || isFull || alreadyBooked}
                 onClick={() => {
