@@ -5,16 +5,31 @@ import { MetaPixelPageViewTracker } from '@/components/analytics/MetaPixelPageVi
 import { PageViewTracker } from '@/components/analytics/PageViewTracker';
 import { getBusinessOffer } from '@/lib/business-platform-billing';
 import { getHomeStudios, getHomeClasses } from '@/lib/home/home-data';
+import { defaultShareOgImages, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
 import { StudioOfferPage } from '@/views/StudioOfferPage/StudioOfferPage';
 
+const title = 'Zenno за йога студиа';
+const description =
+  'Управлявайте йога студиото си в Zenno — разписание, записвания и откриваемост без собствен сайт или рекламен бюджет.';
+
 export const metadata: Metadata = {
-  title: 'Zenno за йога студиа',
-  description:
-    'Управлявайте йога студиото си в Zenno — разписание, записвания и откриваемост без собствен сайт или рекламен бюджет.',
-  robots: {
-    index: false,
-    follow: false,
-    googleBot: { index: false, follow: false },
+  title,
+  description,
+  alternates: {
+    canonical: '/studio-offer',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/studio-offer',
+    title,
+    description,
+    images: defaultShareOgImages,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: [...defaultShareTwitterImagePaths],
   },
 };
 
