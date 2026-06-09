@@ -25,9 +25,10 @@ import {
   isUnlimitedClassCapacity,
   resolveClassMaxCapacity,
 } from '@/lib/yoga-class-limits';
+import { cn } from '@/lib/utils';
 
 const INCOMPLETE_MSG =
-  'Попълнете всички полета и изберете всички опции (инструктор, студио, тип йога, ниво) преди запазване.';
+  'Попълнете всички полета и изберете всички опции преди запазване.';
 
 export type ClassModalPayload = {
   id?: string;
@@ -151,40 +152,46 @@ export function ClassModal({
     }
   }, [studioId, instructorId, instructors]);
 
+  const isEditing = Boolean(classToEdit);
+  const basicsComplete = Boolean(className.trim() && studioId && instructorId);
+  const scheduleComplete = Boolean(basicsComplete && date && startTime && endTime);
+
+  const capRaw = Number(maxCapacity);
+  const capacityIncomplete =
+    isOnlineStudio && noCapacityLimit
+      ? false
+      : !maxCapacity.trim() || !Number.isFinite(capRaw) || capRaw <= 0;
+
+  const priceIncomplete =
+    isFreeClass
+      ? false
+      : !price.trim() || !Number.isFinite(parseEurInput(price)) || parseEurInput(price) < 0;
+
+  const detailsComplete = Boolean(
+    scheduleComplete
+    && yogaType
+    && difficulty
+    && !capacityIncomplete
+    && !priceIncomplete
+    && cancellationPolicy.trim(),
+  );
+
+  const canSave = detailsComplete && !onlineStudioBlocked && !saving;
+
+  const showScheduleSection = isEditing || basicsComplete;
+  const showDetailsSection = isEditing || scheduleComplete;
+
   const handleSave = async () => {
-    const capRaw = Number(maxCapacity);
     const resolvedCapacity = isOnlineStudio && noCapacityLimit
       ? resolveClassMaxCapacity(0, true)
       : capRaw;
     const pr = isFreeClass ? 0 : classPriceBgnFromEur(parseEurInput(price));
 
-    const capacityIncomplete =
-      isOnlineStudio && noCapacityLimit
-        ? false
-        : !maxCapacity.trim() || !Number.isFinite(capRaw) || capRaw <= 0;
-
-    const priceIncomplete =
-      isFreeClass
-        ? false
-        : !price.trim() || !Number.isFinite(parseEurInput(price)) || parseEurInput(price) < 0;
-
     if (onlineStudioBlocked) {
       toast.error(ONLINE_STUDIO_ZOOM_REQUIRED_MSG);
       return;
     }
-    if (
-      !className.trim()
-      || !instructorId
-      || !studioId
-      || !date
-      || !startTime
-      || !endTime
-      || !yogaType
-      || !difficulty
-      || capacityIncomplete
-      || priceIncomplete
-      || !cancellationPolicy.trim()
-    ) {
+    if (!canSave) {
       toast.error(INCOMPLETE_MSG);
       return;
     }
@@ -220,10 +227,14 @@ export function ClassModal({
             {classToEdit ? 'Редактирай клас' : 'Нов клас'}
           </DialogTitle>
           <DialogDescription>
-            {classToEdit ? 'Променете данните и запазете.' : 'Добавете информация за новия клас.'}
+            {classToEdit
+              ? 'Променете данните и запазете.'
+              : 'Попълвайте стъпка по стъпка — следващите полета се появяват, когато предишните са готови.'}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          <section className="space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Основни данни</p>
           <div>
             <Label>Име на клас</Label>
             <Input
@@ -269,6 +280,16 @@ export function ClassModal({
               </Select>
             </div>
           </div>
+          </section>
+
+          {showScheduleSection ? (
+          <section
+            className={cn(
+              'space-y-4 border-t border-border/70 pt-4',
+              !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
+            )}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Дата и час</p>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Дата</Label>
@@ -283,6 +304,17 @@ export function ClassModal({
               <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="mt-1" />
             </div>
           </div>
+          </section>
+          ) : null}
+
+          {showDetailsSection ? (
+          <section
+            className={cn(
+              'space-y-4 border-t border-border/70 pt-4',
+              !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
+            )}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Детайли за класа</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Тип йога</Label>
@@ -392,12 +424,14 @@ export function ClassModal({
           {onlineStudioBlocked ? (
             <p className="text-sm text-destructive">{ONLINE_STUDIO_ZOOM_REQUIRED_MSG}</p>
           ) : null}
+          </section>
+          ) : null}
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onClose}>
             Отказ
           </Button>
-          <Button onClick={() => void handleSave()} disabled={saving || onlineStudioBlocked}>
+          <Button onClick={() => void handleSave()} disabled={!canSave}>
             {saving ? 'Запазване…' : 'Запази'}
           </Button>
         </DialogFooter>
