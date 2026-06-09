@@ -1,5 +1,6 @@
 import { CalendarRange, Clock, Users } from 'lucide-react';
 import type { Instructor, TeachingMode, YogaClass } from '@/data/mock-data';
+import { MultisportBadge } from '@/components/multisport/multisport-badge';
 import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
 import {
   formatClassCapacityDisplay,
@@ -61,9 +62,10 @@ export function EventsTabContent({
                 </span>
                 <span className="font-semibold text-foreground">{formatClassPriceDisplay(cls.price)}</span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{cls.yogaType}</Badge>
                 <Badge variant="outline">{cls.difficulty}</Badge>
+                {cls.acceptsMultisport ? <MultisportBadge size="sm" /> : null}
                 {studioTeachingMode === 'online' ? <TeachingModePill mode="online" /> : null}
                 {instructor && <span className="text-sm text-muted-foreground">с {instructor.name}</span>}
               </div>

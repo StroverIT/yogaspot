@@ -1,4 +1,5 @@
 import { Globe, Mail, MapPin, Navigation, Phone, Video } from 'lucide-react';
+import { MultisportBadge } from '@/components/multisport/multisport-badge';
 import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
 import { Button } from '@/components/ui/button';
 import type { Studio } from '@/data/mock-data';
@@ -15,14 +16,21 @@ function googleMapsDirectionsUrl(lat: number, lng: number) {
   return `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
 }
 
-export function StudioDetailSidebarInfo({ studio }: { studio: Studio }) {
+export function StudioDetailSidebarInfo({
+  studio,
+  showMultisport = false,
+}: {
+  studio: Studio;
+  showMultisport?: boolean;
+}) {
   const coords = hasStudioCoords(studio) ? { lat: studio.lat, lng: studio.lng } : null;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
       <h3 className="mb-4 font-display text-lg font-semibold text-foreground">Информация</h3>
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <TeachingModePill mode={studio.teachingMode} />
+        {showMultisport ? <MultisportBadge size="sm" /> : null}
       </div>
       <div className="space-y-3 text-sm">
         {studio.teachingMode === 'online' ? (

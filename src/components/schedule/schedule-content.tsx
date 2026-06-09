@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { DifficultyBadge } from '@/components/studio-detail/difficulty-badge';
+import { MultisportBadge } from '@/components/multisport/multisport-badge';
 import { DashboardPageHeader } from '@/views/Dashboard/components/DashboardPageHeader';
 import { dashboardCardClass } from '@/views/Dashboard/dashboardUi';
 import {
@@ -148,6 +149,7 @@ function WeeklyScheduleList({
                               {entry.yogaType}
                             </Badge>
                             <DifficultyBadge difficulty={entry.difficulty} />
+                            {entry.acceptsMultisport ? <MultisportBadge size="sm" /> : null}
                             {studioTeachingMode === 'online' ? (
                               <TeachingModePill mode="online" />
                             ) : null}
@@ -437,8 +439,12 @@ function AdminScheduleContent({
                 <p className="text-sm font-semibold text-foreground">{formatPriceDualFromBgn(entry.price)}</p>
                 <p className="text-xs text-muted-foreground">
                   {entry.maxCapacity} места
-                  {entry.acceptsMultisport ? ' · MultiSport' : ''}
                 </p>
+                {entry.acceptsMultisport ? (
+                  <div className="mt-1.5 flex justify-end">
+                    <MultisportBadge size="sm" />
+                  </div>
+                ) : null}
               </div>
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(entry)}>
@@ -556,7 +562,6 @@ function UserScheduleContent({
                 <p className="text-sm font-semibold text-foreground">{formatClassPriceDisplay(entry.price)}</p>
                 <p className="text-xs text-muted-foreground">
                   {isUnlimitedClassCapacity(entry.maxCapacity) ? capacityLabel : `${capacityLabel} места`}
-                  {entry.acceptsMultisport ? ' · MultiSport' : ''}
                 </p>
               </div>
               <Button

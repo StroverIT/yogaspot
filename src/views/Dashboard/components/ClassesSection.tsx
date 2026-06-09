@@ -157,9 +157,7 @@ export function ClassesSection({
                       </Badge>
                       <DifficultyBadge difficulty={cls.difficulty} />
                       {cls.acceptsMultisport ? (
-                        <Badge variant="outline" className="text-xs">
-                          MultiSport
-                        </Badge>
+                        <MultisportBadge size="sm" />
                       ) : null}
                       {isFull && (
                         <Badge variant="destructive" className="gap-1 text-xs">

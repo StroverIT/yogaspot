@@ -23,6 +23,7 @@ export async function StudioDetailPageContent({ id }: { id: string }) {
   }
 
   const { studio } = payload;
+  const showMultisport = payload.hasMultisport;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -39,7 +40,7 @@ export async function StudioDetailPageContent({ id }: { id: string }) {
             <StudioGalleryHero images={studio.images} fill />
             <StudioDetailGallery images={studio.images} />
           </div>
-          <StudioDetailSummary studio={studio} />
+          <StudioDetailSummary studio={studio} showMultisport={showMultisport} />
           <Suspense
             fallback={
               <div className="mt-6 h-48 animate-pulse rounded-2xl border border-border bg-muted/40" />
@@ -50,7 +51,7 @@ export async function StudioDetailPageContent({ id }: { id: string }) {
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <StudioDetailSidebar studio={studio} />
+          <StudioDetailSidebar studio={studio} showMultisport={showMultisport} />
         </div>
       </div>
     </div>

@@ -12,6 +12,8 @@ import {
   yogaClassToDto,
 } from '@/lib/public-studio-dto';
 import { prisma } from '@/lib/prisma';
+import { studioAcceptsMultisport } from '@/lib/multisport';
+import { teachingModeFromPrisma } from '@/lib/teaching-mode';
 import { trackServerEvent } from '@/lib/server-analytics';
 
 export type PublicStudioCorePayload = {
@@ -21,6 +23,7 @@ export type PublicStudioCorePayload = {
   subscription: StudioSubscription | null;
   myBookings: { classIds: string[]; scheduleEntryIds: string[] };
   eventsCount: number;
+  hasMultisport: boolean;
 };
 
 export type PublicStudioExtras = {
@@ -63,12 +66,23 @@ async function fetchPublicStudioCore(id: string): Promise<Omit<PublicStudioCoreP
     return null;
   }
 
+  const schedule = studio.schedule.map(scheduleEntryToDto);
+  const multisportClassCount =
+    teachingModeFromPrisma(studio.teachingMode) !== 'online'
+      ? await prisma.yogaClass.count({
+        where: { studioId: id, date: { gte: today }, acceptsMultisport: true },
+      })
+      : 0;
+
   return {
     studio: studioToDto(studio),
     instructors: studio.instructors.map(instructorToDto),
-    schedule: studio.schedule.map(scheduleEntryToDto),
+    schedule,
     subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
     eventsCount: studio._count.classes,
+    hasMultisport:
+      studioAcceptsMultisport(studioToDto(studio), schedule)
+      || multisportClassCount > 0,
   };
 }
 

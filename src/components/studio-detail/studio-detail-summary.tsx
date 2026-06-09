@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { MultisportBadge } from '@/components/multisport/multisport-badge';
 import type { Studio } from '@/data/mock-data';
 
 export const STUDIO_AMENITY_LABELS: Record<string, string> = {
@@ -9,7 +10,13 @@ export const STUDIO_AMENITY_LABELS: Record<string, string> = {
   equipmentRental: '\u{1F9D8} Оборудване под наем',
 };
 
-export function StudioDetailSummary({ studio }: { studio: Studio }) {
+export function StudioDetailSummary({
+  studio,
+  showMultisport = false,
+}: {
+  studio: Studio;
+  showMultisport?: boolean;
+}) {
   return (
     <>
       <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl">{studio.name}</h1>
@@ -20,6 +27,12 @@ export function StudioDetailSummary({ studio }: { studio: Studio }) {
           <span className="text-muted-foreground">({studio.reviewCount} ревюта)</span>
         </div>
       </div>
+
+      {showMultisport ? (
+        <div className="mt-4">
+          <MultisportBadge size="md" />
+        </div>
+      ) : null}
 
       <p className="mt-6 leading-relaxed text-foreground/80">{studio.description}</p>
 
