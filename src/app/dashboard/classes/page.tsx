@@ -17,6 +17,10 @@ import { Button } from '@/components/ui/button';
 import type { YogaClass } from '@/data/mock-data';
 import { ClassesSection } from '@/views/Dashboard/components/ClassesSection';
 import { ClassModal, type ClassModalPayload } from '@/views/Dashboard/components/modals/ClassModal';
+import {
+  InstructorModal,
+  type InstructorModalPayload,
+} from '@/views/Dashboard/components/modals/InstructorModal';
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
 import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
@@ -28,10 +32,48 @@ export default function DashboardClassesPage() {
   const [editingClass, setEditingClass] = useState<YogaClass | null>(null);
   const [classPendingDelete, setClassPendingDelete] = useState<YogaClass | null>(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [instructorModalOpen, setInstructorModalOpen] = useState(false);
+  const [instructorDefaultStudioId, setInstructorDefaultStudioId] = useState<string | null>(null);
+  const [preselectInstructorId, setPreselectInstructorId] = useState<string | null>(null);
 
   const closeModal = () => {
     setClassModalOpen(false);
     setEditingClass(null);
+    setPreselectInstructorId(null);
+  };
+
+  const closeInstructorModal = () => {
+    setInstructorModalOpen(false);
+    setInstructorDefaultStudioId(null);
+  };
+
+  const handleInstructorSave = async (payload: InstructorModalPayload) => {
+    const res = await fetch('/api/dashboard/instructors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studioId: payload.studioId,
+        teachingMode: payload.teachingMode,
+        zoomMeetingUrl: payload.zoomMeetingUrl,
+        name: payload.name,
+        bio: payload.bio,
+        experienceLevel: payload.experienceLevel,
+        yogaStyle: payload.yogaStyle,
+        photo: payload.photo ?? '',
+      }),
+    });
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error(typeof j.error === 'string' ? j.error : `Неуспешно запазване (${res.status})`);
+      return;
+    }
+    const j = (await res.json()) as { instructor?: { id?: string } };
+    closeInstructorModal();
+    await ws.reload();
+    if (typeof j.instructor?.id === 'string') {
+      setPreselectInstructorId(j.instructor.id);
+    }
+    toastDashboardSaved('instructor');
   };
 
   const closeDeleteDialog = () => {
@@ -164,6 +206,18 @@ export default function DashboardClassesPage() {
         instructors={myInstructors}
         classToEdit={editingClass}
         onlinePayments={ws.onlinePayments}
+        onCreateInstructor={studioId => {
+          setInstructorDefaultStudioId(studioId);
+          setInstructorModalOpen(true);
+        }}
+        preselectInstructorId={preselectInstructorId}
+      />
+      <InstructorModal
+        open={instructorModalOpen}
+        onClose={closeInstructorModal}
+        onSave={handleInstructorSave}
+        studios={myStudios}
+        defaultStudioId={instructorDefaultStudioId}
       />
     </div>
   );

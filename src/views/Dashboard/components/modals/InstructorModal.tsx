@@ -43,6 +43,7 @@ export function InstructorModal({
   onSave,
   studios,
   instructorToEdit,
+  defaultStudioId,
 }: {
   open: boolean;
   onClose: () => void;
@@ -50,6 +51,8 @@ export function InstructorModal({
   studios: typeof mockStudios;
   /** When set, form opens with this instructor’s data. */
   instructorToEdit?: Instructor | null;
+  /** Pre-select studio when creating a new instructor (e.g. from class modal). */
+  defaultStudioId?: string | null;
 }) {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -86,15 +89,23 @@ export function InstructorModal({
       setPhoto(instructorToEdit.photo?.trim() ?? '');
       return;
     }
+    const presetStudio = defaultStudioId ? studios.find(s => s.id === defaultStudioId) : null;
     setName('');
     setBio('');
     setExperienceLevel('');
-    setTeachingMode(physicalStudios.length > 0 ? 'physical' : 'online');
-    setZoomMeetingUrl('');
-    setStudioId(physicalStudios[0]?.id ?? '');
+    if (presetStudio) {
+      const mode = presetStudio.teachingMode === 'online' ? 'online' : 'physical';
+      setTeachingMode(mode);
+      setStudioId(presetStudio.id);
+      setZoomMeetingUrl(presetStudio.zoomMeetingUrl ?? '');
+    } else {
+      setTeachingMode(physicalStudios.length > 0 ? 'physical' : 'online');
+      setZoomMeetingUrl('');
+      setStudioId(physicalStudios[0]?.id ?? '');
+    }
     setSelectedStyles([]);
     setPhoto('');
-  }, [open, instructorToEdit, linkedStudio, physicalStudios]);
+  }, [open, instructorToEdit, linkedStudio, physicalStudios, defaultStudioId, studios]);
 
   useEffect(() => {
     if (!open || instructorToEdit) return;

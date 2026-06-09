@@ -54,6 +54,8 @@ export function ClassModal({
   instructors,
   classToEdit,
   onlinePayments = true,
+  onCreateInstructor,
+  preselectInstructorId,
 }: {
   open: boolean;
   onClose: () => void;
@@ -63,6 +65,10 @@ export function ClassModal({
   classToEdit?: YogaClass | null;
   /** When false (`ONLINE_PAYMENTS` off), no helper text under the price field. */
   onlinePayments?: boolean;
+  /** Opens instructor create flow with the given studio pre-selected. */
+  onCreateInstructor?: (studioId: string) => void;
+  /** After inline instructor create, auto-select in the dropdown. */
+  preselectInstructorId?: string | null;
 }) {
   const [className, setClassName] = useState('');
   const [instructorId, setInstructorId] = useState('');
@@ -151,6 +157,12 @@ export function ClassModal({
       setInstructorId('');
     }
   }, [studioId, instructorId, instructors]);
+
+  useEffect(() => {
+    if (!open || !preselectInstructorId || !studioId) return;
+    const match = instructors.find(i => i.id === preselectInstructorId && i.studioId === studioId);
+    if (match) setInstructorId(preselectInstructorId);
+  }, [open, preselectInstructorId, instructors, studioId]);
 
   const isEditing = Boolean(classToEdit);
   const basicsComplete = Boolean(className.trim() && studioId && instructorId);
@@ -278,6 +290,18 @@ export function ClassModal({
                   ))}
                 </SelectContent>
               </Select>
+              {studioId && instructorsForStudio.length === 0 && onCreateInstructor ? (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Няма инструктор за това студио.{' '}
+                  <button
+                    type="button"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    onClick={() => onCreateInstructor(studioId)}
+                  >
+                    Добавете инструктор
+                  </button>
+                </p>
+              ) : null}
             </div>
           </div>
           </section>
