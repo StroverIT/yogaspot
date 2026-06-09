@@ -14,9 +14,8 @@ export function validateYogaClassMaxCapacity(
   return null;
 }
 
-export function validateYogaClassPrice(price: number, teachingMode: TeachingModeDto): string | null {
+export function validateYogaClassPrice(price: number, _teachingMode?: TeachingModeDto): string | null {
   if (!Number.isFinite(price) || price < 0) return 'Invalid price';
-  if (teachingMode === 'physical' && price <= 0) return 'Invalid price';
   return null;
 }
 

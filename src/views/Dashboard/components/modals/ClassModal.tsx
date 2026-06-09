@@ -141,7 +141,6 @@ export function ClassModal({
   useEffect(() => {
     if (!isOnlineStudio) {
       setNoCapacityLimit(false);
-      setIsFreeClass(false);
     }
   }, [isOnlineStudio]);
 
@@ -157,7 +156,7 @@ export function ClassModal({
     const resolvedCapacity = isOnlineStudio && noCapacityLimit
       ? resolveClassMaxCapacity(0, true)
       : capRaw;
-    const pr = isOnlineStudio && isFreeClass ? 0 : classPriceBgnFromEur(parseEurInput(price));
+    const pr = isFreeClass ? 0 : classPriceBgnFromEur(parseEurInput(price));
 
     const capacityIncomplete =
       isOnlineStudio && noCapacityLimit
@@ -165,7 +164,7 @@ export function ClassModal({
         : !maxCapacity.trim() || !Number.isFinite(capRaw) || capRaw <= 0;
 
     const priceIncomplete =
-      isOnlineStudio && isFreeClass
+      isFreeClass
         ? false
         : !price.trim() || !Number.isFinite(parseEurInput(price)) || parseEurInput(price) < 0;
 
@@ -350,30 +349,28 @@ export function ClassModal({
                 placeholder="12,77"
                 value={price}
                 onChange={e => setPrice(e.target.value)}
-                disabled={isOnlineStudio && isFreeClass}
+                disabled={isFreeClass}
                 className="mt-1"
               />
-              {isOnlineStudio ? (
-                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                  <Checkbox
-                    checked={isFreeClass}
-                    onCheckedChange={checked => {
-                      const on = checked === true;
-                      setIsFreeClass(on);
-                      if (on) setPrice('');
-                    }}
-                  />
-                  Безплатно
-                </label>
-              ) : null}
-              {onlinePayments && !(isOnlineStudio && isFreeClass) ? (
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                <Checkbox
+                  checked={isFreeClass}
+                  onCheckedChange={checked => {
+                    const on = checked === true;
+                    setIsFreeClass(on);
+                    if (on) setPrice('');
+                  }}
+                />
+                Безплатно
+              </label>
+              {onlinePayments && !isFreeClass ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {hasValidBasePrice
                     ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`
                     : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
                 </p>
               ) : null}
-              {isOnlineStudio && isFreeClass ? (
+              {isFreeClass ? (
                 <p className="mt-1 text-xs text-muted-foreground">Класът е безплатен за практикуващите.</p>
               ) : null}
             </div>
