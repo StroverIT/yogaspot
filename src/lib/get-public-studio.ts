@@ -15,7 +15,7 @@ import { prisma } from '@/lib/prisma';
 import { studioAcceptsMultisport } from '@/lib/multisport';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
 import { trackServerEvent } from '@/lib/server-analytics';
-import { isActiveStudioMembershipStatus } from '@/lib/studio-membership';
+import { ACTIVE_STUDIO_MEMBERSHIP_STATUSES } from '@/lib/studio-membership';
 
 export type PublicStudioCorePayload = {
   studio: Studio;
@@ -154,17 +154,19 @@ async function loadMyBookings(
       select: { scheduleEntryId: true },
     }),
     prisma.studioMembership.findFirst({
-      where: { userId, studioId },
-      select: { id: true, status: true },
+      where: {
+        userId,
+        studioId,
+        status: { in: [...ACTIVE_STUDIO_MEMBERSHIP_STATUSES] },
+      },
+      select: { id: true },
     }),
   ]);
 
   return {
     classIds: classRows.map((r) => r.yogaClassId),
     scheduleEntryIds: scheduleRows.map((r) => r.scheduleEntryId),
-    hasActiveMembership: Boolean(
-      activeMembership && isActiveStudioMembershipStatus(activeMembership.status),
-    ),
+    hasActiveMembership: Boolean(activeMembership),
   };
 }
 

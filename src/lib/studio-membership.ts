@@ -17,6 +17,36 @@ export function blocksStudioSubscriptionCheckout(status: StudioMembershipStatus)
   return (BLOCKING_STUDIO_MEMBERSHIP_STATUSES as readonly StudioMembershipStatus[]).includes(status);
 }
 
+export function blockingStudioMembershipWhere(
+  userId: string,
+  studioId: string,
+): {
+  userId: string;
+  studioId: string;
+  status: { in: StudioMembershipStatus[] };
+} {
+  return {
+    userId,
+    studioId,
+    status: { in: [...BLOCKING_STUDIO_MEMBERSHIP_STATUSES] },
+  };
+}
+
+export function blockingStudioSubscriptionWhere(
+  userId: string,
+  studioSubscriptionId: string,
+): {
+  userId: string;
+  studioSubscriptionId: string;
+  status: { in: StudioMembershipStatus[] };
+} {
+  return {
+    userId,
+    studioSubscriptionId,
+    status: { in: [...BLOCKING_STUDIO_MEMBERSHIP_STATUSES] },
+  };
+}
+
 export function mapStripeSubscriptionStatus(status: Stripe.Subscription.Status): StudioMembershipStatus {
   switch (status) {
     case 'active':

@@ -9,7 +9,7 @@ import {
   syncStudioSubscriptionStripeCatalog,
 } from '@/lib/stripe-catalog';
 import { assertStripeConfigured, getPublicAppBaseUrl, getStripe } from '@/lib/stripe-server';
-import { blocksStudioSubscriptionCheckout } from '@/lib/studio-membership';
+import { blockingStudioSubscriptionWhere } from '@/lib/studio-membership';
 
 export const runtime = 'nodejs';
 
@@ -88,14 +88,11 @@ export async function POST(request: Request) {
   }
 
   const existingMembership = await prisma.studioMembership.findFirst({
-    where: {
-      userId: gate.user.id,
-      studioId,
-    },
-    select: { id: true, status: true },
+    where: blockingStudioSubscriptionWhere(gate.user.id, sub.id),
+    select: { id: true },
   });
-  if (existingMembership && blocksStudioSubscriptionCheckout(existingMembership.status)) {
-    return jsonError('Вече имате активен абонамент за това студио.', 409);
+  if (existingMembership) {
+    return jsonError('Вече имате активен абонамент за този план.', 409);
   }
 
   let stripePriceId = sub.stripePriceId;

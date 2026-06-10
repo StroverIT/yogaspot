@@ -11,6 +11,7 @@ import {
 } from '@/lib/business-platform-billing';
 import { syncConnectAccountFromStripe } from '@/lib/stripe-connect';
 import {
+  BLOCKING_STUDIO_MEMBERSHIP_STATUSES,
   customerIdFromSubscription,
   mapStripeSubscriptionStatus,
   subscriptionPeriodEnd,
@@ -339,6 +340,47 @@ async function upsertStudioMembershipFromStripe(
     return;
   }
 
+  const duplicateBlocking = await prisma.studioMembership.findFirst({
+    where: {
+      userId,
+      studioId,
+      ...(studioSubscriptionId ? { studioSubscriptionId } : {}),
+      status: { in: [...BLOCKING_STUDIO_MEMBERSHIP_STATUSES] },
+      NOT: { stripeSubscriptionId: subscription.id },
+    },
+    select: { id: true, status: true },
+  });
+
+  if (duplicateBlocking) {
+    if (duplicateBlocking.status === 'incomplete') {
+      await prisma.studioMembership.update({
+        where: { id: duplicateBlocking.id },
+        data: {
+          ...data,
+          stripeSubscriptionId: subscription.id,
+        },
+      });
+      await trackServerEvent({
+        eventName: 'subscription_completed',
+        userId,
+        studioId,
+        metadata: {
+          stripeSubscriptionId: subscription.id,
+          studioSubscriptionId: studioSubscriptionId ?? null,
+        },
+      });
+    } else {
+      console.error(
+        '[stripe webhook] duplicate studio membership blocked',
+        subscription.id,
+        userId,
+        studioId,
+        studioSubscriptionId ?? null,
+      );
+    }
+    return;
+  }
+
   await prisma.studioMembership.create({
     data: {
       ...data,
@@ -346,12 +388,21 @@ async function upsertStudioMembershipFromStripe(
     },
   });
 
-  await trackServerEvent({
+  await trackStudioMembershipCompleted(userId, studioId, subscription.id, studioSubscriptionId);
+}
+
+function trackStudioMembershipCompleted(
+  userId: string,
+  studioId: string,
+  stripeSubscriptionId: string,
+  studioSubscriptionId: string | undefined,
+): Promise<void> {
+  return trackServerEvent({
     eventName: 'subscription_completed',
     userId,
     studioId,
     metadata: {
-      stripeSubscriptionId: subscription.id,
+      stripeSubscriptionId,
       studioSubscriptionId: studioSubscriptionId ?? null,
     },
   });
