@@ -189,9 +189,6 @@ export default function DashboardSchedulePage() {
         variant="admin"
         studios={myStudios}
         schedule={ws.schedule}
-        subscriptions={ws.subscriptions}
-        subscriptionRequests={ws.subscriptionRequests}
-        onWorkspaceReload={() => void ws.reload()}
         instructors={myInstructors}
         onAdd={() => {
           if (myInstructors.length === 0) {

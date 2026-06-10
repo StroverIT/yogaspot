@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { Instructor, TeachingMode } from '@/data/mock-data';
-import { mockStudios, YOGA_TYPES } from '@/data/mock-data';
+import { INSTRUCTOR_EXPERIENCE_LEVELS, mockStudios, YOGA_TYPES } from '@/data/mock-data';
 import { isValidZoomMeetingUrl } from '@/lib/teaching-mode';
 import { cn } from '@/lib/utils';
 import { Building2, Video } from 'lucide-react';
@@ -28,7 +28,7 @@ export type InstructorModalPayload = {
   id?: string;
   name: string;
   bio: string;
-  experienceLevel: string;
+  experienceLevel: string[];
   studioId?: string;
   teachingMode: TeachingMode;
   zoomMeetingUrl?: string;
@@ -56,7 +56,7 @@ export function InstructorModal({
 }) {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
-  const [experienceLevel, setExperienceLevel] = useState('');
+  const [selectedExperienceLevels, setSelectedExperienceLevels] = useState<string[]>([]);
   const [teachingMode, setTeachingMode] = useState<TeachingMode>('online');
   const [zoomMeetingUrl, setZoomMeetingUrl] = useState('');
   const [studioId, setStudioId] = useState('');
@@ -70,6 +70,16 @@ export function InstructorModal({
     () => studios.filter(s => s.teachingMode !== 'online'),
     [studios],
   );
+  const experienceLevelOptions = useMemo(() => {
+    const levels = [...INSTRUCTOR_EXPERIENCE_LEVELS];
+    for (const current of instructorToEdit?.experienceLevel ?? []) {
+      const trimmed = current.trim();
+      if (trimmed && !levels.includes(trimmed as (typeof INSTRUCTOR_EXPERIENCE_LEVELS)[number])) {
+        levels.unshift(trimmed);
+      }
+    }
+    return levels;
+  }, [instructorToEdit?.experienceLevel]);
   const isOnlineMode = teachingMode === 'online';
   const linkedStudio = instructorToEdit
     ? studios.find(s => s.id === instructorToEdit.studioId)
@@ -81,7 +91,7 @@ export function InstructorModal({
       const mode = linkedStudio?.teachingMode ?? 'physical';
       setName(instructorToEdit.name);
       setBio(instructorToEdit.bio);
-      setExperienceLevel(instructorToEdit.experienceLevel);
+      setSelectedExperienceLevels([...instructorToEdit.experienceLevel]);
       setTeachingMode(mode);
       setZoomMeetingUrl(linkedStudio?.zoomMeetingUrl ?? '');
       setStudioId(instructorToEdit.studioId);
@@ -92,7 +102,7 @@ export function InstructorModal({
     const presetStudio = defaultStudioId ? studios.find(s => s.id === defaultStudioId) : null;
     setName('');
     setBio('');
-    setExperienceLevel('');
+    setSelectedExperienceLevels([]);
     if (presetStudio) {
       const mode = presetStudio.teachingMode === 'online' ? 'online' : 'physical';
       setTeachingMode(mode);
@@ -116,7 +126,7 @@ export function InstructorModal({
 
   const handleSave = async () => {
     const baseIncomplete =
-      !name.trim() || !bio.trim() || !experienceLevel || selectedStyles.length === 0;
+      !name.trim() || !bio.trim() || selectedExperienceLevels.length === 0 || selectedStyles.length === 0;
 
     if (isOnlineMode) {
       if (baseIncomplete || !isValidZoomMeetingUrl(zoomMeetingUrl)) {
@@ -135,7 +145,7 @@ export function InstructorModal({
           id: instructorToEdit?.id,
           name: name.trim(),
           bio: bio.trim(),
-          experienceLevel,
+          experienceLevel: [...selectedExperienceLevels],
           teachingMode,
           zoomMeetingUrl: isOnlineMode ? zoomMeetingUrl.trim() : undefined,
           studioId: isOnlineMode ? instructorToEdit?.studioId ?? studioId : studioId,
@@ -224,17 +234,40 @@ export function InstructorModal({
           </div>
           <div>
             <Label>Ниво на опит</Label>
-            <Select value={experienceLevel || undefined} onValueChange={setExperienceLevel}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Изберете ниво" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Начинаещ">Начинаещ</SelectItem>
-                <SelectItem value="Среден">Среден</SelectItem>
-                <SelectItem value="Напреднал">Напреднал</SelectItem>
-                <SelectItem value="Експерт">Експерт</SelectItem>
-              </SelectContent>
-            </Select>
+            <p className="text-xs text-muted-foreground mt-0.5">Можете да изберете повече от едно ниво.</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {experienceLevelOptions.map(level => {
+                const selected = selectedExperienceLevels.includes(level);
+                return (
+                  <Badge
+                    key={level}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={selected}
+                    variant={selected ? 'default' : 'outline'}
+                    className={cn(
+                      'cursor-pointer transition-colors',
+                      selected ? 'hover:bg-primary/90' : 'hover:bg-primary/10',
+                    )}
+                    onClick={() => {
+                      setSelectedExperienceLevels(prev =>
+                        selected ? prev.filter(l => l !== level) : [...prev, level],
+                      );
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedExperienceLevels(prev =>
+                          selected ? prev.filter(l => l !== level) : [...prev, level],
+                        );
+                      }
+                    }}
+                  >
+                    {level}
+                  </Badge>
+                );
+              })}
+            </div>
           </div>
           <div>
             <Label>Стил йога</Label>

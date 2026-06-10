@@ -31,7 +31,7 @@ export function InstructorsTabContent({ studioInstructors }: { studioInstructors
               <div className="flex items-center gap-1 text-sm">
                 {/* <Star className="h-3.5 w-3.5 fill-accent text-accent" /> */}
                 {/* <span>{instr.rating}</span> */}
-                <span className="text-muted-foreground">{/* · */}{instr.experienceLevel}</span>
+                <span className="text-muted-foreground">{instr.experienceLevel.join(', ')}</span>
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import type { Instructor, Studio, StudioSubscription, SubscriptionRequestDto, YogaClass } from '@/data/mock-data';
+import type { Instructor, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
 import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
@@ -20,7 +20,6 @@ export function OverviewSection({
   myInstructors,
   bookingRevenue,
   subscriptions,
-  subscriptionRequests,
   recentSignups,
 }: {
   avgRating: string;
@@ -32,7 +31,6 @@ export function OverviewSection({
   myInstructors: Instructor[];
   bookingRevenue: DashboardBookingRevenue;
   subscriptions: StudioSubscription[];
-  subscriptionRequests: SubscriptionRequestDto[];
   recentSignups: DashboardRecentSignup[];
 }) {
   const eventsAndScheduleBgn = bookingRevenue.totalBgn;
@@ -41,7 +39,7 @@ export function OverviewSection({
   const subscriptionRevenue = subscriptions
     .filter((sub) => sub.hasMonthlySubscription)
     .reduce((sum, sub) => sum + (sub.monthlyPrice ?? 0), 0);
-  const pendingSubscriptionRequests = subscriptionRequests.filter((req) => req.status === 'PENDING').length;
+  const activeSubscriptions = subscriptions.filter((sub) => sub.hasMonthlySubscription).length;
   const grossRevenue = eventsAndScheduleBgn;
   const payoutFee = calculatePayoutFee(grossRevenue);
   const netPayout = calculateNetPayout(grossRevenue);
@@ -271,8 +269,8 @@ export function OverviewSection({
                 <span className="font-medium text-foreground">{formatPriceDualFromBgn(subscriptionRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Чакащи заявки</span>
-                <span className="font-medium text-foreground">{pendingSubscriptionRequests}</span>
+                <span className="text-muted-foreground">Активни абонаменти</span>
+                <span className="font-medium text-foreground">{activeSubscriptions}</span>
               </div>
             </div>
             <div className="mt-4 space-y-2">

@@ -47,7 +47,6 @@ export default function DashboardOverviewPageClient() {
         myInstructors={myInstructors}
         bookingRevenue={ws.bookingRevenue}
         subscriptions={ws.subscriptions}
-        subscriptionRequests={ws.subscriptionRequests}
         recentSignups={ws.recentSignups}
       />
     );

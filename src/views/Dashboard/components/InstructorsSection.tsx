@@ -82,7 +82,9 @@ export function InstructorsSection({
                     <div>
                       <h3 className="font-display font-semibold text-foreground">{instr.name}</h3>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="secondary" className="text-xs">{instr.experienceLevel}</Badge>
+                        {instr.experienceLevel.map(level => (
+                          <Badge key={level} variant="secondary" className="text-xs">{level}</Badge>
+                        ))}
                         <span className="flex items-center gap-0.5 text-sm text-foreground">
                           <Star className="h-3 w-3 fill-yoga-tertiary text-primary" />
                           {instr.rating}

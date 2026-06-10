@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     photo?: string;
     bio?: string;
     yogaStyle?: string[];
-    experienceLevel?: string;
+    experienceLevel?: string[];
     rating?: number;
   };
   try {
@@ -66,7 +66,11 @@ export async function POST(request: Request) {
     return jsonError('Invalid JSON', 400);
   }
 
-  if (!body.name?.trim() || !body.bio?.trim() || !body.experienceLevel?.trim()) {
+  const experienceLevels = Array.isArray(body.experienceLevel)
+    ? body.experienceLevel.map((x) => x.trim()).filter(Boolean)
+    : [];
+
+  if (!body.name?.trim() || !body.bio?.trim() || experienceLevels.length === 0) {
     return jsonError('Missing name, bio, or experienceLevel', 400);
   }
 
@@ -129,7 +133,7 @@ export async function POST(request: Request) {
       photo: typeof body.photo === 'string' ? body.photo : '',
       bio: body.bio.trim(),
       yogaStyle: yogaStyles,
-      experienceLevel: body.experienceLevel.trim(),
+      experienceLevel: experienceLevels,
       rating: typeof body.rating === 'number' && Number.isFinite(body.rating) ? body.rating : 0,
     },
   });

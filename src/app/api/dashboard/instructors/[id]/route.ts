@@ -27,7 +27,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     photo: string;
     bio: string;
     yogaStyle: string[];
-    experienceLevel: string;
+    experienceLevel: string[];
     rating: number;
     studioId: string;
     zoomMeetingUrl?: string | null;
@@ -43,7 +43,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (typeof body.photo === 'string') data.photo = body.photo;
   if (typeof body.bio === 'string') data.bio = body.bio.trim();
   if (Array.isArray(body.yogaStyle)) data.yogaStyle = body.yogaStyle.filter((x) => typeof x === 'string');
-  if (typeof body.experienceLevel === 'string') data.experienceLevel = body.experienceLevel.trim();
+  if (Array.isArray(body.experienceLevel)) {
+    data.experienceLevel = body.experienceLevel.map((x) => x.trim()).filter(Boolean);
+  }
   if (typeof body.rating === 'number' && Number.isFinite(body.rating)) data.rating = body.rating;
   if (typeof body.studioId === 'string') {
     const next = body.studioId.trim();

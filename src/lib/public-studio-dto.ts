@@ -56,7 +56,7 @@ export function instructorToDto(i: PrismaInstructor): Instructor {
     photo: i.photo,
     bio: i.bio,
     yogaStyle: i.yogaStyle ?? [],
-    experienceLevel: i.experienceLevel,
+    experienceLevel: i.experienceLevel ?? [],
     studioId: i.studioId,
     rating: i.rating,
   };
@@ -128,7 +128,10 @@ export function subscriptionToDto(sub: PrismaSub): StudioSubscription {
   return {
     studioId: sub.studioId,
     hasMonthlySubscription: sub.hasMonthlySubscription,
+    name: sub.name ?? undefined,
     monthlyPrice: sub.monthlyPrice ?? undefined,
+    includes: sub.includes ?? undefined,
+    durationMonths: sub.durationMonths ?? 1,
     subscriptionNote: sub.subscriptionNote ?? undefined,
   };
 }

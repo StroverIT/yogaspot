@@ -46,6 +46,18 @@ export function formatMonthlyDualFromBgn(bgnMonthly: number): string {
   return `${formatPriceDualFromBgn(bgnMonthly)}/мес.`;
 }
 
+function durationLabelBg(months: number): string {
+  if (months === 1) return 'месец';
+  return 'месеца';
+}
+
+/** e.g. "29 € · 56,79 лв. / мес." or "87 € · 170,37 лв. / 3 месеца" */
+export function formatSubscriptionDualFromBgn(bgnAmount: number, durationMonths = 1): string {
+  const price = formatPriceDualFromBgn(bgnAmount);
+  if (durationMonths <= 1) return `${price}/мес.`;
+  return `${price} / ${durationMonths} ${durationLabelBg(durationMonths)}`;
+}
+
 /** Prefill EUR field from stored BGN (class / schedule list prices). */
 export function formatEurInputFromBgn(bgn: number): string {
   if (!Number.isFinite(bgn)) return '';

@@ -1,6 +1,13 @@
 export type ModalType = 'studio' | 'instructor' | 'class' | 'schedule' | null;
 
-export type Section = 'overview' | 'studios' | 'instructors' | 'classes' | 'schedule' | 'retreats';
+export type Section =
+  | 'overview'
+  | 'studios'
+  | 'instructors'
+  | 'classes'
+  | 'schedule'
+  | 'subscriptions'
+  | 'retreats';
 
 export const DASHBOARD_PATHS: Record<Section, string> = {
   overview: '/dashboard',
@@ -8,6 +15,7 @@ export const DASHBOARD_PATHS: Record<Section, string> = {
   instructors: '/dashboard/instructors',
   classes: '/dashboard/classes',
   schedule: '/dashboard/schedule',
+  subscriptions: '/dashboard/subscriptions',
   retreats: '/dashboard/retreats',
 };
 
@@ -19,6 +27,7 @@ export function getActiveSection(pathname: string): Section {
   if (sub === 'instructors') return 'instructors';
   if (sub === 'classes') return 'classes';
   if (sub === 'schedule') return 'schedule';
+  if (sub === 'subscriptions') return 'subscriptions';
   if (sub === 'retreats') return 'retreats';
   return 'overview';
 }

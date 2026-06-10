@@ -8,6 +8,7 @@ import {
   getSubscriptionForOwnerUserId,
   isPlatformAccessBlocked,
 } from '@/lib/business-platform-billing';
+import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
 export type SessionUser = {
   id?: string;
@@ -145,5 +146,28 @@ export async function requireBusinessWriteAccess(
 ): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   const subGate = await requireActivePlatformSubscription(user);
   if (!subGate.ok) return subGate;
+  return { ok: true };
+}
+
+/** Requires Stripe customer on platform billing before studio subscription CRUD. */
+export async function requireStripeReadyForSubscriptions(
+  user: SessionUser & { id: string; role: Role },
+): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  if (user.role === 'admin') return { ok: true };
+  if (!isOnlinePaymentsEnabled()) return { ok: true };
+
+  const sub = await getSubscriptionForOwnerUserId(user.id);
+  if (!sub?.stripeCustomerId) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: 'Свържете Stripe акаунта си, за да създавате абонаменти.',
+          code: 'stripe_not_connected',
+        },
+        { status: 403 },
+      ),
+    };
+  }
   return { ok: true };
 }

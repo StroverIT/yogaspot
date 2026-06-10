@@ -17,6 +17,7 @@ export const MONTHLY_PRICE_EUR = 10;
 
 export type PlatformBillingSummary = {
   hasSubscription: boolean;
+  stripeConnected: boolean;
   status: BusinessPlatformSubscriptionStatus | null;
   isEarlyAdopter: boolean;
   trialDaysRemaining: number | null;
@@ -231,6 +232,7 @@ export async function buildPlatformBillingSummary(
 
   return {
     hasSubscription: true,
+    stripeConnected: Boolean(evaluated.stripeCustomerId),
     status: evaluated.status,
     isEarlyAdopter: evaluated.isEarlyAdopter,
     trialDaysRemaining,
@@ -263,6 +265,7 @@ export const getSubscriptionSummaryForOwnerUserId = cache(async function getSubs
 
   return {
     hasSubscription: false,
+    stripeConnected: false,
     status: 'trial',
     isEarlyAdopter: true,
     trialDaysRemaining: daysBetween(now, trialEndsAt),

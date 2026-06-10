@@ -18,7 +18,7 @@ import { WEEKDAYS } from "@/data/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatMonthlyDualFromBgn } from "@/lib/eur-bgn";
+import { formatSubscriptionDualFromBgn } from "@/lib/eur-bgn";
 import { getStudioCoverSrc } from "@/lib/studio-cover-src";
 
 export type FavoriteStudioDetailBundle = {
@@ -102,7 +102,11 @@ export function FavoriteStudioCard({ studio, bundle, onRemove }: FavoriteStudioC
             </Badge>
             {subscription?.hasMonthlySubscription && (
               <Badge variant="outline" className="rounded-full gap-1 text-xs text-primary border-primary/30">
-                <CreditCard className="h-3 w-3" /> {formatMonthlyDualFromBgn(subscription.monthlyPrice ?? 0)}
+                <CreditCard className="h-3 w-3" />{' '}
+                {formatSubscriptionDualFromBgn(
+                  subscription.monthlyPrice ?? 0,
+                  subscription.durationMonths ?? 1,
+                )}
               </Badge>
             )}
             <div className="flex gap-1.5 ml-auto">

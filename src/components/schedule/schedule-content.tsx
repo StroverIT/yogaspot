@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -15,24 +14,19 @@ import {
   type ScheduleEntry,
   type Studio,
   type StudioSubscription,
-  type SubscriptionRequestDto,
   type Weekday,
 } from '@/data/mock-data';
 import Link from 'next/link';
-import { CalendarDays, CreditCard, Edit, MessageSquare, Plus, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { CalendarDays, CreditCard, Edit, Plus, Trash2 } from 'lucide-react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import { formatPriceDualFromBgn, formatSubscriptionDualFromBgn } from '@/lib/eur-bgn';
 import {
   formatClassCapacityDisplay,
   formatClassPriceDisplay,
   isClassAtCapacity,
   isUnlimitedClassCapacity,
 } from '@/lib/yoga-class-limits';
-import { SubscriptionRequestDetailsModal } from '@/views/Dashboard/components/modals/SubscriptionRequestDetailsModal';
-import { SubscriptionRequestFormModal } from '@/views/Dashboard/components/modals/SubscriptionRequestFormModal';
-import { SubscriptionRequestStatusModal } from '@/views/Dashboard/components/modals/SubscriptionRequestStatusModal';
 import { StudioTabEmptyState } from '@/components/studio-detail/studio-tab-empty-state';
 import { TeachingModePill } from '@/components/studio/teaching-mode-badge';
 import type { TeachingMode } from '@/data/mock-data';
@@ -41,9 +35,6 @@ export type AdminProps = {
   variant: 'admin';
   studios: Studio[];
   schedule: ScheduleEntry[];
-  subscriptions: StudioSubscription[];
-  subscriptionRequests: SubscriptionRequestDto[];
-  onWorkspaceReload: () => void | Promise<void>;
   instructors: Instructor[];
   onAdd: () => void;
   onEdit: (entry: ScheduleEntry) => void;
@@ -70,9 +61,6 @@ export function ScheduleContent(props: ScheduleContentProps) {
       <AdminScheduleContent
         studios={props.studios}
         schedule={props.schedule}
-        subscriptions={props.subscriptions}
-        subscriptionRequests={props.subscriptionRequests}
-        onWorkspaceReload={props.onWorkspaceReload}
         instructors={props.instructors}
         onAdd={props.onAdd}
         onEdit={props.onEdit}
@@ -175,9 +163,6 @@ function WeeklyScheduleList({
 function AdminScheduleContent({
   studios,
   schedule,
-  subscriptions,
-  subscriptionRequests,
-  onWorkspaceReload,
   instructors,
   onAdd,
   onEdit,
@@ -185,9 +170,6 @@ function AdminScheduleContent({
 }: {
   studios: Studio[];
   schedule: ScheduleEntry[];
-  subscriptions: StudioSubscription[];
-  subscriptionRequests: SubscriptionRequestDto[];
-  onWorkspaceReload: () => void | Promise<void>;
   instructors: Instructor[];
   onAdd: () => void;
   onEdit: (entry: ScheduleEntry) => void;
@@ -195,9 +177,6 @@ function AdminScheduleContent({
 }) {
   const [selectedStudio, setSelectedStudio] = useState<string>(studios[0]?.id || '');
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
-  const [formModalOpen, setFormModalOpen] = useState(false);
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   useEffect(() => {
     if (studios.length === 0) {
@@ -210,20 +189,7 @@ function AdminScheduleContent({
     });
   }, [studios]);
 
-  useEffect(() => {
-    setFormModalOpen(false);
-    setStatusModalOpen(false);
-    setDetailsModalOpen(false);
-  }, [selectedStudio]);
-
   const studioSchedule = schedule.filter(s => s.studioId === selectedStudio);
-  const subscription = subscriptions.find(s => s.studioId === selectedStudio);
-  const selectedStudioName = studios.find(s => s.id === selectedStudio)?.name ?? '';
-  const latestRequest = useMemo(() => {
-    const forStudio = subscriptionRequests.filter(r => r.studioId === selectedStudio);
-    if (forStudio.length === 0) return null;
-    return [...forStudio].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-  }, [subscriptionRequests, selectedStudio]);
   const scheduleByDay = buildScheduleByDay(studioSchedule);
 
   const instructorsForStudio = instructors.filter(i => i.studioId === selectedStudio);
@@ -269,7 +235,7 @@ function AdminScheduleContent({
     <div className="space-y-6">
       <DashboardPageHeader
         title="Разписание"
-        description="Управлявайте седмичното разписание на вашите студиа и абонаментите към тях."
+        description="Управлявайте седмичното разписание на вашите студиа."
         actions={
           <div className="flex max-w-md flex-col items-stretch gap-2 sm:items-end">
             {addScheduleDisabled ? (
@@ -321,113 +287,6 @@ function AdminScheduleContent({
           ))}
         </div>
       </div>
-
-      <div className={`${dashboardCardClass} p-5`}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="rounded-xl bg-secondary/15 p-2.5 ring-1 ring-secondary/25 shrink-0">
-              <CreditCard className="h-5 w-5 text-secondary" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-semibold text-foreground">Месечен абонамент</h3>
-                {latestRequest?.status === 'PENDING' ? (
-                  <Badge variant="secondary" className="text-xs">
-                    Заявка: изчаква одобрение
-                  </Badge>
-                ) : null}
-              </div>
-              {subscription?.hasMonthlySubscription ? (
-                <>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{subscription.subscriptionNote}</p>
-                  <p className="mt-1 text-lg font-bold tabular-nums text-primary">
-                    {formatMonthlyDualFromBgn(subscription.monthlyPrice)}
-                  </p>
-                </>
-              ) : (
-                <p className="mt-0.5 text-sm text-muted-foreground">Не е активиран за това студио</p>
-              )}
-              {!subscription?.hasMonthlySubscription && latestRequest && latestRequest.status !== 'PENDING' ? (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Последна заявка:{' '}
-                  {latestRequest.status === 'ACCEPTED' ? 'одобрена.' : 'отказана от администратор.'}
-                </p>
-              ) : null}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">
-            {!subscription?.hasMonthlySubscription && latestRequest?.status === 'PENDING' ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-xl border-primary/20 hover:bg-primary/5"
-                onClick={() => setStatusModalOpen(true)}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Преглед на заявката
-              </Button>
-            ) : null}
-            {!subscription?.hasMonthlySubscription &&
-            latestRequest &&
-            latestRequest.status !== 'PENDING' ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-xl border-primary/20 hover:bg-primary/5"
-                onClick={() => setDetailsModalOpen(true)}
-              >
-                Пълни детайли
-              </Button>
-            ) : null}
-            {!subscription?.hasMonthlySubscription && (!latestRequest || latestRequest.status !== 'PENDING') ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-xl border-primary/20 hover:bg-primary/5"
-                onClick={() => setFormModalOpen(true)}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Заявка
-              </Button>
-            ) : null}
-            {subscription?.hasMonthlySubscription ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-xl border-primary/20 hover:bg-primary/5"
-                onClick={() => toast.info('За промяна на абонамент, моля свържете се с нас на admin@Zenno.bg')}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Промени
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <SubscriptionRequestFormModal
-        open={formModalOpen}
-        onClose={() => setFormModalOpen(false)}
-        studioId={selectedStudio}
-        studioName={selectedStudioName}
-        onSuccess={onWorkspaceReload}
-      />
-      <SubscriptionRequestStatusModal
-        open={statusModalOpen}
-        onClose={() => setStatusModalOpen(false)}
-        request={latestRequest}
-        studioName={selectedStudioName}
-        onOpenFullDetails={() => setDetailsModalOpen(true)}
-      />
-      <SubscriptionRequestDetailsModal
-        open={detailsModalOpen}
-        onClose={() => setDetailsModalOpen(false)}
-        request={latestRequest}
-        studioName={selectedStudioName}
-      />
 
       {viewMode === 'weekly' && (
         <WeeklyScheduleList
@@ -540,9 +399,18 @@ function UserScheduleContent({
               <CreditCard className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Месечен абонамент</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">{subscription.subscriptionNote}</p>
-              <p className="text-lg font-bold text-primary mt-1">{formatMonthlyDualFromBgn(subscription.monthlyPrice)}</p>
+              <h3 className="font-semibold text-foreground">
+                {subscription.name ?? 'Абонамент'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {subscription.includes ?? subscription.subscriptionNote}
+              </p>
+              <p className="text-lg font-bold text-primary mt-1">
+                {formatSubscriptionDualFromBgn(
+                  subscription.monthlyPrice ?? 0,
+                  subscription.durationMonths ?? 1,
+                )}
+              </p>
             </div>
           </div>
         </div>

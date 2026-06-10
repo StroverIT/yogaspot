@@ -8,6 +8,7 @@ type EnsureStripeCatalogEntryParams = {
   baseAmount: number;
   metadata: Record<string, string>;
   recurringInterval?: StripeInterval;
+  recurringIntervalCount?: number;
 };
 
 function getStripeSecretKey(): string | null {
@@ -47,6 +48,7 @@ async function createStripePrice(
   productId: string,
   unitAmount: number,
   recurringInterval?: StripeInterval,
+  recurringIntervalCount?: number,
 ): Promise<string> {
   const form = new URLSearchParams();
   form.append('currency', 'eur');
@@ -54,6 +56,9 @@ async function createStripePrice(
   form.append('unit_amount', String(unitAmount));
   if (recurringInterval) {
     form.append('recurring[interval]', recurringInterval);
+    if (recurringIntervalCount && recurringIntervalCount > 1) {
+      form.append('recurring[interval_count]', String(recurringIntervalCount));
+    }
   }
 
   const response = await fetch('https://api.stripe.com/v1/prices', {
@@ -83,5 +88,11 @@ export async function ensureStripeCatalogEntry(params: EnsureStripeCatalogEntryP
   if (finalChargeCents <= 0) return;
 
   const productId = await createStripeProduct(secretKey, params.name, params.metadata);
-  await createStripePrice(secretKey, productId, finalChargeCents, params.recurringInterval);
+  await createStripePrice(
+    secretKey,
+    productId,
+    finalChargeCents,
+    params.recurringInterval,
+    params.recurringIntervalCount,
+  );
 }

@@ -39,7 +39,7 @@ export interface Instructor {
   photo: string;
   bio: string;
   yogaStyle: string[];
-  experienceLevel: string;
+  experienceLevel: string[];
   studioId: string;
   rating: number;
 }
@@ -128,7 +128,10 @@ export interface Retreat {
 export interface StudioSubscription {
   studioId: string;
   hasMonthlySubscription: boolean;
+  name?: string;
   monthlyPrice?: number;
+  includes?: string;
+  durationMonths?: number;
   subscriptionNote?: string;
 }
 
@@ -152,6 +155,14 @@ export const YOGA_TYPES = [
 ];
 
 export const DIFFICULTY_LEVELS = ['начинаещ', 'среден', 'напреднал'] as const;
+
+/** Ниво на опит на инструктора (преподавателски стаж / квалификация). */
+export const INSTRUCTOR_EXPERIENCE_LEVELS = [
+  'Начинаещ',
+  'Среден',
+  'Напреднал',
+  'Експерт',
+] as const;
 
 export const mockStudios: Studio[] = [
   {
@@ -236,19 +247,19 @@ export const mockStudios: Studio[] = [
 export const mockInstructors: Instructor[] = [
   {
     id: 'i1', name: 'Мария Иванова', photo: '', bio: '15 години опит в Хатха и Виняса йога. Сертифицирана RYT-500.',
-    yogaStyle: ['Хатха', 'Виняса'], experienceLevel: 'Експерт', studioId: 's1', rating: 4.9,
+    yogaStyle: ['Хатха', 'Виняса'], experienceLevel: ['Експерт'], studioId: 's1', rating: 4.9,
   },
   {
     id: 'i2', name: 'Георги Петров', photo: '', bio: 'Специалист по Аштанга йога с 10 години опит. Обучавал се в Индия.',
-    yogaStyle: ['Аштанга', 'Пауър'], experienceLevel: 'Напреднал', studioId: 's2', rating: 4.7,
+    yogaStyle: ['Аштанга', 'Пауър'], experienceLevel: ['Напреднал'], studioId: 's2', rating: 4.7,
   },
   {
     id: 'i3', name: 'Елена Димитрова', photo: '', bio: 'Учител по Ин йога и медитация. Фокусира се върху релаксация и възстановяване.',
-    yogaStyle: ['Ин', 'Ресторативна'], experienceLevel: 'Експерт', studioId: 's3', rating: 4.8,
+    yogaStyle: ['Ин', 'Ресторативна'], experienceLevel: ['Експерт'], studioId: 's3', rating: 4.8,
   },
   {
     id: 'i4', name: 'Николай Стоянов', photo: '', bio: 'Младият и динамичен инструктор специализиран в Пауър и Аеро йога.',
-    yogaStyle: ['Пауър', 'Аеро йога'], experienceLevel: 'Среден', studioId: 's4', rating: 4.6,
+    yogaStyle: ['Пауър', 'Аеро йога'], experienceLevel: ['Среден'], studioId: 's4', rating: 4.6,
   },
 ];
 
@@ -328,8 +339,32 @@ export const mockSchedule: ScheduleEntry[] = [
 ];
 
 export const mockSubscriptions: StudioSubscription[] = [
-  { studioId: 's1', hasMonthlySubscription: true, monthlyPrice: 120, subscriptionNote: '8 посещения месечно, всеки клас' },
-  { studioId: 's2', hasMonthlySubscription: true, monthlyPrice: 150, subscriptionNote: 'Неограничени посещения' },
+  {
+    studioId: 's1',
+    hasMonthlySubscription: true,
+    name: 'Месечен пълен достъп',
+    monthlyPrice: 120,
+    includes: '8 посещения месечно, всеки клас',
+    durationMonths: 1,
+    subscriptionNote: '8 посещения месечно, всеки клас',
+  },
+  {
+    studioId: 's2',
+    hasMonthlySubscription: true,
+    name: 'Неограничен абонамент',
+    monthlyPrice: 150,
+    includes: 'Неограничени посещения',
+    durationMonths: 1,
+    subscriptionNote: 'Неограничени посещения',
+  },
   { studioId: 's3', hasMonthlySubscription: false },
-  { studioId: 's4', hasMonthlySubscription: true, monthlyPrice: 140, subscriptionNote: '10 посещения, Пауър и Аеро йога' },
+  {
+    studioId: 's4',
+    hasMonthlySubscription: true,
+    name: 'Комбиниран пакет',
+    monthlyPrice: 140,
+    includes: '10 посещения, Пауър и Аеро йога',
+    durationMonths: 3,
+    subscriptionNote: '10 посещения, Пауър и Аеро йога',
+  },
 ];

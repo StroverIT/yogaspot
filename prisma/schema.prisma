@@ -259,7 +259,7 @@ model Instructor {
   photo            String   @default("")
   bio              String
   yogaStyle        String[] @default([])
-  experienceLevel  String
+  experienceLevel  String[] @default([])
   rating           Float    @default(0)
 
   classes  YogaClass[]
@@ -382,7 +382,10 @@ model StudioSubscription {
   studioId               String  @unique
   studio                 Studio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
   hasMonthlySubscription Boolean @default(false)
+  name                   String?
   monthlyPrice           Float?
+  includes               String? @db.Text
+  durationMonths         Int     @default(1)
   subscriptionNote       String?
 }
 
