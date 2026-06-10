@@ -28,6 +28,7 @@ import {
 import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { cn } from '@/lib/utils';
 import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 import {
   isFreeClassPrice,
@@ -263,7 +264,10 @@ export function ScheduleModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="flex max-w-xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[85vh] sm:gap-4 sm:overflow-y-auto sm:p-6">
+      <DialogContent
+        {...preventDialogOutsideClose}
+        className="flex max-w-xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[85vh] sm:gap-4 sm:overflow-y-auto sm:p-6"
+      >
         <DialogHeader className="shrink-0 space-y-1.5 px-4 pb-2 pt-5 text-left sm:px-0 sm:pt-0 sm:pr-14">
           <DialogTitle className="font-display text-xl">
             {entry ? 'Редактирай час' : 'Добави час в разписание'}

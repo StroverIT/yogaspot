@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -109,7 +110,7 @@ export function VideoModal({
 
   return (
     <Dialog open={open} onOpenChange={next => !next && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent {...preventDialogOutsideClose} className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             <Video className="h-5 w-5 text-primary" />

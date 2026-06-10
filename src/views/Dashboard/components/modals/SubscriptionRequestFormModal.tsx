@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -75,7 +76,7 @@ export function SubscriptionRequestFormModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-lg sm:max-h-[90vh] overflow-y-auto">
+      <DialogContent {...preventDialogOutsideClose} className="max-w-lg sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">Заявка за месечен абонамент</DialogTitle>
           <DialogDescription>

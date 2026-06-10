@@ -162,7 +162,7 @@ export function RetreatSignupButton({
             ) : null}
             {showOnline ? (
               <Button type="button" disabled={pending} onClick={() => void handleOnlinePay()}>
-                {pending ? 'Зареждане…' : 'Плащане в Stripe'}
+                {pending ? 'Зареждане…' : 'Плащане онлайн'}
               </Button>
             ) : null}
           </DialogFooter>

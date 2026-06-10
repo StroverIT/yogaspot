@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import type { SubscriptionRequestDto, SubscriptionRequestStatus } from '@/data/mock-data';
 
 function statusLabel(status: SubscriptionRequestStatus): string {
@@ -51,7 +52,7 @@ export function SubscriptionRequestStatusModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent {...preventDialogOutsideClose} className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">Статус на заявката</DialogTitle>
           <DialogDescription>

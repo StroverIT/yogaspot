@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -549,6 +550,7 @@ export function StudioModal({
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent
+        {...preventDialogOutsideClose}
         className={cn(
           'fixed inset-0 z-50 flex h-dvh max-h-dvh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 shadow-lg sm:max-w-none sm:rounded-none',
           'data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100',

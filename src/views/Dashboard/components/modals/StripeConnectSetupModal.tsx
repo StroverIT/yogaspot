@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 
 export function StripeConnectSetupModal({
@@ -50,7 +51,7 @@ export function StripeConnectSetupModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent {...preventDialogOutsideClose} className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">Свържете Stripe акаунт</DialogTitle>
           <DialogDescription asChild>

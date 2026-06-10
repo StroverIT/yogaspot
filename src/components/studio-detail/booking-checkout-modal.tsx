@@ -180,7 +180,7 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
           ) : null}
           {showOnline ? (
             <Button type="button" onClick={() => void handlePay()} disabled={paying || !target}>
-              {paying ? 'Зареждане…' : 'Плащане в Stripe'}
+              {paying ? 'Зареждане…' : 'Плащане онлайн'}
             </Button>
           ) : null}
         </DialogFooter>

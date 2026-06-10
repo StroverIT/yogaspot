@@ -33,6 +33,7 @@ import {
 import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { cn } from '@/lib/utils';
 import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 
 const INCOMPLETE_MSG =
@@ -260,7 +261,10 @@ export function ClassModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="flex max-w-xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[85vh] sm:gap-4 sm:overflow-y-auto sm:p-6">
+      <DialogContent
+        {...preventDialogOutsideClose}
+        className="flex max-w-xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[85vh] sm:gap-4 sm:overflow-y-auto sm:p-6"
+      >
         <DialogHeader className="shrink-0 space-y-1.5 px-4 pb-2 pt-5 text-left sm:px-0 sm:pt-0 sm:pr-14">
           <DialogTitle className="font-display text-xl">
             {classToEdit ? 'Редактирай клас' : 'Нов клас'}
@@ -272,231 +276,230 @@ export function ClassModal({
           </DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-2 sm:px-0 sm:pb-0">
-        <div className="space-y-4">
-          <section className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Основни данни</p>
-          <div>
-            <Label>Име на клас</Label>
-            <Input
-              value={className}
-              onChange={e => setClassName(e.target.value)}
-              placeholder="напр. Сутрешна Хатха"
-              className="mt-1"
-            />
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label>Студио</Label>
-              <Select value={studioId || undefined} onValueChange={setStudioId}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Изберете" />
-                </SelectTrigger>
-                <SelectContent>
-                  {studios.map(s => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Инструктор</Label>
-              <Select
-                value={instructorId || undefined}
-                onValueChange={setInstructorId}
-                disabled={!studioId || instructorsForStudio.length === 0}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={studioId ? 'Изберете' : 'Първо изберете студио'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructorsForStudio.map(i => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {studioId && instructorsForStudio.length === 0 && onCreateInstructor ? (
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Няма инструктор за това студио.{' '}
-                  <button
-                    type="button"
-                    className="font-medium text-primary underline-offset-4 hover:underline"
-                    onClick={() => onCreateInstructor(studioId)}
-                  >
-                    Добавете инструктор
-                  </button>
-                </p>
-              ) : null}
-            </div>
-          </div>
-          </section>
-
-          {showScheduleSection ? (
-          <section
-            className={cn(
-              'space-y-4 border-t border-border/70 pt-4',
-              !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
-            )}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Дата и час</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div>
-              <Label>Дата</Label>
-              <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label>Начален час</Label>
-              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label>Краен час</Label>
-              <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="mt-1" />
-            </div>
-          </div>
-          </section>
-          ) : null}
-
-          {showDetailsSection ? (
-          <section
-            className={cn(
-              'space-y-4 border-t border-border/70 pt-4',
-              !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
-            )}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Детайли за класа</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label>Тип йога</Label>
-              <Select value={yogaType || undefined} onValueChange={setYogaType}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Изберете тип" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YOGA_TYPES.map(t => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Ниво на трудност</Label>
-              <Select value={difficulty || undefined} onValueChange={setDifficulty}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Изберете" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DIFFICULTY_LEVELS.map(d => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label>Максимален капацитет</Label>
-              <Input
-                type="number"
-                min={1}
-                placeholder="20"
-                value={maxCapacity}
-                onChange={e => setMaxCapacity(e.target.value)}
-                disabled={isOnlineStudio && noCapacityLimit}
-                className="mt-1"
-              />
-              {isOnlineStudio ? (
-                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                  <Checkbox
-                    checked={noCapacityLimit}
-                    onCheckedChange={checked => {
-                      const on = checked === true;
-                      setNoCapacityLimit(on);
-                      if (on) setMaxCapacity('');
-                    }}
-                  />
-                  Няма лимит
-                </label>
-              ) : null}
-            </div>
-            <div>
-              <Label>Цена (€)</Label>
-              <Input
-                type="text"
-                inputMode="decimal"
-                placeholder="12,77"
-                value={price}
-                onChange={e => setPrice(e.target.value)}
-                disabled={isFreeClass}
-                className="mt-1"
-              />
-              <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                <Checkbox
-                  checked={isFreeClass}
-                  onCheckedChange={checked => {
-                    const on = checked === true;
-                    setIsFreeClass(on);
-                    if (on) setPrice('');
-                  }}
+          <div className="space-y-4">
+            <section className="space-y-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Основни данни</p>
+              <div>
+                <Label>Име на клас</Label>
+                <Input
+                  value={className}
+                  onChange={e => setClassName(e.target.value)}
+                  placeholder="напр. Сутрешна Хатха"
+                  className="mt-1"
                 />
-                Безплатно
-              </label>
-              {isFreeClass ? (
-                <p className="mt-1 text-xs text-muted-foreground">Класът е безплатен за практикуващите.</p>
-              ) : null}
-            </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Студио</Label>
+                  <Select value={studioId || undefined} onValueChange={setStudioId}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Изберете" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {studios.map(s => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Инструктор</Label>
+                  <Select
+                    value={instructorId || undefined}
+                    onValueChange={setInstructorId}
+                    disabled={!studioId || instructorsForStudio.length === 0}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder={studioId ? 'Изберете' : 'Първо изберете студио'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {instructorsForStudio.map(i => (
+                        <SelectItem key={i.id} value={i.id}>
+                          {i.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {studioId && instructorsForStudio.length === 0 && onCreateInstructor ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Няма инструктор за това студио.{' '}
+                      <button
+                        type="button"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        onClick={() => onCreateInstructor(studioId)}
+                      >
+                        Добавете инструктор
+                      </button>
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+
+            {showScheduleSection ? (
+              <section
+                className={cn(
+                  'space-y-4 border-t border-border/70 pt-4',
+                  !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
+                )}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Дата и час</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div>
+                    <Label>Дата</Label>
+                    <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Начален час</Label>
+                    <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Краен час</Label>
+                    <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="mt-1" />
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
+            {showDetailsSection ? (
+              <section
+                className={cn(
+                  'space-y-4 border-t border-border/70 pt-4',
+                  !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
+                )}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Детайли за класа</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Тип йога</Label>
+                    <Select value={yogaType || undefined} onValueChange={setYogaType}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Изберете тип" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {YOGA_TYPES.map(t => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Ниво на трудност</Label>
+                    <Select value={difficulty || undefined} onValueChange={setDifficulty}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Изберете" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DIFFICULTY_LEVELS.map(d => (
+                          <SelectItem key={d} value={d}>
+                            {d}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Максимален капацитет</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="20"
+                      value={maxCapacity}
+                      onChange={e => setMaxCapacity(e.target.value)}
+                      disabled={isOnlineStudio && noCapacityLimit}
+                      className="mt-1"
+                    />
+                    {isOnlineStudio ? (
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                        <Checkbox
+                          checked={noCapacityLimit}
+                          onCheckedChange={checked => {
+                            const on = checked === true;
+                            setNoCapacityLimit(on);
+                            if (on) setMaxCapacity('');
+                          }}
+                        />
+                        Няма лимит
+                      </label>
+                    ) : null}
+                  </div>
+                  <div>
+                    <Label>Цена (€)</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="12,77"
+                      value={price}
+                      onChange={e => setPrice(e.target.value)}
+                      disabled={isFreeClass}
+                      className="mt-1"
+                    />
+                    <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                      <Checkbox
+                        checked={isFreeClass}
+                        onCheckedChange={checked => {
+                          const on = checked === true;
+                          setIsFreeClass(on);
+                          if (on) setPrice('');
+                        }}
+                      />
+                      Безплатно
+                    </label>
+                    {isFreeClass ? (
+                      <p className="mt-1 text-xs text-muted-foreground">Класът е безплатен за практикуващите.</p>
+                    ) : null}
+                  </div>
+                </div>
+                {!isFreeClass ? (
+                  <PaymentModeField
+                    value={paymentMode}
+                    onChange={setPaymentMode}
+                    stripeConnect={stripeConnect}
+                    onRequireStripeSetup={() => setStripeSetupOpen(true)}
+                    showOnlineFeeHint={hasValidBasePrice}
+                  />
+                ) : null}
+                {!isFreeClass && hasValidBasePrice && includesOnlinePayment(paymentMode) ? (
+                  <p className="text-xs text-muted-foreground">
+                    Крайна цена за клиента при онлайн плащане:{' '}
+                    {formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))}
+                  </p>
+                ) : null}
+                <div>
+                  <Label>Политика за отказване</Label>
+                  <Input
+                    value={cancellationPolicy}
+                    onChange={e => setCancellationPolicy(e.target.value)}
+                    placeholder="напр. До 2 часа преди клас"
+                    className="mt-1"
+                  />
+                </div>
+                {!isOnlineStudio ? (
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                    <Checkbox
+                      checked={acceptsMultisport}
+                      onCheckedChange={checked => setAcceptsMultisport(checked === true)}
+                    />
+                    Приема MultiSport
+                  </label>
+                ) : null}
+                {selectedStudio?.teachingMode === 'online' ? (
+                  <p className="text-sm text-muted-foreground">
+                    Онлайн клас - практикуващите получават Zoom линк след запис.
+                  </p>
+                ) : null}
+                {onlineStudioBlocked ? (
+                  <p className="text-sm text-destructive">{ONLINE_STUDIO_ZOOM_REQUIRED_MSG}</p>
+                ) : null}
+              </section>
+            ) : null}
           </div>
-          {!isFreeClass ? (
-            <PaymentModeField
-              value={paymentMode}
-              onChange={setPaymentMode}
-              stripeConnect={stripeConnect}
-              onRequireStripeSetup={() => setStripeSetupOpen(true)}
-              showOnlineFeeHint={hasValidBasePrice}
-            />
-          ) : null}
-          {!isFreeClass && hasValidBasePrice && includesOnlinePayment(paymentMode) ? (
-            <p className="text-xs text-muted-foreground">
-              Крайна цена за клиента при онлайн плащане:{' '}
-              {formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса{' '}
-              {formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)
-            </p>
-          ) : null}
-          <div>
-            <Label>Политика за отказване</Label>
-            <Input
-              value={cancellationPolicy}
-              onChange={e => setCancellationPolicy(e.target.value)}
-              placeholder="напр. До 2 часа преди клас"
-              className="mt-1"
-            />
-          </div>
-          {!isOnlineStudio ? (
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-              <Checkbox
-                checked={acceptsMultisport}
-                onCheckedChange={checked => setAcceptsMultisport(checked === true)}
-              />
-              Приема MultiSport
-            </label>
-          ) : null}
-          {selectedStudio?.teachingMode === 'online' ? (
-            <p className="text-sm text-muted-foreground">
-              Онлайн клас - практикуващите получават Zoom линк след запис.
-            </p>
-          ) : null}
-          {onlineStudioBlocked ? (
-            <p className="text-sm text-destructive">{ONLINE_STUDIO_ZOOM_REQUIRED_MSG}</p>
-          ) : null}
-          </section>
-          ) : null}
-        </div>
         </div>
         <DialogFooter className="mt-0 shrink-0 gap-3 border-t bg-background px-4 py-4 sm:mt-4 sm:border-t-0 sm:px-0 sm:py-0 [&_button]:w-full sm:[&_button]:w-auto">
           <Button variant="outline" onClick={onClose}>

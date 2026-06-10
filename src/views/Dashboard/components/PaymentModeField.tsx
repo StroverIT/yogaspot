@@ -46,11 +46,7 @@ export function PaymentModeField({
           </label>
         ))}
       </RadioGroup>
-      {showOnlineFeeHint && includesOnlinePayment(value) ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          При онлайн плащане се добавя автоматично такса 0,70 лв. + 3%.
-        </p>
-      ) : null}
+
     </div>
   );
 }

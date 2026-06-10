@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import type { SubscriptionRequestDto, SubscriptionRequestStatus } from '@/data/mock-data';
 import { formatMonthlyDualFromBgn } from '@/lib/eur-bgn';
 
@@ -50,7 +51,7 @@ export function SubscriptionRequestDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-lg sm:max-h-[90vh] overflow-y-auto">
+      <DialogContent {...preventDialogOutsideClose} className="max-w-lg sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">Детайли за заявката</DialogTitle>
           <DialogDescription>Студио: {studioName}</DialogDescription>

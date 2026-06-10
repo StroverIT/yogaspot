@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import type { TeachingModeDto } from '@/lib/teaching-mode';
 import { getOnboardingFirstStepHref } from '@/lib/dashboard-onboarding';
 import { cn } from '@/lib/utils';
@@ -37,8 +38,8 @@ export function DashboardTeachingModeOnboardingModal({
   return (
     <Dialog open={open} onOpenChange={() => { }}>
       <DialogContent
+        {...preventDialogOutsideClose}
         className="max-w-lg gap-0 overflow-hidden p-0 [&>button.absolute]:hidden"
-        onPointerDownOutside={e => e.preventDefault()}
         onEscapeKeyDown={e => e.preventDefault()}
       >
         <DialogHeader className="space-y-2 px-6 pt-6 text-center sm:text-center">

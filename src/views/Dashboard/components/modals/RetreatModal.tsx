@@ -21,6 +21,7 @@ import {
 import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { isFreeClassPrice } from '@/lib/yoga-class-limits';
 import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
+import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
 import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 
 type RetreatImageUrlSlot = { kind: 'url'; id: string; url: string };
@@ -295,7 +296,10 @@ export function RetreatModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh] sm:gap-4 sm:overflow-y-auto sm:p-6">
+      <DialogContent
+        {...preventDialogOutsideClose}
+        className="flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-h-[90vh] sm:gap-4 sm:overflow-y-auto sm:p-6"
+      >
         <DialogHeader className="shrink-0 space-y-1.5 px-4 pb-2 pt-5 text-left sm:px-0 sm:pt-0 sm:pr-14">
           <DialogTitle className="font-display flex items-center gap-2 text-xl sm:text-2xl">
             <Palmtree className="h-5 w-5 shrink-0 text-primary" /> {retreatToEdit ? 'Редактирай рийтрийт' : 'Нов рийтрийт'}
