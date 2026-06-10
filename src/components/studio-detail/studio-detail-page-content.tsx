@@ -14,13 +14,8 @@ const STUDIO_DETAIL_MOBILE_CTA_OFFSET_CLASS =
   'pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0';
 import { StudioDetailSummary } from '@/components/studio-detail/studio-detail-summary';
 import { getPublicStudioCorePayload } from '@/lib/get-public-studio';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
-
 export async function StudioDetailPageContent({ id }: { id: string }) {
-  const [payload, onlinePayments] = await Promise.all([
-    getPublicStudioCorePayload(id, { trackView: true }),
-    Promise.resolve(isOnlinePaymentsEnabled()),
-  ]);
+  const payload = await getPublicStudioCorePayload(id, { trackView: true });
 
   if (!payload) {
     notFound();
@@ -51,7 +46,7 @@ export async function StudioDetailPageContent({ id }: { id: string }) {
                 <div className="mt-6 h-48 animate-pulse rounded-2xl border border-border bg-muted/40" />
               }
             >
-              <StudioDetailInteractive initialPayload={payload} onlinePayments={onlinePayments} />
+              <StudioDetailInteractive initialPayload={payload} />
             </Suspense>
           </div>
 

@@ -37,6 +37,13 @@ enum PaymentStatus {
   failed
 }
 
+enum StudioMembershipStatus {
+  active
+  past_due
+  canceled
+  incomplete
+}
+
 enum BusinessPlatformSubscriptionStatus {
   trial
   active
@@ -80,6 +87,7 @@ model User {
   bookings       Booking[]
   scheduleEntryBookings ScheduleEntryBooking[]
   retreatBookings RetreatBooking[]
+  studioMemberships StudioMembership[]
 }
 
 /// A client user’s completed visit to a scheduled class (used for profile history and spend summary).
@@ -130,6 +138,10 @@ model Business {
   name        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  stripeConnectAccountId        String? @unique
+  stripeConnectChargesEnabled   Boolean @default(false)
+  stripeConnectDetailsSubmitted Boolean @default(false)
 
   studios                  Studio[]
   platformSubscription     BusinessPlatformSubscription?
@@ -209,6 +221,7 @@ model Studio {
   retreats      Retreat[]
   subscription          StudioSubscription?
   subscriptionRequests  SubscriptionRequest[]
+  memberships           StudioMembership[]
   favorites             Favorite[]
 }
 
@@ -387,6 +400,28 @@ model StudioSubscription {
   includes               String? @db.Text
   durationMonths         Int     @default(1)
   subscriptionNote       String?
+  stripeProductId        String?
+  stripePriceId          String? @unique
+  memberships            StudioMembership[]
+}
+
+model StudioMembership {
+  id                   String                 @id @default(cuid())
+  userId               String
+  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studioId             String
+  studio               Studio                 @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  studioSubscriptionId String?
+  studioSubscription   StudioSubscription?    @relation(fields: [studioSubscriptionId], references: [id], onDelete: SetNull)
+  stripeSubscriptionId String                 @unique
+  stripeCustomerId     String?
+  status               StudioMembershipStatus @default(incomplete)
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([userId, studioId])
+  @@index([studioId, status])
 }
 
 model SubscriptionRequest {

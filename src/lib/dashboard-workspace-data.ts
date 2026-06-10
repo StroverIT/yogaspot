@@ -12,11 +12,11 @@ import type {
 import { listStudioIdsForActor, type SessionUser } from '@/lib/api-auth';
 import type { PlatformBillingSummary } from '@/lib/business-platform-billing';
 import { getSubscriptionSummaryForOwnerUserId } from '@/lib/business-platform-billing';
+import { getStripeConnectSummaryForOwnerUserId, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { emptyDashboardBookingRevenue, getDashboardBookingRevenueSummary } from '@/lib/dashboard-booking-revenue';
 import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 import { getDashboardRecentSignups } from '@/lib/dashboard-recent-signups';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { prisma } from '@/lib/prisma';
 import {
   instructorToDto,
@@ -39,8 +39,8 @@ export type DashboardWorkspaceData = {
   subscriptionRequests: SubscriptionRequestDto[];
   recentSignups: DashboardRecentSignup[];
   bookingRevenue: DashboardBookingRevenue;
-  onlinePayments: boolean;
   platformBilling: PlatformBillingSummary | null;
+  stripeConnect: StripeConnectSummary | null;
 };
 
 type WorkspaceActor = SessionUser & { id: string; role: Role };
@@ -57,8 +57,13 @@ function studioToDashboardDto(
 export const getDashboardWorkspaceData = cache(async function getDashboardWorkspaceData(
   user: WorkspaceActor,
 ): Promise<DashboardWorkspaceData> {
-  const platformBilling =
-    user.role === 'business' ? await getSubscriptionSummaryForOwnerUserId(user.id) : null;
+  const [platformBilling, stripeConnect] =
+    user.role === 'business'
+      ? await Promise.all([
+          getSubscriptionSummaryForOwnerUserId(user.id),
+          getStripeConnectSummaryForOwnerUserId(user.id),
+        ])
+      : [null, null];
 
   const studioIds = await listStudioIdsForActor(user);
   if (studioIds.length === 0) {
@@ -72,8 +77,8 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
       subscriptionRequests: [],
       recentSignups: [],
       bookingRevenue: emptyDashboardBookingRevenue,
-      onlinePayments: isOnlinePaymentsEnabled(),
       platformBilling,
+      stripeConnect,
     };
   }
 
@@ -130,7 +135,7 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
     recentSignups,
     bookingRevenue,
-    onlinePayments: isOnlinePaymentsEnabled(),
     platformBilling,
+    stripeConnect,
   };
 });

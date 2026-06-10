@@ -54,7 +54,6 @@ export function ClassModal({
   studios,
   instructors,
   classToEdit,
-  onlinePayments = true,
   onCreateInstructor,
   preselectInstructorId,
 }: {
@@ -64,8 +63,6 @@ export function ClassModal({
   studios: typeof mockStudios;
   instructors: typeof mockInstructors;
   classToEdit?: YogaClass | null;
-  /** When false (`ONLINE_PAYMENTS` off), no helper text under the price field. */
-  onlinePayments?: boolean;
   /** Opens instructor create flow with the given studio pre-selected. */
   onCreateInstructor?: (studioId: string) => void;
   /** After inline instructor create, auto-select in the dropdown. */
@@ -427,7 +424,7 @@ export function ClassModal({
                 />
                 Безплатно
               </label>
-              {onlinePayments && !isFreeClass ? (
+              {!isFreeClass ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {hasValidBasePrice
                     ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`

@@ -235,7 +235,6 @@ export default function DashboardSchedulePage() {
         studios={myStudios}
         instructors={myInstructors}
         entry={editingSchedule}
-        onlinePayments={ws.onlinePayments}
         onCreateInstructor={studioId => {
           setInstructorDefaultStudioId(studioId);
           setInstructorModalOpen(true);

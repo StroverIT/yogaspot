@@ -30,6 +30,7 @@ export function StudioDetailTabs({
   checkoutModalOpen,
   bookedClassIds,
   bookedScheduleEntryIds,
+  hasActiveMembership,
 }: {
   studioId: string;
   studioTeachingMode: TeachingMode;
@@ -50,6 +51,7 @@ export function StudioDetailTabs({
   checkoutModalOpen: boolean;
   bookedClassIds: string[];
   bookedScheduleEntryIds: string[];
+  hasActiveMembership: boolean;
 }) {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab ?? 'schedule');
@@ -78,10 +80,12 @@ export function StudioDetailTabs({
         {activeTab === 'schedule' && (
           <ScheduleContent
             variant="user"
+            studioId={studioId}
             studioSchedule={studioSchedule}
             subscription={subscription}
             instructors={studioInstructors}
             isAuthenticated={isAuthenticated}
+            hasActiveMembership={hasActiveMembership}
             checkoutModalOpen={checkoutModalOpen}
             onRequestScheduleBook={onRequestScheduleBook}
             bookedScheduleEntryIds={bookedScheduleEntryIds}

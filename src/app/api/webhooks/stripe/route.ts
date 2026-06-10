@@ -4,12 +4,18 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { getStripe } from '@/lib/stripe-server';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import {
   handlePlatformInvoicePaid,
   handlePlatformInvoicePaymentFailed,
   syncSubscriptionFromStripe,
 } from '@/lib/business-platform-billing';
+import { syncConnectAccountFromStripe } from '@/lib/stripe-connect';
+import {
+  customerIdFromSubscription,
+  mapStripeSubscriptionStatus,
+  subscriptionPeriodEnd,
+} from '@/lib/studio-membership';
+import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
 
@@ -294,14 +300,144 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
   }
 }
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
+function isStudioSubscriptionMetadata(md: Record<string, string | undefined>): boolean {
+  return md.zennoKind === 'studio_subscription' || md.checkoutKind === 'studio_subscription';
+}
+
+async function upsertStudioMembershipFromStripe(
+  subscription: Stripe.Subscription,
+  md: Record<string, string>,
+): Promise<void> {
+  const userId = md.userId ?? subscription.metadata?.userId;
+  const studioId = md.studioId ?? subscription.metadata?.studioId;
+  const studioSubscriptionId = md.studioSubscriptionId ?? subscription.metadata?.studioSubscriptionId;
+
+  if (!userId || !studioId) {
+    console.error('[stripe webhook] studio subscription missing user/studio', subscription.id);
+    return;
+  }
+
+  const existing = await prisma.studioMembership.findUnique({
+    where: { stripeSubscriptionId: subscription.id },
+    select: { id: true },
+  });
+
+  const data = {
+    userId,
+    studioId,
+    studioSubscriptionId: studioSubscriptionId || null,
+    stripeCustomerId: customerIdFromSubscription(subscription),
+    status: mapStripeSubscriptionStatus(subscription.status),
+    currentPeriodEnd: subscriptionPeriodEnd(subscription),
+  };
+
+  if (existing) {
+    await prisma.studioMembership.update({
+      where: { stripeSubscriptionId: subscription.id },
+      data,
+    });
+    return;
+  }
+
+  await prisma.studioMembership.create({
+    data: {
+      ...data,
+      stripeSubscriptionId: subscription.id,
+    },
+  });
+
+  await trackServerEvent({
+    eventName: 'subscription_completed',
+    userId,
+    studioId,
+    metadata: {
+      stripeSubscriptionId: subscription.id,
+      studioSubscriptionId: studioSubscriptionId ?? null,
+    },
+  });
+}
+
+async function fulfillStudioSubscriptionCheckout(
+  session: Stripe.Checkout.Session,
+  md: Record<string, string>,
+  stripeAccountId?: string | null,
+): Promise<void> {
+  const subId =
+    typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
+  if (!subId) {
+    console.error('[stripe webhook] studio subscription checkout missing subscription id', session.id);
+    return;
+  }
+
+  const stripe = getStripe();
+  const subscription = await stripe.subscriptions.retrieve(
+    subId,
+    stripeAccountId ? { stripeAccount: stripeAccountId } : undefined,
+  );
+
+  await upsertStudioMembershipFromStripe(subscription, md);
+}
+
+async function syncStudioMembershipLifecycle(
+  subscription: Stripe.Subscription,
+): Promise<void> {
+  if (!isStudioSubscriptionMetadata(subscription.metadata ?? {})) return;
+
+  const existing = await prisma.studioMembership.findUnique({
+    where: { stripeSubscriptionId: subscription.id },
+    select: { id: true },
+  });
+  if (!existing) {
+    const md = (subscription.metadata ?? {}) as Record<string, string>;
+    if (md.userId && md.studioId) {
+      await upsertStudioMembershipFromStripe(subscription, md);
+    }
+    return;
+  }
+
+  await prisma.studioMembership.update({
+    where: { stripeSubscriptionId: subscription.id },
+    data: {
+      status: mapStripeSubscriptionStatus(subscription.status),
+      currentPeriodEnd: subscriptionPeriodEnd(subscription),
+      stripeCustomerId: customerIdFromSubscription(subscription),
+    },
+  });
+}
+
+async function handleStudioSubscriptionInvoiceFailed(invoice: Stripe.Invoice): Promise<void> {
+  const subId =
+    typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+  if (!subId) return;
+
+  const membership = await prisma.studioMembership.findUnique({
+    where: { stripeSubscriptionId: subId },
+    select: { id: true },
+  });
+  if (!membership) return;
+
+  await prisma.studioMembership.update({
+    where: { stripeSubscriptionId: subId },
+    data: { status: 'past_due' },
+  });
+}
+
+async function handleCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session,
+  stripeAccountId?: string | null,
+): Promise<void> {
+  const md = (session.metadata ?? {}) as Record<string, string>;
+
+  if (session.mode === 'subscription' && isStudioSubscriptionMetadata(md)) {
+    await fulfillStudioSubscriptionCheckout(session, md, stripeAccountId);
+    return;
+  }
+
   const existing = await prisma.payment.findUnique({
     where: { stripeCheckoutSessionId: session.id },
     select: { id: true },
   });
   if (existing) return;
-
-  const md = (session.metadata ?? {}) as Record<string, string>;
 
   if (md.checkoutKind === 'schedule') {
     await fulfillScheduleBooking(session, md);
@@ -317,10 +453,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
 }
 
 export async function POST(request: Request) {
-  if (!isOnlinePaymentsEnabled()) {
-    return NextResponse.json({ received: true, onlinePayments: false });
-  }
-
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   if (!secret) {
     console.error('[stripe webhook] STRIPE_WEBHOOK_SECRET is not set');
@@ -346,8 +478,9 @@ export async function POST(request: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.mode === 'payment') {
-          await handleCheckoutSessionCompleted(session);
+        const connectAccountId = typeof event.account === 'string' ? event.account : null;
+        if (session.mode === 'payment' || session.mode === 'subscription') {
+          await handleCheckoutSessionCompleted(session, connectAccountId);
         }
         break;
       }
@@ -362,6 +495,8 @@ export async function POST(request: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         if (subscription.metadata?.zennoKind === 'platform_subscription') {
           await syncSubscriptionFromStripe(subscription);
+        } else if (isStudioSubscriptionMetadata(subscription.metadata ?? {})) {
+          await syncStudioMembershipLifecycle(subscription);
         }
         break;
       }
@@ -386,12 +521,25 @@ export async function POST(request: Request) {
         const subId =
           typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
         if (subId) {
+          const connectAccountId = typeof event.account === 'string' ? event.account : undefined;
           const stripe = getStripe();
-          const sub = await stripe.subscriptions.retrieve(subId);
+          const sub = await stripe.subscriptions.retrieve(
+            subId,
+            connectAccountId ? { stripeAccount: connectAccountId } : undefined,
+          );
           if (sub.metadata?.zennoKind === 'platform_subscription') {
             await handlePlatformInvoicePaymentFailed(invoice);
             await syncSubscriptionFromStripe(sub, invoice);
+          } else if (isStudioSubscriptionMetadata(sub.metadata ?? {})) {
+            await handleStudioSubscriptionInvoiceFailed(invoice);
           }
+        }
+        break;
+      }
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account;
+        if (account.metadata?.zennoKind === 'connect_seller' || account.id) {
+          await syncConnectAccountFromStripe(account);
         }
         break;
       }

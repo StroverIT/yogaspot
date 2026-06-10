@@ -44,14 +44,14 @@ function tabNeedsExtras(tab: TabKey | undefined) {
 
 type StudioDetailInteractiveProps = {
   initialPayload: PublicStudioCorePayload;
-  onlinePayments: boolean;
 };
 
-export function StudioDetailInteractive({ initialPayload, onlinePayments }: StudioDetailInteractiveProps) {
+export function StudioDetailInteractive({ initialPayload }: StudioDetailInteractiveProps) {
   const searchParams = useSearchParams();
   const defaultTab = tabFromSearchParam(searchParams.get('tab'));
   const { isAuthenticated } = useAuth();
   const wasAuthenticated = useRef(isAuthenticated);
+  const handledSubscriptionReturn = useRef(false);
 
   const [core, setCore] = useState(initialPayload);
   const [extras, setExtras] = useState<PublicStudioExtras | null>(null);
@@ -130,6 +130,21 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
   );
   const bookedClassIds = core.myBookings?.classIds ?? [];
   const bookedScheduleEntryIds = core.myBookings?.scheduleEntryIds ?? [];
+  const hasActiveMembership = core.myBookings?.hasActiveMembership ?? false;
+
+  useEffect(() => {
+    const subscriptionParam = searchParams.get('subscription');
+    if (subscriptionParam !== 'success' || handledSubscriptionReturn.current) return;
+    handledSubscriptionReturn.current = true;
+    toast.success('Абонаментът е активиран успешно.');
+    window.history.replaceState({}, '', `/studio/${encodeURIComponent(studio.id)}?tab=schedule`);
+    void fetchFullPayload().then((data) => {
+      if (!data) return;
+      const { classes, reviews, ...nextCore } = data;
+      setCore(nextCore);
+      setExtras({ classes, reviews });
+    });
+  }, [searchParams, studio.id, fetchFullPayload]);
 
   const handleRequestClassBook = (classId: string) => {
     if (!isAuthenticated) {
@@ -170,7 +185,6 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
         <BookingCheckoutModal
           open
           target={checkoutTarget}
-          onlinePayments={onlinePayments}
           onClose={() => setCheckoutTarget(null)}
           onBooked={() => {
             void fetchFullPayload().then((data) => {
@@ -204,6 +218,7 @@ export function StudioDetailInteractive({ initialPayload, onlinePayments }: Stud
         checkoutModalOpen={checkoutTarget !== null}
         bookedClassIds={bookedClassIds}
         bookedScheduleEntryIds={bookedScheduleEntryIds}
+          hasActiveMembership={hasActiveMembership}
       />
     </>
   );

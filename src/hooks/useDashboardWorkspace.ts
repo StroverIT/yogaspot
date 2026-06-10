@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DashboardWorkspaceData } from '@/lib/dashboard-workspace-data';
 import { emptyDashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
-import { parseOnlinePaymentsFlag } from '@/lib/payment-settings';
-
 export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData | null) {
   const hasInitialData = initialWorkspace !== undefined;
   const [data, setData] = useState<DashboardWorkspaceData | null>(initialWorkspace ?? null);
@@ -29,7 +27,6 @@ export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData 
       setData({
         ...json,
         bookingRevenue: json.bookingRevenue ?? emptyDashboardBookingRevenue,
-        onlinePayments: parseOnlinePaymentsFlag(json.onlinePayments),
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
@@ -54,8 +51,8 @@ export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData 
     subscriptionRequests: data?.subscriptionRequests ?? [],
     recentSignups: data?.recentSignups ?? [],
     bookingRevenue: data?.bookingRevenue ?? emptyDashboardBookingRevenue,
-    onlinePayments: data?.onlinePayments ?? true,
     platformBilling: data?.platformBilling ?? null,
+    stripeConnect: data?.stripeConnect ?? null,
     loading,
     error,
     reload,

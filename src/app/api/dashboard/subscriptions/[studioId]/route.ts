@@ -9,7 +9,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { subscriptionToDto } from '@/lib/public-studio-dto';
 import { buildSubscriptionNoteFromRequest } from '@/lib/subscription-request-dto';
-import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
+import { getConnectAccountIdForStudio, syncStudioSubscriptionStripeCatalog } from '@/lib/stripe-catalog';
 
 export const runtime = 'nodejs';
 
@@ -92,6 +92,49 @@ export async function PUT(req: Request, context: RouteContext) {
   }
 
   const subscriptionNote = buildSubscriptionNoteFromRequest(name, includes);
+  const existing = await prisma.studioSubscription.findUnique({ where: { studioId } });
+
+  let stripeProductId: string | null = existing?.stripeProductId ?? null;
+  let stripePriceId: string | null = existing?.stripePriceId ?? null;
+
+  const connectAccountId = await getConnectAccountIdForStudio(studioId);
+  if (!connectAccountId) {
+    return NextResponse.json(
+      {
+        error: 'Свържете Stripe акаунта си, за да създавате абонаменти.',
+        code: 'stripe_not_connected',
+      },
+      { status: 403 },
+    );
+  }
+
+  const catalogUnchanged =
+    Boolean(existing?.stripePriceId) &&
+    existing?.monthlyPrice === monthlyPrice &&
+    existing?.durationMonths === durationMonths;
+
+  if (catalogUnchanged && existing?.stripePriceId) {
+    stripeProductId = existing.stripeProductId;
+    stripePriceId = existing.stripePriceId;
+  } else {
+    try {
+      const catalog = await syncStudioSubscriptionStripeCatalog({
+        name,
+        baseAmount: monthlyPrice,
+        durationMonths,
+        studioId,
+        studioSubscriptionId: existing?.id ?? studioId,
+        stripeAccountId: connectAccountId,
+        existingProductId: existing?.stripeProductId,
+        existingPriceId: existing?.stripePriceId,
+      });
+      stripeProductId = catalog.productId;
+      stripePriceId = catalog.priceId;
+    } catch (error) {
+      console.error('Stripe catalog sync failed for studio subscription', studioId, error);
+      return jsonError('Неуспешно създаване на Stripe продукт/цена. Опитайте отново.', 502);
+    }
+  }
 
   const saved = await prisma.studioSubscription.upsert({
     where: { studioId },
@@ -103,6 +146,8 @@ export async function PUT(req: Request, context: RouteContext) {
       includes,
       durationMonths,
       subscriptionNote,
+      stripeProductId,
+      stripePriceId,
     },
     update: {
       hasMonthlySubscription: true,
@@ -111,24 +156,10 @@ export async function PUT(req: Request, context: RouteContext) {
       includes,
       durationMonths,
       subscriptionNote,
+      stripeProductId,
+      stripePriceId,
     },
   });
-
-  try {
-    await ensureStripeCatalogEntry({
-      name: `Subscription: ${name}`,
-      baseAmount: saved.monthlyPrice ?? monthlyPrice,
-      recurringInterval: 'month',
-      recurringIntervalCount: durationMonths,
-      metadata: {
-        type: 'subscription',
-        studioId,
-        studioSubscriptionId: saved.id,
-      },
-    });
-  } catch (error) {
-    console.error('Stripe catalog sync failed for studio subscription', saved.id, error);
-  }
 
   return NextResponse.json({ subscription: subscriptionToDto(saved) });
 }
@@ -158,6 +189,8 @@ export async function DELETE(_req: Request, context: RouteContext) {
       includes: null,
       durationMonths: 1,
       subscriptionNote: null,
+      stripeProductId: null,
+      stripePriceId: null,
     },
   });
 

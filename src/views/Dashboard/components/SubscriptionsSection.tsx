@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { PlatformBillingSummary } from '@/lib/business-platform-billing';
+import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 import type { Studio, StudioSubscription } from '@/data/mock-data';
 import { formatSubscriptionDualFromBgn } from '@/lib/eur-bgn';
 import { CreditCard, Edit, Plus, Trash2 } from 'lucide-react';
@@ -23,53 +23,45 @@ import { dashboardCardClass } from '../dashboardUi';
 import { DashboardPageHeader } from './DashboardPageHeader';
 import { SubscriptionModal, type SubscriptionModalPayload } from './modals/SubscriptionModal';
 
-function canManageSubscriptions(
-  onlinePayments: boolean,
-  platformBilling: PlatformBillingSummary | null | undefined,
-): boolean {
-  if (!onlinePayments) return true;
-  if (!platformBilling) return false;
-  if (platformBilling.isBlocked) return false;
-  return platformBilling.stripeConnected;
+function canManageSubscriptions(stripeConnect: StripeConnectSummary | null | undefined): boolean {
+  return isStripeConnectReady(stripeConnect);
 }
 
 export function SubscriptionsSection({
   studios,
   subscriptions,
-  onlinePayments,
-  platformBilling,
+  stripeConnect,
   onWorkspaceReload,
 }: {
   studios: Studio[];
   subscriptions: StudioSubscription[];
-  onlinePayments: boolean;
-  platformBilling: PlatformBillingSummary | null | undefined;
+  stripeConnect: StripeConnectSummary | null | undefined;
   onWorkspaceReload: () => void | Promise<void>;
 }) {
   const [selectedStudio, setSelectedStudio] = useState(studios[0]?.id ?? '');
   const [modalOpen, setModalOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [connectLoading, setConnectLoading] = useState(false);
 
   const selectedStudioName = studios.find(s => s.id === selectedStudio)?.name ?? '';
   const subscription = useMemo(
     () => subscriptions.find(s => s.studioId === selectedStudio),
     [subscriptions, selectedStudio],
   );
-  const stripeReady = canManageSubscriptions(onlinePayments, platformBilling);
+  const stripeReady = canManageSubscriptions(stripeConnect);
 
-  const openPortal = async () => {
-    setPortalLoading(true);
+  const startStripeConnect = async () => {
+    setConnectLoading(true);
     try {
-      const res = await fetch('/api/dashboard/platform-billing/portal', { method: 'POST' });
-      const j = (await res.json().catch(() => ({}))) as { url?: string };
+      const res = await fetch('/api/dashboard/stripe-connect/onboard', { method: 'POST' });
+      const j = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
       if (j.url) {
         window.location.href = j.url;
-      } else {
-        toast.error('Неуспешно отваряне на портала за плащания.');
+        return;
       }
+      toast.error(typeof j.error === 'string' ? j.error : 'Неуспешно стартиране на Stripe свързване.');
     } finally {
-      setPortalLoading(false);
+      setConnectLoading(false);
     }
   };
 
@@ -159,22 +151,28 @@ export function SubscriptionsSection({
                 <CreditCard className="h-5 w-5 text-secondary" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Свържете Stripe</h3>
+                <h3 className="font-semibold text-foreground">Свържете Stripe акаунт</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  За да създавате абонаменти, първо настройте плащанията си чрез Stripe. След успешно свързване
-                  можете да публикувате абонаментни планове директно.
+                  Zenno работи като Stripe marketplace. Свържете съществуващ или нов Stripe акаунт чрез
+                  защитения OAuth поток на Stripe — след това можете да публикувате абонаменти и да получавате
+                  плащания.
                 </p>
+                {stripeConnect?.accountId && !stripeConnect.isReady ? (
+                  <p className="mt-2 text-xs text-amber-600">
+                    Акаунтът е свързан, но още не е готов за плащания. Довършете настройката в Stripe.
+                  </p>
+                ) : null}
               </div>
             </div>
             <Button
               type="button"
               variant="outline"
               className="shrink-0 gap-2 rounded-xl"
-              disabled={portalLoading}
-              onClick={() => void openPortal()}
+              disabled={connectLoading}
+              onClick={() => void startStripeConnect()}
             >
               <CreditCard className="h-4 w-4" />
-              {portalLoading ? 'Зареждане…' : 'Към плащания'}
+              {connectLoading ? 'Зареждане…' : stripeConnect?.accountId ? 'Свържи отново' : 'Свържи със Stripe'}
             </Button>
           </div>
         </div>

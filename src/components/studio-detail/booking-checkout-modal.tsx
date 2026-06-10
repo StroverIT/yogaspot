@@ -23,12 +23,11 @@ export type CheckoutModalTarget =
 type Props = {
   open: boolean;
   target: CheckoutModalTarget | null;
-  onlinePayments: boolean;
   onClose: () => void;
   onBooked?: () => void;
 };
 
-export function BookingCheckoutModal({ open, target, onlinePayments, onClose, onBooked }: Props) {
+export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props) {
   const [paying, setPaying] = useState(false);
 
   const title =
@@ -48,7 +47,7 @@ export function BookingCheckoutModal({ open, target, onlinePayments, onClose, on
   const basePrice = target?.kind === 'class' ? target.yogaClass.price : target?.kind === 'schedule' ? target.entry.price : 0;
   const isFreeClassBooking =
     (target?.kind === 'class' || target?.kind === 'schedule') && isFreeClassPrice(basePrice);
-  const useStripeCheckout = onlinePayments && !isFreeClassBooking;
+  const useStripeCheckout = !isFreeClassBooking;
   const finalPrice = useStripeCheckout ? calculateFinalCustomerAmount(basePrice) : basePrice;
 
   const handlePay = async () => {

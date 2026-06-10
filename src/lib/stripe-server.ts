@@ -1,14 +1,13 @@
 /**
  * Stripe / checkout environment (server + URLs):
- * - STRIPE_SECRET_KEY - Stripe API (Checkout + webhooks + refunds); unused when `ONLINE_PAYMENTS` is off
+ * - STRIPE_SECRET_KEY - Stripe API (Checkout + webhooks + refunds + Connect OAuth token exchange)
+ * - STRIPE_CONNECT_CLIENT_ID - Connect OAuth client ID (`ca_...`) from Stripe Dashboard > Connect > Settings
  * - STRIPE_WEBHOOK_SECRET - verify `stripe-signature` on POST /api/webhooks/stripe (webhook no-ops when off)
  * - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY - optional for hosted Checkout redirect; needed for Elements later
  * - NEXT_PUBLIC_APP_URL - site origin for Checkout success/cancel URLs (fallback: NEXTAUTH_URL)
  * - DATABASE_URL - Prisma
  * - NEXTAUTH_URL / NEXTAUTH_SECRET - NextAuth session for POST /api/checkout/class
  * - SUPABASE_URL / SUPABASE_ANON_KEY - storage / future client Supabase (not used by these routes today)
- * - ONLINE_PAYMENTS - set `false` / `0` / `no` to disable all Stripe usage (checkout, catalog, webhook handler).
- *   Offline enroll uses POST /api/bookings/*. See `isOnlinePaymentsEnabled` in payment-settings.
  * - EMAIL_FROM - From address for booking emails (required for any mail transport)
  * - SMTP: SMTP_HOST (+ SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE as needed) - **if SMTP_HOST is set, SMTP is used**
  *   even when Google OAuth env vars exist (so NextAuth Google keys do not take over mail by mistake).

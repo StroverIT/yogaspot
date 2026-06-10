@@ -8,7 +8,6 @@ import type Stripe from 'stripe';
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { getStripe } from '@/lib/stripe-server';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 
 export const EARLY_ADOPTER_LIMIT = 20;
 export const TRIAL_DAYS = 30;
@@ -104,10 +103,6 @@ export function getPlatformPriceId(): string | null {
 async function ensurePlatformStripePriceId(): Promise<string> {
   const existing = getPlatformPriceId();
   if (existing) return existing;
-
-  if (!isOnlinePaymentsEnabled()) {
-    throw new Error('Онлайн плащанията са изключени.');
-  }
 
   const stripe = getStripe();
   const products = await stripe.products.list({ limit: 100, active: true });
@@ -297,39 +292,37 @@ export async function provisionPlatformSubscription(businessId: string): Promise
   let stripeCustomerId: string | null = null;
   let stripeSubscriptionId: string | null = null;
 
-  if (isOnlinePaymentsEnabled()) {
-    try {
-      const stripe = getStripe();
-      const priceId = await ensurePlatformStripePriceId();
-      const customer = await stripe.customers.create({
-        email: business.owner.email ?? undefined,
-        name: business.owner.name ?? undefined,
-        metadata: { businessId, ownerUserId: business.ownerUserId, zennoKind: 'platform_subscription' },
-      });
-      stripeCustomerId = customer.id;
+  try {
+    const stripe = getStripe();
+    const priceId = await ensurePlatformStripePriceId();
+    const customer = await stripe.customers.create({
+      email: business.owner.email ?? undefined,
+      name: business.owner.name ?? undefined,
+      metadata: { businessId, ownerUserId: business.ownerUserId, zennoKind: 'platform_subscription' },
+    });
+    stripeCustomerId = customer.id;
 
-      const trialEndUnix =
-        trialActive && persistedTrialEndsAt ? Math.floor(persistedTrialEndsAt.getTime() / 1000) : undefined;
+    const trialEndUnix =
+      trialActive && persistedTrialEndsAt ? Math.floor(persistedTrialEndsAt.getTime() / 1000) : undefined;
 
-      const subscription = await stripe.subscriptions.create({
-        customer: customer.id,
-        items: [{ price: priceId }],
-        trial_end: trialEndUnix,
-        metadata: { businessId, ownerUserId: business.ownerUserId, zennoKind: 'platform_subscription' },
-        payment_settings: { save_default_payment_method: 'on_subscription' },
-        collection_method: 'charge_automatically',
-      });
-      stripeSubscriptionId = subscription.id;
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: priceId }],
+      trial_end: trialEndUnix,
+      metadata: { businessId, ownerUserId: business.ownerUserId, zennoKind: 'platform_subscription' },
+      payment_settings: { save_default_payment_method: 'on_subscription' },
+      collection_method: 'charge_automatically',
+    });
+    stripeSubscriptionId = subscription.id;
 
-      if (subscription.trial_end && trialActive) {
-        persistedTrialEndsAt = new Date(subscription.trial_end * 1000);
-      }
-      if (subscription.current_period_end) {
-        nextPaymentDueAt = new Date(subscription.current_period_end * 1000);
-      }
-    } catch (err) {
-      console.error('[platform billing] Stripe provision failed', err);
+    if (subscription.trial_end && trialActive) {
+      persistedTrialEndsAt = new Date(subscription.trial_end * 1000);
     }
+    if (subscription.current_period_end) {
+      nextPaymentDueAt = new Date(subscription.current_period_end * 1000);
+    }
+  } catch (err) {
+    console.error('[platform billing] Stripe provision failed', err);
   }
 
   return prisma.businessPlatformSubscription.create({
@@ -350,7 +343,6 @@ export async function ensureStripeSubscriptionForExisting(
   subscription: BusinessPlatformSubscription,
 ): Promise<BusinessPlatformSubscription> {
   if (subscription.stripeSubscriptionId && subscription.stripeCustomerId) return subscription;
-  if (!isOnlinePaymentsEnabled()) return subscription;
 
   const business = await prisma.business.findUniqueOrThrow({
     where: { id: subscription.businessId },
@@ -556,7 +548,7 @@ export async function createPlatformBillingPortalSession(ownerUserId: string): P
   if (!sub) return null;
 
   const synced = await ensureStripeSubscriptionForExisting(sub);
-  if (!synced.stripeCustomerId || !isOnlinePaymentsEnabled()) return null;
+  if (!synced.stripeCustomerId) return null;
 
   const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({

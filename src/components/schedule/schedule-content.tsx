@@ -17,6 +17,7 @@ import {
   type Weekday,
 } from '@/data/mock-data';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { CalendarDays, CreditCard, Edit, Plus, Trash2 } from 'lucide-react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -43,10 +44,12 @@ export type AdminProps = {
 
 type UserProps = {
   variant: 'user';
+  studioId: string;
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
   instructors: Instructor[];
   isAuthenticated: boolean;
+  hasActiveMembership: boolean;
   checkoutModalOpen: boolean;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
   bookedScheduleEntryIds: string[];
@@ -70,10 +73,12 @@ export function ScheduleContent(props: ScheduleContentProps) {
   }
   return (
     <UserScheduleContent
+      studioId={props.studioId}
       studioSchedule={props.studioSchedule}
       subscription={props.subscription}
       instructors={props.instructors}
       isAuthenticated={props.isAuthenticated}
+      hasActiveMembership={props.hasActiveMembership}
       checkoutModalOpen={props.checkoutModalOpen}
       onRequestScheduleBook={props.onRequestScheduleBook}
       bookedScheduleEntryIds={props.bookedScheduleEntryIds}
@@ -370,47 +375,100 @@ function AdminScheduleContent({
 }
 
 function UserScheduleContent({
+  studioId,
   studioSchedule,
   subscription,
   instructors,
   isAuthenticated,
+  hasActiveMembership,
   checkoutModalOpen,
   onRequestScheduleBook,
   bookedScheduleEntryIds,
   studioTeachingMode,
 }: {
+  studioId: string;
   studioSchedule: ScheduleEntry[];
   subscription: StudioSubscription | undefined;
   instructors: Instructor[];
   isAuthenticated: boolean;
+  hasActiveMembership: boolean;
   checkoutModalOpen: boolean;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
   bookedScheduleEntryIds: string[];
   studioTeachingMode?: TeachingMode;
 }) {
   const scheduleByDay = buildScheduleByDay(studioSchedule);
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!isAuthenticated) {
+      toast.error('Моля, влезте, за да се абонирате.');
+      return;
+    }
+    setSubscribing(true);
+    try {
+      const res = await fetch('/api/checkout/studio-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studioId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
+      if (!res.ok) {
+        toast.error(typeof data.error === 'string' ? data.error : `Грешка (${res.status})`);
+        return;
+      }
+      if (typeof data.url === 'string') {
+        window.location.href = data.url;
+        return;
+      }
+      toast.error('Липсва линк за плащане.');
+    } catch {
+      toast.error('Мрежова грешка.');
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {subscription?.hasMonthlySubscription && (
         <div id="studio-subscription" className="scroll-mt-24 rounded-xl border border-border bg-card p-5">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-              <CreditCard className="h-5 w-5 text-primary" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                <CreditCard className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-foreground">
+                  {subscription.name ?? 'Абонамент'}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {subscription.includes ?? subscription.subscriptionNote}
+                </p>
+                <p className="text-lg font-bold text-primary mt-1">
+                  {formatSubscriptionDualFromBgn(
+                    subscription.monthlyPrice ?? 0,
+                    subscription.durationMonths ?? 1,
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground">
-                {subscription.name ?? 'Абонамент'}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {subscription.includes ?? subscription.subscriptionNote}
-              </p>
-              <p className="text-lg font-bold text-primary mt-1">
-                {formatSubscriptionDualFromBgn(
-                  subscription.monthlyPrice ?? 0,
-                  subscription.durationMonths ?? 1,
-                )}
-              </p>
+            <div className="shrink-0">
+              {hasActiveMembership ? (
+                <Button type="button" variant="outline" size="sm" className="rounded-lg" disabled>
+                  Активен абонамент
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-lg"
+                  disabled={subscribing || checkoutModalOpen}
+                  onClick={() => void handleSubscribe()}
+                >
+                  {subscribing ? 'Зареждане…' : 'Абонирай се'}
+                </Button>
+              )}
             </div>
           </div>
         </div>

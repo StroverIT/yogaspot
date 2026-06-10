@@ -8,7 +8,7 @@ import {
   getSubscriptionForOwnerUserId,
   isPlatformAccessBlocked,
 } from '@/lib/business-platform-billing';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
+import { getStripeConnectSummaryForOwnerUserId, isStripeConnectReady } from '@/lib/stripe-connect';
 
 export type SessionUser = {
   id?: string;
@@ -149,15 +149,14 @@ export async function requireBusinessWriteAccess(
   return { ok: true };
 }
 
-/** Requires Stripe customer on platform billing before studio subscription CRUD. */
+/** Requires a fully onboarded Stripe Connect account before studio subscription CRUD. */
 export async function requireStripeReadyForSubscriptions(
   user: SessionUser & { id: string; role: Role },
 ): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   if (user.role === 'admin') return { ok: true };
-  if (!isOnlinePaymentsEnabled()) return { ok: true };
 
-  const sub = await getSubscriptionForOwnerUserId(user.id);
-  if (!sub?.stripeCustomerId) {
+  const connect = await getStripeConnectSummaryForOwnerUserId(user.id, { refresh: true });
+  if (!isStripeConnectReady(connect)) {
     return {
       ok: false,
       response: NextResponse.json(

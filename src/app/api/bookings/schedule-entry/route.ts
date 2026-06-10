@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { jsonError, requireSession } from '@/lib/api-auth';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { enrollUserInScheduleOffline } from '@/lib/offline-booking';
-import { isOnlinePaymentsEnabled } from '@/lib/payment-settings';
 import { prisma } from '@/lib/prisma';
 import { isFreeClassPrice } from '@/lib/yoga-class-limits';
 import { trackServerEvent } from '@/lib/server-analytics';
@@ -25,15 +24,13 @@ export async function POST(request: Request) {
   if (!scheduleEntryId) return jsonError('Missing scheduleEntryId', 400);
   if (!studioId) return jsonError('Missing studioId', 400);
 
-  if (isOnlinePaymentsEnabled()) {
-    const entry = await prisma.scheduleEntry.findFirst({
-      where: { id: scheduleEntryId, studioId },
-      select: { price: true },
-    });
-    if (!entry) return jsonError('Часът не е намерен.', 404);
-    if (!isFreeClassPrice(entry.price)) {
-      return jsonError('Офлайн записване е налично само когато онлайн плащанията са изключени.', 403);
-    }
+  const entry = await prisma.scheduleEntry.findFirst({
+    where: { id: scheduleEntryId, studioId },
+    select: { price: true },
+  });
+  if (!entry) return jsonError('Часът не е намерен.', 404);
+  if (!isFreeClassPrice(entry.price)) {
+    return jsonError('Платените часове изискват плащане през Stripe.', 403);
   }
 
   try {

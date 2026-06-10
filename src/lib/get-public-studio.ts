@@ -21,7 +21,7 @@ export type PublicStudioCorePayload = {
   instructors: Instructor[];
   schedule: ScheduleEntry[];
   subscription: StudioSubscription | null;
-  myBookings: { classIds: string[]; scheduleEntryIds: string[] };
+  myBookings: { classIds: string[]; scheduleEntryIds: string[]; hasActiveMembership: boolean };
   eventsCount: number;
   hasMultisport: boolean;
 };
@@ -143,7 +143,7 @@ async function loadMyBookings(
   userId: string,
   studioId: string,
 ): Promise<PublicStudioCorePayload['myBookings']> {
-  const [classRows, scheduleRows] = await Promise.all([
+  const [classRows, scheduleRows, activeMembership] = await Promise.all([
     prisma.booking.findMany({
       where: { userId, yogaClass: { studioId } },
       select: { yogaClassId: true },
@@ -152,11 +152,16 @@ async function loadMyBookings(
       where: { userId, scheduleEntry: { studioId } },
       select: { scheduleEntryId: true },
     }),
+    prisma.studioMembership.findFirst({
+      where: { userId, studioId, status: 'active' },
+      select: { id: true },
+    }),
   ]);
 
   return {
     classIds: classRows.map((r) => r.yogaClassId),
     scheduleEntryIds: scheduleRows.map((r) => r.scheduleEntryId),
+    hasActiveMembership: Boolean(activeMembership),
   };
 }
 
@@ -170,7 +175,7 @@ const loadPublicStudioCore = cache(async (id: string): Promise<LoadedStudioCore 
   const myBookings =
     sessionUser?.id != null
       ? await loadMyBookings(sessionUser.id, core.studio.id)
-      : { classIds: [], scheduleEntryIds: [] };
+      : { classIds: [], scheduleEntryIds: [], hasActiveMembership: false };
 
   return {
     payload: { ...core, myBookings },

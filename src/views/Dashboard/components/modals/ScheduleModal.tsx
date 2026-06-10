@@ -58,7 +58,6 @@ export function ScheduleModal({
   studios,
   instructors,
   entry,
-  onlinePayments = true,
   onCreateInstructor,
   preselectInstructorId,
 }: {
@@ -68,8 +67,6 @@ export function ScheduleModal({
   studios: typeof mockStudios;
   instructors: typeof mockInstructors;
   entry: ScheduleEntry | null;
-  /** When false (`ONLINE_PAYMENTS` off), no helper text under the price field. */
-  onlinePayments?: boolean;
   onCreateInstructor?: (studioId: string) => void;
   preselectInstructorId?: string | null;
 }) {
@@ -478,7 +475,7 @@ export function ScheduleModal({
                     />
                     Безплатно
                   </label>
-                  {onlinePayments && !isFreeClass ? (
+                  {!isFreeClass ? (
                     <p className="mt-1 text-xs text-muted-foreground">
                       {hasValidBasePrice
                         ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`
