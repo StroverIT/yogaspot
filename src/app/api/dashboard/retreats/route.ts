@@ -105,7 +105,7 @@ export async function POST(request: Request) {
   if (!Number.isFinite(maxCapacity) || maxCapacity <= 0) return jsonError('Invalid maxCapacity', 400);
   if (!Number.isFinite(price) || price < 0) return jsonError('Invalid price', 400);
 
-  const paymentModeResult = parsePaymentModeFromBody(paymentModeRaw || undefined, price, 'both');
+  const paymentModeResult = parsePaymentModeFromBody(paymentModeRaw || undefined, price, 'onsite');
   if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
   const paymentMode = paymentModeResult.mode;
 

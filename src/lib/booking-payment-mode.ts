@@ -28,7 +28,7 @@ export function resolvePaymentModeForPrice(price: number, mode: BookingPaymentMo
   return mode;
 }
 
-export function parsePaymentModeInput(value: unknown, fallback: BookingPaymentMode = 'both'): BookingPaymentMode {
+export function parsePaymentModeInput(value: unknown, fallback: BookingPaymentMode = 'onsite'): BookingPaymentMode {
   return isBookingPaymentMode(value) ? value : fallback;
 }
 
@@ -43,19 +43,19 @@ export function validatePaymentModeForSave(
   return { ok: true, mode: resolved };
 }
 
-/** Effective mode for catalog items; paid items without stored mode default to online (legacy). */
+/** Effective mode for catalog items; missing stored mode defaults to onsite. */
 export function effectivePaymentMode(
   price: number,
   mode: BookingPaymentMode | null | undefined,
 ): BookingPaymentMode {
   if (isFreeClassPrice(price)) return 'onsite';
-  return mode ?? 'online';
+  return mode ?? 'onsite';
 }
 
 export function parsePaymentModeFromBody(
   value: unknown,
   price: number,
-  fallback: BookingPaymentMode = 'both',
+  fallback: BookingPaymentMode = 'onsite',
 ): { ok: true; mode: BookingPaymentMode } | { ok: false; error: string } {
   const parsed = parsePaymentModeInput(value, fallback);
   return validatePaymentModeForSave(parsed, price);

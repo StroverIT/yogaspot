@@ -93,7 +93,7 @@ export function ClassModal({
   const [noCapacityLimit, setNoCapacityLimit] = useState(false);
   const [isFreeClass, setIsFreeClass] = useState(false);
   const [acceptsMultisport, setAcceptsMultisport] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('both');
+  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('onsite');
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
@@ -141,7 +141,7 @@ export function ClassModal({
       setPrice(free ? '' : formatEurInputFromBgn(classToEdit.price));
       setCancellationPolicy(classToEdit.cancellationPolicy);
       setAcceptsMultisport(classToEdit.acceptsMultisport === true);
-      setPaymentMode(classToEdit.paymentMode ?? (free ? 'onsite' : 'both'));
+      setPaymentMode(classToEdit.paymentMode ?? 'onsite');
       return;
     }
     setClassName('');
@@ -158,7 +158,7 @@ export function ClassModal({
     setNoCapacityLimit(false);
     setIsFreeClass(false);
     setAcceptsMultisport(false);
-    setPaymentMode('both');
+    setPaymentMode('onsite');
     setStripeSetupOpen(false);
   }, [open, classToEdit]);
 

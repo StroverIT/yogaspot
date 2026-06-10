@@ -81,7 +81,7 @@ export function RetreatModal({
   const [activitiesRaw, setActivitiesRaw] = useState('');
   const [maxCapacity, setMaxCapacity] = useState('');
   const [price, setPrice] = useState('');
-  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('both');
+  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('onsite');
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [isPublished, setIsPublished] = useState(true);
   const [imageSlots, setImageSlots] = useState<RetreatImageSlot[]>([]);
@@ -122,7 +122,7 @@ export function RetreatModal({
       setMaxCapacity(String(retreatToEdit.maxCapacity));
       setPrice(String(retreatToEdit.price));
       setPaymentMode(
-        retreatToEdit.paymentMode ?? (isFreeClassPrice(retreatToEdit.price) ? 'onsite' : 'both'),
+        retreatToEdit.paymentMode ?? 'onsite',
       );
       setIsPublished(retreatToEdit.isPublished);
       setImageSlots(
@@ -148,7 +148,7 @@ export function RetreatModal({
     setActivitiesRaw('');
     setMaxCapacity('');
     setPrice('');
-    setPaymentMode('both');
+    setPaymentMode('onsite');
     setStripeSetupOpen(false);
     setIsPublished(true);
     setImageSlots([]);

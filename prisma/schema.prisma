@@ -303,7 +303,7 @@ model YogaClass {
   maxCapacity         Int
   enrolled            Int      @default(0)
   price               Float
-  paymentMode         BookingPaymentMode @default(online)
+  paymentMode         BookingPaymentMode @default(onsite)
   yogaType            String
   difficulty          String
   cancellationPolicy  String
@@ -364,7 +364,7 @@ model ScheduleEntry {
   maxCapacity Int
   enrolled    Int      @default(0)
   price             Float
-  paymentMode       BookingPaymentMode @default(online)
+  paymentMode       BookingPaymentMode @default(onsite)
   isRecurring       Boolean  @default(true)
   acceptsMultisport Boolean  @default(false)
 

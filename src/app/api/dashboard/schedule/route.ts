@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   const priceError = validateYogaClassPrice(price, teachingMode);
   if (priceError) return jsonError(priceError, 400);
 
-  const paymentModeResult = parsePaymentModeFromBody(body.paymentMode, price, 'both');
+  const paymentModeResult = parsePaymentModeFromBody(body.paymentMode, price, 'onsite');
   if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
   const paymentMode = paymentModeResult.mode;
 

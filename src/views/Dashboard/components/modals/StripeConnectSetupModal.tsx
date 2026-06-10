@@ -56,8 +56,7 @@ export function StripeConnectSetupModal({
           <DialogDescription asChild>
             <div className="space-y-2 text-left text-sm text-muted-foreground">
               <p>
-                За онлайн плащания Zenno работи като Stripe marketplace. Свържете съществуващ или нов Stripe
-                акаунт чрез защитения OAuth поток на Stripe — след това клиентите могат да плащат онлайн.
+                Работим със Stripe. За да приемате онлайн плащания, нужно е да свържете акаунта със Stripe.
               </p>
               {stripeConnect?.accountId && !stripeConnect.isReady ? (
                 <p className="text-xs text-amber-600">

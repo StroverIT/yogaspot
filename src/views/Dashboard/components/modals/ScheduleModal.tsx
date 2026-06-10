@@ -91,7 +91,7 @@ export function ScheduleModal({
   const [noCapacityLimit, setNoCapacityLimit] = useState(false);
   const [isFreeClass, setIsFreeClass] = useState(false);
   const [acceptsMultisport, setAcceptsMultisport] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('both');
+  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('onsite');
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([{ day: '', startTime: '', endTime: '' }]);
   const [saving, setSaving] = useState(false);
@@ -139,7 +139,7 @@ export function ScheduleModal({
       setMaxCapacity(unlimited ? '' : String(entry.maxCapacity));
       setPrice(free ? '' : formatEurInputFromBgn(entry.price));
       setAcceptsMultisport(entry.acceptsMultisport === true);
-      setPaymentMode(entry.paymentMode ?? (free ? 'onsite' : 'both'));
+      setPaymentMode(entry.paymentMode ?? 'onsite');
       return;
     }
     setClassName('');
@@ -152,7 +152,7 @@ export function ScheduleModal({
     setNoCapacityLimit(false);
     setIsFreeClass(false);
     setAcceptsMultisport(false);
-    setPaymentMode('both');
+    setPaymentMode('onsite');
     setStripeSetupOpen(false);
     setTimeSlots([{ day: '', startTime: '', endTime: '' }]);
   }, [open, entry]);
