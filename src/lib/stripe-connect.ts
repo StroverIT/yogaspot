@@ -55,12 +55,16 @@ function toSummary(row: {
 }): StripeConnectSummary {
   const chargesEnabled = row.stripeConnectChargesEnabled;
   const detailsSubmitted = row.stripeConnectDetailsSubmitted;
-  return {
+  const summary = {
     accountId: row.stripeConnectAccountId,
     chargesEnabled,
     detailsSubmitted,
     isReady: Boolean(row.stripeConnectAccountId && chargesEnabled && detailsSubmitted),
   };
+  // #region agent log
+  fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c7b600'},body:JSON.stringify({sessionId:'c7b600',location:'stripe-connect.ts:toSummary',message:'computed stripe connect summary from DB row',data:{accountId:summary.accountId,chargesEnabled,detailsSubmitted,isReady:summary.isReady},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  return summary;
 }
 
 export async function syncConnectAccountFromStripe(account: Stripe.Account): Promise<void> {
@@ -79,6 +83,9 @@ async function refreshConnectAccountFromStripe(accountId: string): Promise<Strip
     assertStripeConfigured();
     const stripe = getStripe();
     const account = await stripe.accounts.retrieve(accountId);
+    // #region agent log
+    fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c7b600'},body:JSON.stringify({sessionId:'c7b600',location:'stripe-connect.ts:refreshConnectAccountFromStripe',message:'stripe API account retrieved',data:{accountId:account.id,charges_enabled:account.charges_enabled,details_submitted:account.details_submitted,payouts_enabled:account.payouts_enabled},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     await syncConnectAccountFromStripe(account);
     const biz = await prisma.business.findFirst({
       where: { stripeConnectAccountId: accountId },
@@ -90,6 +97,9 @@ async function refreshConnectAccountFromStripe(accountId: string): Promise<Strip
     });
     return biz ? toSummary(biz) : null;
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c7b600'},body:JSON.stringify({sessionId:'c7b600',location:'stripe-connect.ts:refreshConnectAccountFromStripe:catch',message:'stripe refresh failed',data:{accountId,error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     console.error('[stripe connect] failed to refresh account', accountId, error);
     return null;
   }
@@ -108,6 +118,10 @@ export const getStripeConnectSummaryForOwnerUserId = cache(async function getStr
     },
   });
   if (!biz) return null;
+
+  // #region agent log
+  fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c7b600'},body:JSON.stringify({sessionId:'c7b600',location:'stripe-connect.ts:getStripeConnectSummaryForOwnerUserId',message:'loading connect summary',data:{ownerUserId,refreshRequested:Boolean(options?.refresh),dbAccountId:biz.stripeConnectAccountId,dbChargesEnabled:biz.stripeConnectChargesEnabled,dbDetailsSubmitted:biz.stripeConnectDetailsSubmitted},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
 
   if (options?.refresh && biz.stripeConnectAccountId) {
     const refreshed = await refreshConnectAccountFromStripe(biz.stripeConnectAccountId);

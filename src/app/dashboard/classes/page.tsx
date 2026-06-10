@@ -24,6 +24,7 @@ import {
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
 import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
+import { StripeOnlinePaymentsBanner } from '@/views/Dashboard/components/StripeOnlinePaymentsBanner';
 
 export default function DashboardClassesPage() {
   const ws = useDashboardWorkspaceContext();
@@ -142,7 +143,8 @@ export default function DashboardClassesPage() {
   const addClassDisabled = noInstructors;
 
   return (
-    <div>
+    <div className="space-y-6">
+      <StripeOnlinePaymentsBanner stripeConnect={ws.stripeConnect} />
       <ClassesSection
         classes={myClasses}
         studios={myStudios}

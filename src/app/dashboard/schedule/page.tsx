@@ -23,6 +23,7 @@ import {
 import { deriveDashboardMetrics } from '@/views/Dashboard/dashboardMockData';
 import { toastDashboardSaved } from '@/views/Dashboard/dashboardSaveToast';
 import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
+import { StripeOnlinePaymentsBanner } from '@/views/Dashboard/components/StripeOnlinePaymentsBanner';
 
 export default function DashboardSchedulePage() {
   const ws = useDashboardWorkspaceContext();
@@ -186,6 +187,9 @@ export default function DashboardSchedulePage() {
 
   return (
     <>
+      <div className="mb-6">
+        <StripeOnlinePaymentsBanner stripeConnect={ws.stripeConnect} />
+      </div>
       <ScheduleContent
         variant="admin"
         studios={myStudios}

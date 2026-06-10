@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -49,6 +49,12 @@ export function SubscriptionsSection({
     [subscriptions, selectedStudio],
   );
   const stripeReady = canManageSubscriptions(stripeConnect);
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c7b600'},body:JSON.stringify({sessionId:'c7b600',location:'SubscriptionsSection.tsx:useEffect',message:'subscriptions section stripe state',data:{accountId:stripeConnect?.accountId??null,chargesEnabled:stripeConnect?.chargesEnabled??null,detailsSubmitted:stripeConnect?.detailsSubmitted??null,isReady:stripeConnect?.isReady??null,stripeReady},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+  }, [stripeConnect, stripeReady]);
 
   const startStripeConnect = async () => {
     setConnectLoading(true);
@@ -153,9 +159,7 @@ export function SubscriptionsSection({
               <div>
                 <h3 className="font-semibold text-foreground">Свържете Stripe акаунт</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Zenno работи като Stripe marketplace. Свържете съществуващ или нов Stripe акаунт чрез
-                  защитения OAuth поток на Stripe — след това можете да публикувате абонаменти и да получавате
-                  плащания.
+                  Работим със Stripe. За да приемате онлайн плащания, нужно е да свържете акаунта със Stripe.
                 </p>
                 {stripeConnect?.accountId && !stripeConnect.isReady ? (
                   <p className="mt-2 text-xs text-amber-600">

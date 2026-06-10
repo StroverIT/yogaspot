@@ -16,6 +16,7 @@ import type { Retreat } from '@/data/mock-data';
 import { useDashboardWorkspaceContext } from '@/contexts/DashboardWorkspaceContext';
 import { RetreatsSection } from '@/views/Dashboard/components/RetreatsSection';
 import { NEW_IMAGE_SLOT_MARKER, RetreatModal, type RetreatModalPayload } from '@/views/Dashboard/components/modals/RetreatModal';
+import { StripeOnlinePaymentsBanner } from '@/views/Dashboard/components/StripeOnlinePaymentsBanner';
 
 export default function DashboardRetreatsPage() {
   const ws = useDashboardWorkspaceContext();
@@ -106,6 +107,9 @@ export default function DashboardRetreatsPage() {
 
   return (
     <>
+      <div className="mb-6">
+        <StripeOnlinePaymentsBanner stripeConnect={ws.stripeConnect} />
+      </div>
       <RetreatsSection
         retreats={myRetreats}
         studios={ws.studios}
