@@ -7,8 +7,10 @@ import { EventsTabContent } from './events-tab-content';
 import { InstructorsTabContent } from './instructors-tab-content';
 import { ReviewsTabContent } from './reviews-tab-content';
 import { ScheduleContent } from '@/components/schedule/schedule-content';
+import { StudioDetailVideosTab } from '@/components/studio-detail/studio-detail-videos-tab';
 import { StudioDetailTabBar } from './studio-detail-tab-bar';
 import type { TabKey } from './types';
+import type { AccessibleSubscriptionVideo } from '@/lib/subscription-videos-access';
 
 export function StudioDetailTabs({
   studioId,
@@ -20,6 +22,9 @@ export function StudioDetailTabs({
   studioInstructors,
   studioReviews,
   eventsCount,
+  subscriptionVideosCount,
+  studioVideos,
+  videosLoading,
   reviewsCount,
   extrasLoading,
   onTabChange,
@@ -41,6 +46,9 @@ export function StudioDetailTabs({
   studioInstructors: Instructor[];
   studioReviews: Review[];
   eventsCount: number;
+  subscriptionVideosCount: number;
+  studioVideos: AccessibleSubscriptionVideo[];
+  videosLoading: boolean;
   reviewsCount: number;
   extrasLoading: boolean;
   onTabChange: (tab: TabKey) => void;
@@ -67,6 +75,9 @@ export function StudioDetailTabs({
 
   const tabs = [
     { key: 'schedule' as const, label: 'Разписание', count: studioSchedule.length },
+    ...(subscriptionVideosCount > 0
+      ? [{ key: 'videos' as const, label: 'Видеа', count: subscriptionVideosCount }]
+      : []),
     { key: 'events' as const, label: 'Събития', count: eventsCount },
     { key: 'instructors' as const, label: 'Инструктори', count: studioInstructors.length },
     { key: 'reviews' as const, label: 'Ревюта', count: reviewsCount },
@@ -90,6 +101,14 @@ export function StudioDetailTabs({
             onRequestScheduleBook={onRequestScheduleBook}
             bookedScheduleEntryIds={bookedScheduleEntryIds}
             studioTeachingMode={studioTeachingMode}
+          />
+        )}
+        {activeTab === 'videos' && (
+          <StudioDetailVideosTab
+            studioId={studioId}
+            videos={studioVideos}
+            hasActiveMembership={hasActiveMembership}
+            loading={videosLoading}
           />
         )}
         {activeTab === 'events' &&

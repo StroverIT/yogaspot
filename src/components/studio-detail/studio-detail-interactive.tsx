@@ -14,9 +14,10 @@ import type {
   PublicStudioPayload,
 } from '@/lib/get-public-studio';
 import { StudioMembershipBanner } from '@/components/studio-detail/studio-membership-banner';
+import type { AccessibleSubscriptionVideo } from '@/lib/subscription-videos-access';
 import { isClassAtCapacity } from '@/lib/yoga-class-limits';
 
-const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
+const TAB_KEYS: TabKey[] = ['schedule', 'videos', 'events', 'instructors', 'reviews'];
 
 const StudioDetailTabs = dynamic(
   () =>
@@ -43,6 +44,10 @@ function tabNeedsExtras(tab: TabKey | undefined) {
   return tab === 'events' || tab === 'reviews';
 }
 
+function tabNeedsVideos(tab: TabKey | undefined) {
+  return tab === 'videos';
+}
+
 type StudioDetailInteractiveProps = {
   initialPayload: PublicStudioCorePayload;
 };
@@ -59,6 +64,9 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
   const [extrasLoading, setExtrasLoading] = useState(false);
   const extrasRequested = useRef(false);
   const [checkoutTarget, setCheckoutTarget] = useState<CheckoutModalTarget | null>(null);
+  const [studioVideos, setStudioVideos] = useState<AccessibleSubscriptionVideo[]>([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+  const videosRequested = useRef(false);
 
   useEffect(() => {
     setCore(initialPayload);
@@ -82,19 +90,47 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
     }
   }, [core.studio.id, extras]);
 
+  const loadVideos = useCallback(
+    async (force = false) => {
+      if (!force && videosRequested.current) return;
+      videosRequested.current = true;
+      setVideosLoading(true);
+      try {
+        const res = await fetch(`/api/public/studios/${encodeURIComponent(core.studio.id)}/videos`);
+        if (res.ok) {
+          const data = (await res.json()) as { videos?: AccessibleSubscriptionVideo[] };
+          setStudioVideos(data.videos ?? []);
+        } else {
+          videosRequested.current = false;
+        }
+      } catch {
+        videosRequested.current = false;
+      } finally {
+        setVideosLoading(false);
+      }
+    },
+    [core.studio.id],
+  );
+
   useEffect(() => {
     if (tabNeedsExtras(defaultTab)) {
       void loadExtras();
     }
-  }, [defaultTab, loadExtras]);
+    if (tabNeedsVideos(defaultTab)) {
+      void loadVideos();
+    }
+  }, [defaultTab, loadExtras, loadVideos]);
 
   const handleTabChange = useCallback(
     (tab: TabKey) => {
       if (tabNeedsExtras(tab)) {
         void loadExtras();
       }
+      if (tabNeedsVideos(tab)) {
+        void loadVideos();
+      }
     },
-    [loadExtras],
+    [loadExtras, loadVideos],
   );
 
   const fetchFullPayload = useCallback(async (): Promise<PublicStudioPayload | null> => {
@@ -135,17 +171,28 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
 
   useEffect(() => {
     const subscriptionParam = searchParams.get('subscription');
+    const sessionId = searchParams.get('session_id');
     if (subscriptionParam !== 'success' || handledSubscriptionReturn.current) return;
     handledSubscriptionReturn.current = true;
     toast.success('Абонаментът е активиран успешно.');
     window.history.replaceState({}, '', `/studio/${encodeURIComponent(studio.id)}?tab=schedule`);
-    void fetchFullPayload().then((data) => {
+    void (async () => {
+      if (sessionId) {
+        await fetch('/api/checkout/studio-subscription/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, studioId: studio.id }),
+        });
+      }
+      const data = await fetchFullPayload();
       if (!data) return;
       const { classes, reviews, ...nextCore } = data;
       setCore(nextCore);
       setExtras({ classes, reviews });
-    });
-  }, [searchParams, studio.id, fetchFullPayload]);
+      videosRequested.current = false;
+      void loadVideos(true);
+    })();
+  }, [searchParams, studio.id, fetchFullPayload, loadVideos]);
 
   const handleRequestClassBook = (classId: string) => {
     if (!isAuthenticated) {
@@ -198,7 +245,12 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
         />
       ) : null}
 
-      {hasActiveMembership ? <StudioMembershipBanner /> : null}
+      {hasActiveMembership ? (
+        <StudioMembershipBanner
+          studioId={studio.id}
+          hasVideos={core.subscriptionVideosCount > 0}
+        />
+      ) : null}
 
       <StudioDetailTabs
         key={studio.id}
@@ -211,6 +263,9 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
         studioInstructors={instructors}
         studioReviews={studioReviews}
         eventsCount={core.eventsCount}
+        subscriptionVideosCount={core.subscriptionVideosCount}
+        studioVideos={studioVideos}
+        videosLoading={videosLoading}
         reviewsCount={studio.reviewCount}
         extrasLoading={extrasLoading}
         onTabChange={handleTabChange}
@@ -221,7 +276,7 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
         checkoutModalOpen={checkoutTarget !== null}
         bookedClassIds={bookedClassIds}
         bookedScheduleEntryIds={bookedScheduleEntryIds}
-          hasActiveMembership={hasActiveMembership}
+        hasActiveMembership={hasActiveMembership}
       />
     </>
   );

@@ -16,6 +16,7 @@ import { studioAcceptsMultisport } from '@/lib/multisport';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { ACTIVE_STUDIO_MEMBERSHIP_STATUSES } from '@/lib/studio-membership';
+import { countStudioSubscriptionVideos } from '@/lib/subscription-videos-access';
 
 export type PublicStudioCorePayload = {
   studio: Studio;
@@ -24,6 +25,7 @@ export type PublicStudioCorePayload = {
   subscription: StudioSubscription | null;
   myBookings: { classIds: string[]; scheduleEntryIds: string[]; hasActiveMembership: boolean };
   eventsCount: number;
+  subscriptionVideosCount: number;
   hasMultisport: boolean;
 };
 
@@ -68,6 +70,7 @@ async function fetchPublicStudioCore(id: string): Promise<Omit<PublicStudioCoreP
   }
 
   const schedule = studio.schedule.map(scheduleEntryToDto);
+  const subscriptionVideosCount = await countStudioSubscriptionVideos(id);
   const multisportClassCount =
     teachingModeFromPrisma(studio.teachingMode) !== 'online'
       ? await prisma.yogaClass.count({
@@ -81,6 +84,7 @@ async function fetchPublicStudioCore(id: string): Promise<Omit<PublicStudioCoreP
     schedule,
     subscription: studio.subscription ? subscriptionToDto(studio.subscription) : null,
     eventsCount: studio._count.classes,
+    subscriptionVideosCount,
     hasMultisport:
       studioAcceptsMultisport(studioToDto(studio), schedule)
       || multisportClassCount > 0,
