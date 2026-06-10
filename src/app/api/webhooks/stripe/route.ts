@@ -39,9 +39,6 @@ async function handleCheckoutSessionCompleted(
   stripeAccountId?: string | null,
 ): Promise<void> {
   const md = (session.metadata ?? {}) as Record<string, string>;
-  // #region agent log
-  fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a2d8e4'},body:JSON.stringify({sessionId:'a2d8e4',location:'webhooks/stripe/route.ts:handleCheckoutSessionCompleted',message:'webhook checkout.session.completed',data:{stripeSessionId:session.id,mode:session.mode,checkoutKind:md.checkoutKind??null,classId:md.classId??null,scheduleEntryId:md.scheduleEntryId??null,paymentStatus:session.payment_status,connectAccountId:stripeAccountId??null},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
 
   if (session.mode === 'subscription' && isStudioSubscriptionMetadata(md)) {
     await fulfillStudioSubscriptionCheckout(session, md, stripeAccountId);

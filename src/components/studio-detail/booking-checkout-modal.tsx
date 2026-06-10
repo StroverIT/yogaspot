@@ -85,9 +85,6 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
         body,
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
-      // #region agent log
-      fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a2d8e4' }, body: JSON.stringify({ sessionId: 'a2d8e4', location: 'booking-checkout-modal.tsx:handlePay', message: 'checkout API response', data: { kind: target.kind, status: res.ok, httpStatus: res.status, hasUrl: typeof data.url === 'string', error: data.error ?? null, targetId: target.kind === 'class' ? target.yogaClass.id : target.entry.id }, timestamp: Date.now(), hypothesisId: 'E' }) }).catch(() => { });
-      // #endregion
       if (!res.ok) {
         toast.error(typeof data.error === 'string' ? data.error : `Грешка (${res.status})`);
         return;

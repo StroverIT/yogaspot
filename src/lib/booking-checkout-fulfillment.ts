@@ -147,10 +147,6 @@ export async function fulfillClassBooking(session: Stripe.Checkout.Session, md: 
     throw err;
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a2d8e4'},body:JSON.stringify({sessionId:'a2d8e4',location:'booking-checkout-fulfillment.ts:fulfillClassBooking',message:'class booking fulfillment result',data:{stripeSessionId:session.id,fulfilled,bookingId:bookingId||null,classId:md.classId??null},timestamp:Date.now(),hypothesisId:'B',runId:'post-fix'})}).catch(()=>{});
-  // #endregion
-
   if (fulfilled && classSnapshot && bookingId) {
     await runBookingNotifications({
       kind: 'class',
@@ -448,10 +444,6 @@ export async function confirmBookingCheckout(params: {
   if (!md.userId || md.userId !== params.userId) {
     return { ok: false, error: 'Forbidden', status: 403 };
   }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a2d8e4'},body:JSON.stringify({sessionId:'a2d8e4',location:'booking-checkout-fulfillment.ts:confirmBookingCheckout',message:'client confirm booking checkout',data:{stripeSessionId:session.id,checkoutKind:md.checkoutKind??null,classId:md.classId??null},timestamp:Date.now(),hypothesisId:'A',runId:'post-fix'})}).catch(()=>{});
-  // #endregion
 
   await fulfillPaidBookingCheckout(session);
   return { ok: true };

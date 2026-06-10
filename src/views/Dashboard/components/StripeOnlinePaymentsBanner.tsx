@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -14,12 +14,6 @@ export function StripeOnlinePaymentsBanner({
   stripeConnect: StripeConnectSummary | null | undefined;
 }) {
   const [connectLoading, setConnectLoading] = useState(false);
-
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c7b600'},body:JSON.stringify({sessionId:'c7b600',location:'StripeOnlinePaymentsBanner.tsx:useEffect',message:'banner received stripeConnect props',data:{accountId:stripeConnect?.accountId??null,chargesEnabled:stripeConnect?.chargesEnabled??null,detailsSubmitted:stripeConnect?.detailsSubmitted??null,isReady:stripeConnect?.isReady??null,bannerHidden:isStripeConnectReady(stripeConnect)},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-  }, [stripeConnect]);
 
   if (isStripeConnectReady(stripeConnect)) {
     return null;
