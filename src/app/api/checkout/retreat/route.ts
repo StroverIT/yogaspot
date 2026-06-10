@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { jsonError, requireSession } from '@/lib/api-auth';
+import { effectivePaymentMode, includesOnlinePayment } from '@/lib/booking-payment-mode';
 import { prisma } from '@/lib/prisma';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { assertStripeConfigured, classPriceToStripeUnitAmountEurCents, getPublicAppBaseUrl, getStripe } from '@/lib/stripe-server';
-import { effectivePaymentMode, includesOnlinePayment } from '@/lib/booking-payment-mode';
-import { isClassAtCapacity, isFreeClassPrice } from '@/lib/yoga-class-limits';
+import { isFreeClassPrice } from '@/lib/yoga-class-limits';
 
 export const runtime = 'nodejs';
 
@@ -12,17 +12,15 @@ export async function POST(request: Request) {
   const gate = await requireSession();
   if (!gate.ok) return gate.response;
 
-  let body: { scheduleEntryId?: string; studioId?: string };
+  let body: { retreatId?: string };
   try {
     body = await request.json();
   } catch {
     return jsonError('Invalid JSON', 400);
   }
 
-  const scheduleEntryId = typeof body.scheduleEntryId === 'string' ? body.scheduleEntryId.trim() : '';
-  const studioId = typeof body.studioId === 'string' ? body.studioId.trim() : '';
-  if (!scheduleEntryId) return jsonError('Missing scheduleEntryId', 400);
-  if (!studioId) return jsonError('Missing studioId', 400);
+  const retreatId = typeof body.retreatId === 'string' ? body.retreatId.trim() : '';
+  if (!retreatId) return jsonError('Missing retreatId', 400);
 
   const appUrl = getPublicAppBaseUrl();
   if (!appUrl) {
@@ -35,54 +33,58 @@ export async function POST(request: Request) {
     return jsonError('Stripe is not configured', 503);
   }
 
-  const entry = await prisma.scheduleEntry.findFirst({
-    where: { id: scheduleEntryId, studioId },
+  const retreat = await prisma.retreat.findUnique({
+    where: { id: retreatId },
     select: {
       id: true,
       studioId: true,
-      className: true,
+      title: true,
       price: true,
+      paymentMode: true,
       enrolled: true,
       maxCapacity: true,
-      paymentMode: true,
+      isPublished: true,
+      isHidden: true,
     },
   });
 
-  if (!entry) return jsonError('Schedule entry not found', 404);
+  if (!retreat || retreat.isHidden || !retreat.isPublished) {
+    return jsonError('Рийтрийтът не е намерен.', 404);
+  }
 
-  const mode = effectivePaymentMode(entry.price, entry.paymentMode);
+  const mode = effectivePaymentMode(retreat.price, retreat.paymentMode);
   if (!includesOnlinePayment(mode)) {
-    return jsonError('Този час приема само плащане на място.', 400);
+    return jsonError('Този рийтрийт приема само плащане на място.', 400);
   }
 
-  if (isClassAtCapacity(entry.enrolled, entry.maxCapacity)) {
-    return jsonError('This time slot is full', 409);
+  if (retreat.enrolled >= retreat.maxCapacity) {
+    return jsonError('Няма свободни места.', 409);
   }
 
-  if (isFreeClassPrice(entry.price)) {
-    return jsonError('Този час е безплатен — използвайте директно записване.', 400);
+  if (isFreeClassPrice(retreat.price)) {
+    return jsonError('Този рийтрийт е безплатен — използвайте директно записване.', 400);
   }
 
-  const existing = await prisma.scheduleEntryBooking.findUnique({
+  const existing = await prisma.retreatBooking.findUnique({
     where: {
-      userId_scheduleEntryId: { userId: gate.user.id, scheduleEntryId: entry.id },
+      retreatId_userId: { retreatId, userId: gate.user.id },
     },
     select: { id: true },
   });
   if (existing) {
-    return jsonError('You already booked this time slot', 409);
+    return jsonError('Вече сте записани за този рийтрийт.', 409);
   }
 
-  const unitAmount = classPriceToStripeUnitAmountEurCents(entry.price);
+  const unitAmount = classPriceToStripeUnitAmountEurCents(retreat.price);
   if (unitAmount <= 0) {
-    return jsonError('Entry has no payable price', 400);
+    return jsonError('Retreat has no payable price', 400);
   }
 
   const metaBase = {
-    checkoutKind: 'schedule',
+    checkoutKind: 'retreat',
     userId: gate.user.id,
-    scheduleEntryId: entry.id,
-    studioId: entry.studioId,
+    retreatId: retreat.id,
+    studioId: retreat.studioId,
     amountCents: String(unitAmount),
   } as const;
 
@@ -96,10 +98,10 @@ export async function POST(request: Request) {
           currency: 'eur',
           unit_amount: unitAmount,
           product_data: {
-            name: `${entry.className} (разписание)`,
+            name: retreat.title,
             metadata: {
-              scheduleEntryId: entry.id,
-              studioId: entry.studioId,
+              retreatId: retreat.id,
+              studioId: retreat.studioId,
             },
           },
         },
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
       metadata: { ...metaBase },
     },
     success_url: `${appUrl}/profile/history?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/studio/${encodeURIComponent(entry.studioId)}?tab=schedule`,
+    cancel_url: `${appUrl}/retreats/${encodeURIComponent(retreat.id)}`,
   });
 
   if (!session.url) {
@@ -120,10 +122,10 @@ export async function POST(request: Request) {
   await trackServerEvent({
     eventName: 'booking_started',
     userId: gate.user.id,
-    studioId: entry.studioId,
+    studioId: retreat.studioId,
     metadata: {
-      kind: 'schedule',
-      scheduleEntryId: entry.id,
+      kind: 'retreat',
+      retreatId: retreat.id,
       checkoutSessionId: session.id,
     },
   });

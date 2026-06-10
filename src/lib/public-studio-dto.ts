@@ -74,6 +74,7 @@ export function yogaClassToDto(c: PrismaYogaClass): YogaClass {
     maxCapacity: c.maxCapacity,
     enrolled: c.enrolled,
     price: c.price,
+    paymentMode: c.paymentMode,
     yogaType: c.yogaType,
     difficulty: c.difficulty as YogaClass['difficulty'],
     cancellationPolicy: c.cancellationPolicy,
@@ -96,6 +97,7 @@ export function scheduleEntryToDto(s: PrismaScheduleEntry): ScheduleEntry {
     maxCapacity: s.maxCapacity,
     enrolled: s.enrolled,
     price: s.price,
+    paymentMode: s.paymentMode,
     isRecurring: s.isRecurring,
     acceptsMultisport: s.acceptsMultisport,
   };
@@ -118,6 +120,7 @@ export function retreatToDto(r: PrismaRetreat): Retreat {
     maxCapacity: r.maxCapacity,
     enrolled: r.enrolled,
     price: r.price,
+    paymentMode: r.paymentMode,
     isPublished: r.isPublished,
     isHidden: r.isHidden,
     createdAt: r.createdAt.toISOString(),

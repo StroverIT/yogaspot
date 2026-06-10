@@ -3,7 +3,7 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { enrollUserInScheduleOffline } from '@/lib/offline-booking';
 import { prisma } from '@/lib/prisma';
-import { isFreeClassPrice } from '@/lib/yoga-class-limits';
+import { effectivePaymentMode, includesOnsitePayment } from '@/lib/booking-payment-mode';
 import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
@@ -26,11 +26,12 @@ export async function POST(request: Request) {
 
   const entry = await prisma.scheduleEntry.findFirst({
     where: { id: scheduleEntryId, studioId },
-    select: { price: true },
+    select: { price: true, paymentMode: true },
   });
   if (!entry) return jsonError('Часът не е намерен.', 404);
-  if (!isFreeClassPrice(entry.price)) {
-    return jsonError('Платените часове изискват плащане през Stripe.', 403);
+  const mode = effectivePaymentMode(entry.price, entry.paymentMode);
+  if (!includesOnsitePayment(mode)) {
+    return jsonError('Този час приема само онлайн плащане.', 403);
   }
 
   try {

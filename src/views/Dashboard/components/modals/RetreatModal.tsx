@@ -13,6 +13,15 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import type { Retreat, Studio } from '@/data/mock-data';
+import {
+  includesOnlinePayment,
+  resolvePaymentModeForPrice,
+  type BookingPaymentMode,
+} from '@/lib/booking-payment-mode';
+import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
+import { isFreeClassPrice } from '@/lib/yoga-class-limits';
+import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
+import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 
 type RetreatImageUrlSlot = { kind: 'url'; id: string; url: string };
 type RetreatImageFileSlot = { kind: 'file'; id: string; file: File; previewUrl: string };
@@ -35,6 +44,7 @@ export type RetreatModalPayload = {
   duration: string;
   maxCapacity: number;
   price: number;
+  paymentMode: BookingPaymentMode;
   isPublished: boolean;
   imageSlots: RetreatImageSlot[];
 };
@@ -48,12 +58,14 @@ export function RetreatModal({
   onSave,
   studios,
   retreatToEdit,
+  stripeConnect,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (payload: RetreatModalPayload) => void | Promise<void>;
   studios: Studio[];
   retreatToEdit?: Retreat | null;
+  stripeConnect: StripeConnectSummary | null;
 }) {
   const [studioId, setStudioId] = useState('');
   const [title, setTitle] = useState('');
@@ -69,6 +81,8 @@ export function RetreatModal({
   const [activitiesRaw, setActivitiesRaw] = useState('');
   const [maxCapacity, setMaxCapacity] = useState('');
   const [price, setPrice] = useState('');
+  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('both');
+  const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [isPublished, setIsPublished] = useState(true);
   const [imageSlots, setImageSlots] = useState<RetreatImageSlot[]>([]);
   const [saving, setSaving] = useState(false);
@@ -107,6 +121,9 @@ export function RetreatModal({
       setActivitiesRaw(retreatToEdit.activities.join('\n'));
       setMaxCapacity(String(retreatToEdit.maxCapacity));
       setPrice(String(retreatToEdit.price));
+      setPaymentMode(
+        retreatToEdit.paymentMode ?? (isFreeClassPrice(retreatToEdit.price) ? 'onsite' : 'both'),
+      );
       setIsPublished(retreatToEdit.isPublished);
       setImageSlots(
         (retreatToEdit.images ?? []).map((url) => ({
@@ -131,6 +148,8 @@ export function RetreatModal({
     setActivitiesRaw('');
     setMaxCapacity('');
     setPrice('');
+    setPaymentMode('both');
+    setStripeSetupOpen(false);
     setIsPublished(true);
     setImageSlots([]);
   }, [open, retreatToEdit, studios]);
@@ -240,6 +259,13 @@ export function RetreatModal({
       return;
     }
 
+    const resolvedPaymentMode = resolvePaymentModeForPrice(parsedPrice, paymentMode);
+    if (includesOnlinePayment(resolvedPaymentMode) && !isStripeConnectReady(stripeConnect)) {
+      toast.error('Свържете Stripe акаунта си, за да приемате онлайн плащания.');
+      setStripeSetupOpen(true);
+      return;
+    }
+
     setSaving(true);
     try {
       await Promise.resolve(
@@ -257,6 +283,7 @@ export function RetreatModal({
           duration: duration.trim(),
           maxCapacity: capacity,
           price: parsedPrice,
+          paymentMode: resolvedPaymentMode,
           isPublished,
           imageSlots,
         }),
@@ -343,6 +370,15 @@ export function RetreatModal({
               />
             </div>
           </div>
+
+          {Number.isFinite(Number(price)) && !isFreeClassPrice(Number(price)) ? (
+            <PaymentModeField
+              value={paymentMode}
+              onChange={setPaymentMode}
+              stripeConnect={stripeConnect}
+              onRequireStripeSetup={() => setStripeSetupOpen(true)}
+            />
+          ) : null}
 
           <div>
             <Label>Име на рийтрийт</Label>
@@ -537,6 +573,11 @@ export function RetreatModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <StripeConnectSetupModal
+        open={stripeSetupOpen}
+        onClose={() => setStripeSetupOpen(false)}
+        stripeConnect={stripeConnect}
+      />
     </Dialog>
   );
 }

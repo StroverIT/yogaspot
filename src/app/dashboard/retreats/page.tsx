@@ -49,6 +49,7 @@ export default function DashboardRetreatsPage() {
     formData.append('duration', payload.duration);
     formData.append('maxCapacity', String(payload.maxCapacity));
     formData.append('price', String(payload.price));
+    formData.append('paymentMode', payload.paymentMode);
     formData.append('isPublished', String(payload.isPublished));
     payload.activities.forEach((activity) => formData.append('activities', activity));
 
@@ -125,6 +126,7 @@ export default function DashboardRetreatsPage() {
         onSave={handleSave}
         studios={ws.studios}
         retreatToEdit={editingRetreat}
+        stripeConnect={ws.stripeConnect}
       />
 
       <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && !deleteInProgress && setPendingDelete(null)}>

@@ -1,3 +1,5 @@
+import type { BookingPaymentMode } from '@/lib/booking-payment-mode';
+
 export type TeachingMode = 'physical' | 'online';
 
 export interface Studio {
@@ -55,6 +57,7 @@ export interface YogaClass {
   maxCapacity: number;
   enrolled: number;
   price: number;
+  paymentMode?: BookingPaymentMode;
   yogaType: string;
   difficulty: 'начинаещ' | 'среден' | 'напреднал';
   cancellationPolicy: string;
@@ -100,6 +103,7 @@ export interface ScheduleEntry {
   maxCapacity: number;
   enrolled: number;
   price: number;
+  paymentMode?: BookingPaymentMode;
   isRecurring: boolean; // true = weekly recurring
   acceptsMultisport?: boolean;
 }
@@ -120,6 +124,7 @@ export interface Retreat {
   maxCapacity: number;
   enrolled: number;
   price: number;
+  paymentMode?: BookingPaymentMode;
   isPublished: boolean;
   isHidden: boolean;
   createdAt: string;

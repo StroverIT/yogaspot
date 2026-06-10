@@ -25,7 +25,15 @@ import {
   isUnlimitedClassCapacity,
   resolveClassMaxCapacity,
 } from '@/lib/yoga-class-limits';
+import {
+  includesOnlinePayment,
+  resolvePaymentModeForPrice,
+  type BookingPaymentMode,
+} from '@/lib/booking-payment-mode';
+import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { cn } from '@/lib/utils';
+import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
+import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете всички опции преди запазване.';
@@ -45,6 +53,7 @@ export type ClassModalPayload = {
   cancellationPolicy: string;
   waitingList?: string[];
   acceptsMultisport?: boolean;
+  paymentMode: BookingPaymentMode;
 };
 
 export function ClassModal({
@@ -56,6 +65,7 @@ export function ClassModal({
   classToEdit,
   onCreateInstructor,
   preselectInstructorId,
+  stripeConnect,
 }: {
   open: boolean;
   onClose: () => void;
@@ -67,6 +77,7 @@ export function ClassModal({
   onCreateInstructor?: (studioId: string) => void;
   /** After inline instructor create, auto-select in the dropdown. */
   preselectInstructorId?: string | null;
+  stripeConnect: StripeConnectSummary | null;
 }) {
   const [className, setClassName] = useState('');
   const [instructorId, setInstructorId] = useState('');
@@ -82,6 +93,8 @@ export function ClassModal({
   const [noCapacityLimit, setNoCapacityLimit] = useState(false);
   const [isFreeClass, setIsFreeClass] = useState(false);
   const [acceptsMultisport, setAcceptsMultisport] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('both');
+  const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
   const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
@@ -128,6 +141,7 @@ export function ClassModal({
       setPrice(free ? '' : formatEurInputFromBgn(classToEdit.price));
       setCancellationPolicy(classToEdit.cancellationPolicy);
       setAcceptsMultisport(classToEdit.acceptsMultisport === true);
+      setPaymentMode(classToEdit.paymentMode ?? (free ? 'onsite' : 'both'));
       return;
     }
     setClassName('');
@@ -144,6 +158,8 @@ export function ClassModal({
     setNoCapacityLimit(false);
     setIsFreeClass(false);
     setAcceptsMultisport(false);
+    setPaymentMode('both');
+    setStripeSetupOpen(false);
   }, [open, classToEdit]);
 
   useEffect(() => {
@@ -210,6 +226,12 @@ export function ClassModal({
       toast.error(INCOMPLETE_MSG);
       return;
     }
+    const resolvedPaymentMode = resolvePaymentModeForPrice(pr, paymentMode);
+    if (includesOnlinePayment(resolvedPaymentMode) && !isStripeConnectReady(stripeConnect)) {
+      toast.error('Свържете Stripe акаунта си, за да приемате онлайн плащания.');
+      setStripeSetupOpen(true);
+      return;
+    }
     setSaving(true);
     try {
       await Promise.resolve(
@@ -228,6 +250,7 @@ export function ClassModal({
           cancellationPolicy: cancellationPolicy.trim(),
           waitingList: classToEdit?.waitingList,
           acceptsMultisport: !isOnlineStudio && acceptsMultisport,
+          paymentMode: resolvedPaymentMode,
         }),
       );
     } finally {
@@ -424,18 +447,27 @@ export function ClassModal({
                 />
                 Безплатно
               </label>
-              {!isFreeClass ? (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {hasValidBasePrice
-                    ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`
-                    : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
-                </p>
-              ) : null}
               {isFreeClass ? (
                 <p className="mt-1 text-xs text-muted-foreground">Класът е безплатен за практикуващите.</p>
               ) : null}
             </div>
           </div>
+          {!isFreeClass ? (
+            <PaymentModeField
+              value={paymentMode}
+              onChange={setPaymentMode}
+              stripeConnect={stripeConnect}
+              onRequireStripeSetup={() => setStripeSetupOpen(true)}
+              showOnlineFeeHint={hasValidBasePrice}
+            />
+          ) : null}
+          {!isFreeClass && hasValidBasePrice && includesOnlinePayment(paymentMode) ? (
+            <p className="text-xs text-muted-foreground">
+              Крайна цена за клиента при онлайн плащане:{' '}
+              {formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса{' '}
+              {formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)
+            </p>
+          ) : null}
           <div>
             <Label>Политика за отказване</Label>
             <Input
@@ -475,6 +507,11 @@ export function ClassModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <StripeConnectSetupModal
+        open={stripeSetupOpen}
+        onClose={() => setStripeSetupOpen(false)}
+        stripeConnect={stripeConnect}
+      />
     </Dialog>
   );
 }

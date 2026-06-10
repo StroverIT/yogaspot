@@ -12,6 +12,11 @@ import {
 import { Button } from '@/components/ui/button';
 import type { ScheduleEntry, YogaClass } from '@/data/mock-data';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import {
+  effectivePaymentMode,
+  includesOnsitePayment,
+  includesOnlinePayment,
+} from '@/lib/booking-payment-mode';
 import { calculateFinalCustomerAmount } from '@/lib/payments';
 import { formatClassPriceDisplay, isFreeClassPrice } from '@/lib/yoga-class-limits';
 import { toast } from 'sonner';
@@ -44,11 +49,22 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
         ? `${target.entry.startTime}–${target.entry.endTime} · ${target.entry.day}`
         : '';
 
-  const basePrice = target?.kind === 'class' ? target.yogaClass.price : target?.kind === 'schedule' ? target.entry.price : 0;
-  const isFreeClassBooking =
-    (target?.kind === 'class' || target?.kind === 'schedule') && isFreeClassPrice(basePrice);
-  const useStripeCheckout = !isFreeClassBooking;
-  const finalPrice = useStripeCheckout ? calculateFinalCustomerAmount(basePrice) : basePrice;
+  const basePrice =
+    target?.kind === 'class'
+      ? target.yogaClass.price
+      : target?.kind === 'schedule'
+        ? target.entry.price
+        : 0;
+  const paymentMode =
+    target?.kind === 'class'
+      ? effectivePaymentMode(target.yogaClass.price, target.yogaClass.paymentMode)
+      : target?.kind === 'schedule'
+        ? effectivePaymentMode(target.entry.price, target.entry.paymentMode)
+        : 'onsite';
+  const isFreeClassBooking = isFreeClassPrice(basePrice);
+  const showOnline = !isFreeClassBooking && includesOnlinePayment(paymentMode);
+  const showOnsite = isFreeClassBooking || includesOnsitePayment(paymentMode);
+  const finalPrice = showOnline ? calculateFinalCustomerAmount(basePrice) : basePrice;
 
   const handlePay = async () => {
     if (!target) return;
@@ -116,13 +132,19 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
     }
   };
 
+  const dialogTitle = isFreeClassBooking
+    ? 'Записване'
+    : showOnline && !showOnsite
+      ? 'Потвърждение и плащане'
+      : showOnline && showOnsite
+        ? 'Записване и плащане'
+        : 'Записване';
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display">
-            {useStripeCheckout ? 'Потвърждение и плащане' : 'Записване'}
-          </DialogTitle>
+          <DialogTitle className="font-display">{dialogTitle}</DialogTitle>
           <DialogDescription asChild>
             <div className="space-y-2 text-left text-sm text-muted-foreground">
               <p className="font-medium text-foreground">{title}</p>
@@ -135,9 +157,14 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
                   <span className="font-semibold text-foreground">
                     {isFreeClassBooking
                       ? formatClassPriceDisplay(0)
-                      : formatPriceDualFromBgn(useStripeCheckout ? finalPrice : basePrice)}
+                      : formatPriceDualFromBgn(showOnline ? finalPrice : basePrice)}
                   </span>
                 </p>
+                {showOnline && showOnsite ? (
+                  <p className="text-xs">Можете да платите онлайн или на място в студиото.</p>
+                ) : showOnsite && !showOnline ? (
+                  <p className="text-xs">Плащането се извършва на място в студиото.</p>
+                ) : null}
               </>
             </div>
           </DialogDescription>
@@ -146,15 +173,16 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
           <Button type="button" variant="outline" onClick={onClose} disabled={paying}>
             Отказ
           </Button>
-          {useStripeCheckout ? (
+          {showOnsite ? (
+            <Button type="button" variant={showOnline ? 'outline' : 'default'} onClick={() => void handleOfflineConfirm()} disabled={paying || !target}>
+              {paying ? 'Записване…' : showOnline ? 'На място' : 'Потвърди'}
+            </Button>
+          ) : null}
+          {showOnline ? (
             <Button type="button" onClick={() => void handlePay()} disabled={paying || !target}>
               {paying ? 'Зареждане…' : 'Плащане в Stripe'}
             </Button>
-          ) : (
-            <Button type="button" onClick={() => void handleOfflineConfirm()} disabled={paying || !target}>
-              {paying ? 'Записване…' : 'Потвърди'}
-            </Button>
-          )}
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

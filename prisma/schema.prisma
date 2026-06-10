@@ -37,6 +37,12 @@ enum PaymentStatus {
   failed
 }
 
+enum BookingPaymentMode {
+  onsite
+  online
+  both
+}
+
 enum StudioMembershipStatus {
   active
   past_due
@@ -243,6 +249,7 @@ model Retreat {
   maxCapacity Int
   enrolled    Int      @default(0)
   price       Float    @default(0)
+  paymentMode BookingPaymentMode @default(onsite)
   isPublished Boolean  @default(true)
   isHidden    Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -260,6 +267,8 @@ model RetreatBooking {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  payment Payment?
 
   @@unique([retreatId, userId])
   @@index([userId, createdAt(sort: Desc)])
@@ -294,6 +303,7 @@ model YogaClass {
   maxCapacity         Int
   enrolled            Int      @default(0)
   price               Float
+  paymentMode         BookingPaymentMode @default(online)
   yogaType            String
   difficulty          String
   cancellationPolicy  String
@@ -327,6 +337,8 @@ model Payment {
   booking                 Booking?      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   scheduleEntryBookingId  String?       @unique
   scheduleEntryBooking    ScheduleEntryBooking? @relation(fields: [scheduleEntryBookingId], references: [id], onDelete: Cascade)
+  retreatBookingId        String?       @unique
+  retreatBooking          RetreatBooking? @relation(fields: [retreatBookingId], references: [id], onDelete: Cascade)
   status                  PaymentStatus @default(pending)
   amount                  Int
   currency                String        @default("eur")
@@ -352,6 +364,7 @@ model ScheduleEntry {
   maxCapacity Int
   enrolled    Int      @default(0)
   price             Float
+  paymentMode       BookingPaymentMode @default(online)
   isRecurring       Boolean  @default(true)
   acceptsMultisport Boolean  @default(false)
 

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
+import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole, requireStripeConnectReady } from '@/lib/api-auth';
+import { includesOnlinePayment, parsePaymentModeFromBody } from '@/lib/booking-payment-mode';
 import { retreatToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
   const duration = String(formData.get('duration') ?? '').trim();
   const maxCapacityRaw = String(formData.get('maxCapacity') ?? '').trim();
   const priceRaw = String(formData.get('price') ?? '').trim();
+  const paymentModeRaw = String(formData.get('paymentMode') ?? '').trim();
   const activities = formData
     .getAll('activities')
     .filter((x): x is string => typeof x === 'string')
@@ -102,6 +104,18 @@ export async function POST(request: Request) {
   if (lat == null || lng == null) return jsonError('Missing map coordinates', 400);
   if (!Number.isFinite(maxCapacity) || maxCapacity <= 0) return jsonError('Invalid maxCapacity', 400);
   if (!Number.isFinite(price) || price < 0) return jsonError('Invalid price', 400);
+
+  const paymentModeResult = parsePaymentModeFromBody(paymentModeRaw || undefined, price, 'both');
+  if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
+  const paymentMode = paymentModeResult.mode;
+
+  if (includesOnlinePayment(paymentMode)) {
+    const stripeGate = await requireStripeConnectReady(
+      gate.user,
+      'Свържете Stripe акаунта си, за да приемате онлайн плащания.',
+    );
+    if (!stripeGate.ok) return stripeGate.response;
+  }
 
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -136,6 +150,7 @@ export async function POST(request: Request) {
           maxCapacity: number;
           enrolled: number;
           price: number;
+          paymentMode: typeof paymentMode;
           isPublished: boolean;
           isHidden: boolean;
         };
@@ -158,6 +173,7 @@ export async function POST(request: Request) {
       maxCapacity,
       enrolled: 0,
       price,
+      paymentMode,
       isPublished,
       isHidden: false,
     },

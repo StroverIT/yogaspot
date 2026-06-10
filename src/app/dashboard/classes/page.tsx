@@ -100,6 +100,7 @@ export default function DashboardClassesPage() {
         cancellationPolicy: payload.cancellationPolicy,
         ...(isEdit && payload.waitingList !== undefined ? { waitingList: payload.waitingList } : {}),
         acceptsMultisport: payload.acceptsMultisport === true,
+        paymentMode: payload.paymentMode,
         ...(!isEdit ? { enrolled: 0 } : {}),
       }),
     });
@@ -211,6 +212,7 @@ export default function DashboardClassesPage() {
           setInstructorModalOpen(true);
         }}
         preselectInstructorId={preselectInstructorId}
+        stripeConnect={ws.stripeConnect}
       />
       <InstructorModal
         open={instructorModalOpen}

@@ -3,6 +3,7 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { assertStripeConfigured, classPriceToStripeUnitAmountEurCents, getPublicAppBaseUrl, getStripe } from '@/lib/stripe-server';
+import { effectivePaymentMode, includesOnlinePayment } from '@/lib/booking-payment-mode';
 import { isClassAtCapacity, isFreeClassPrice } from '@/lib/yoga-class-limits';
 
 export const runtime = 'nodejs';
@@ -41,10 +42,16 @@ export async function POST(request: Request) {
       price: true,
       enrolled: true,
       maxCapacity: true,
+      paymentMode: true,
     },
   });
 
   if (!yogaClass) return jsonError('Class not found', 404);
+
+  const mode = effectivePaymentMode(yogaClass.price, yogaClass.paymentMode);
+  if (!includesOnlinePayment(mode)) {
+    return jsonError('Този клас приема само плащане на място.', 400);
+  }
 
   if (isClassAtCapacity(yogaClass.enrolled, yogaClass.maxCapacity)) {
     return jsonError('Class is full', 409);

@@ -103,6 +103,7 @@ export default function DashboardSchedulePage() {
           price: payload.price,
           isRecurring: true,
           acceptsMultisport: payload.acceptsMultisport === true,
+          paymentMode: payload.paymentMode,
         }),
       });
 
@@ -240,6 +241,7 @@ export default function DashboardSchedulePage() {
           setInstructorModalOpen(true);
         }}
         preselectInstructorId={preselectInstructorId}
+        stripeConnect={ws.stripeConnect}
       />
       <InstructorModal
         open={instructorModalOpen}

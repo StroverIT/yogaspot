@@ -149,9 +149,10 @@ export async function requireBusinessWriteAccess(
   return { ok: true };
 }
 
-/** Requires a fully onboarded Stripe Connect account before studio subscription CRUD. */
-export async function requireStripeReadyForSubscriptions(
+/** Requires a fully onboarded Stripe Connect account. */
+export async function requireStripeConnectReady(
   user: SessionUser & { id: string; role: Role },
+  errorMessage = 'Свържете Stripe акаунта си.',
 ): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
   if (user.role === 'admin') return { ok: true };
 
@@ -161,7 +162,7 @@ export async function requireStripeReadyForSubscriptions(
       ok: false,
       response: NextResponse.json(
         {
-          error: 'Свържете Stripe акаунта си, за да създавате абонаменти.',
+          error: errorMessage,
           code: 'stripe_not_connected',
         },
         { status: 403 },
@@ -169,4 +170,14 @@ export async function requireStripeReadyForSubscriptions(
     };
   }
   return { ok: true };
+}
+
+/** Requires a fully onboarded Stripe Connect account before studio subscription CRUD. */
+export async function requireStripeReadyForSubscriptions(
+  user: SessionUser & { id: string; role: Role },
+): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  return requireStripeConnectReady(
+    user,
+    'Свържете Stripe акаунта си, за да създавате абонаменти.',
+  );
 }

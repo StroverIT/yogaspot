@@ -3,7 +3,7 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 import { runBookingNotifications } from '@/lib/booking-notifications';
 import { enrollUserInYogaClassOffline } from '@/lib/offline-booking';
 import { prisma } from '@/lib/prisma';
-import { isFreeClassPrice } from '@/lib/yoga-class-limits';
+import { effectivePaymentMode, includesOnsitePayment } from '@/lib/booking-payment-mode';
 import { trackServerEvent } from '@/lib/server-analytics';
 
 export const runtime = 'nodejs';
@@ -24,11 +24,12 @@ export async function POST(request: Request) {
 
   const yogaClass = await prisma.yogaClass.findUnique({
     where: { id: classId },
-    select: { price: true },
+    select: { price: true, paymentMode: true },
   });
   if (!yogaClass) return jsonError('Класът не е намерен.', 404);
-  if (!isFreeClassPrice(yogaClass.price)) {
-    return jsonError('Платените класове изискват плащане през Stripe.', 403);
+  const mode = effectivePaymentMode(yogaClass.price, yogaClass.paymentMode);
+  if (!includesOnsitePayment(mode)) {
+    return jsonError('Този клас приема само онлайн плащане.', 403);
   }
 
   try {

@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import { jsonError, requireSession } from '@/lib/api-auth';
+import { effectivePaymentMode, includesOnsitePayment } from '@/lib/booking-payment-mode';
 import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -18,6 +19,18 @@ export async function POST(request: Request) {
 
   const retreatId = typeof body.retreatId === 'string' ? body.retreatId.trim() : '';
   if (!retreatId) return jsonError('Missing retreatId', 400);
+
+  const retreatMeta = await prisma.retreat.findUnique({
+    where: { id: retreatId },
+    select: { price: true, paymentMode: true, isPublished: true, isHidden: true },
+  });
+  if (!retreatMeta || retreatMeta.isHidden || !retreatMeta.isPublished) {
+    return jsonError('Рийтрийтът не е намерен.', 404);
+  }
+  const mode = effectivePaymentMode(retreatMeta.price, retreatMeta.paymentMode);
+  if (!includesOnsitePayment(mode)) {
+    return jsonError('Този рийтрийт приема само онлайн плащане.', 403);
+  }
 
   try {
     await prisma.$transaction(async (tx) => {

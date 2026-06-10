@@ -20,7 +20,15 @@ import {
 import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 import { ONLINE_STUDIO_ZOOM_REQUIRED_MSG } from '@/lib/studio-online-gate';
 import { onlineStudioMissingZoom } from '@/lib/teaching-mode';
+import {
+  includesOnlinePayment,
+  resolvePaymentModeForPrice,
+  type BookingPaymentMode,
+} from '@/lib/booking-payment-mode';
+import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { cn } from '@/lib/utils';
+import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
+import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 import {
   isFreeClassPrice,
   isUnlimitedClassCapacity,
@@ -43,6 +51,7 @@ export type ScheduleModalPayload = {
   maxCapacity: number;
   price: number;
   acceptsMultisport?: boolean;
+  paymentMode: BookingPaymentMode;
 };
 
 type TimeSlot = {
@@ -60,6 +69,7 @@ export function ScheduleModal({
   entry,
   onCreateInstructor,
   preselectInstructorId,
+  stripeConnect,
 }: {
   open: boolean;
   onClose: () => void;
@@ -69,6 +79,7 @@ export function ScheduleModal({
   entry: ScheduleEntry | null;
   onCreateInstructor?: (studioId: string) => void;
   preselectInstructorId?: string | null;
+  stripeConnect: StripeConnectSummary | null;
 }) {
   const [className, setClassName] = useState('');
   const [studioId, setStudioId] = useState('');
@@ -80,6 +91,8 @@ export function ScheduleModal({
   const [noCapacityLimit, setNoCapacityLimit] = useState(false);
   const [isFreeClass, setIsFreeClass] = useState(false);
   const [acceptsMultisport, setAcceptsMultisport] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('both');
+  const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([{ day: '', startTime: '', endTime: '' }]);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
@@ -126,6 +139,7 @@ export function ScheduleModal({
       setMaxCapacity(unlimited ? '' : String(entry.maxCapacity));
       setPrice(free ? '' : formatEurInputFromBgn(entry.price));
       setAcceptsMultisport(entry.acceptsMultisport === true);
+      setPaymentMode(entry.paymentMode ?? (free ? 'onsite' : 'both'));
       return;
     }
     setClassName('');
@@ -138,6 +152,8 @@ export function ScheduleModal({
     setNoCapacityLimit(false);
     setIsFreeClass(false);
     setAcceptsMultisport(false);
+    setPaymentMode('both');
+    setStripeSetupOpen(false);
     setTimeSlots([{ day: '', startTime: '', endTime: '' }]);
   }, [open, entry]);
 
@@ -214,6 +230,12 @@ export function ScheduleModal({
       ? resolveClassMaxCapacity(0, true)
       : capRaw;
     const pr = isFreeClass ? 0 : classPriceBgnFromEur(parseEurInput(price));
+    const resolvedPaymentMode = resolvePaymentModeForPrice(pr, paymentMode);
+    if (includesOnlinePayment(resolvedPaymentMode) && !isStripeConnectReady(stripeConnect)) {
+      toast.error('Свържете Stripe акаунта си, за да приемате онлайн плащания.');
+      setStripeSetupOpen(true);
+      return;
+    }
 
     const payloads: ScheduleModalPayload[] = timeSlots.map(slot => ({
       id: entry?.id,
@@ -228,6 +250,7 @@ export function ScheduleModal({
       maxCapacity: resolvedCapacity,
       price: pr,
       acceptsMultisport: !isOnlineStudio && acceptsMultisport,
+      paymentMode: resolvedPaymentMode,
     }));
 
     setSaving(true);
@@ -475,18 +498,27 @@ export function ScheduleModal({
                     />
                     Безплатно
                   </label>
-                  {!isFreeClass ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {hasValidBasePrice
-                        ? `Крайна цена за клиента: ${formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса ${formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)`
-                        : 'Добавяме автоматично онлайн такса 0,70 лв. + 3% при плащане.'}
-                    </p>
-                  ) : null}
                   {isFreeClass ? (
                     <p className="mt-1 text-xs text-muted-foreground">Часът е безплатен за практикуващите.</p>
                   ) : null}
                 </div>
               </div>
+              {!isFreeClass ? (
+                <PaymentModeField
+                  value={paymentMode}
+                  onChange={setPaymentMode}
+                  stripeConnect={stripeConnect}
+                  onRequireStripeSetup={() => setStripeSetupOpen(true)}
+                  showOnlineFeeHint={hasValidBasePrice}
+                />
+              ) : null}
+              {!isFreeClass && hasValidBasePrice && includesOnlinePayment(paymentMode) ? (
+                <p className="text-xs text-muted-foreground">
+                  Крайна цена за клиента при онлайн плащане:{' '}
+                  {formatPriceDualFromBgn(calculateFinalCustomerAmount(eurToBgn(parsedEur)))} (такса{' '}
+                  {formatPriceDualFromBgn(calculateOnlinePaymentFee(eurToBgn(parsedEur)))} = 0,70 лв. + 3%)
+                </p>
+              ) : null}
               {!isOnlineStudio ? (
                 <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                   <Checkbox
@@ -517,6 +549,11 @@ export function ScheduleModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <StripeConnectSetupModal
+        open={stripeSetupOpen}
+        onClose={() => setStripeSetupOpen(false)}
+        stripeConnect={stripeConnect}
+      />
     </Dialog>
   );
 }

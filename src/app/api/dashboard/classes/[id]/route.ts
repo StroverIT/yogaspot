@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole, requireStripeConnectReady } from '@/lib/api-auth';
+import { includesOnlinePayment, parsePaymentModeFromBody } from '@/lib/booking-payment-mode';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { teachingModeFromPrisma } from '@/lib/teaching-mode';
@@ -37,6 +38,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     instructorId: string;
     studioId: string;
     acceptsMultisport: boolean;
+    paymentMode: string;
   }>;
   try {
     body = await request.json();
@@ -89,7 +91,24 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
     }
   }
 
+  if (typeof body.paymentMode === 'string') {
+    const nextPrice = typeof data.price === 'number' ? data.price : existing.price;
+    const paymentModeResult = parsePaymentModeFromBody(body.paymentMode, nextPrice, existing.paymentMode);
+    if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
+    data.paymentMode = paymentModeResult.mode;
+  }
+
   if (Object.keys(data).length === 0) return jsonError('No valid fields', 400);
+
+  const effectivePaymentMode =
+    typeof data.paymentMode === 'string' ? data.paymentMode : existing.paymentMode;
+  if (includesOnlinePayment(effectivePaymentMode as typeof existing.paymentMode)) {
+    const stripeGate = await requireStripeConnectReady(
+      gate.user,
+      'Свържете Stripe акаунта си, за да приемате онлайн плащания.',
+    );
+    if (!stripeGate.ok) return stripeGate.response;
+  }
 
   if (typeof data.maxCapacity === 'number' || typeof data.price === 'number' || typeof data.acceptsMultisport === 'boolean') {
     const studio = await prisma.studio.findUnique({

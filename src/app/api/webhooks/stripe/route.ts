@@ -65,6 +65,15 @@ type ScheduleLocked = {
   price: number;
 };
 
+type RetreatLocked = {
+  id: string;
+  studioId: string;
+  enrolled: number;
+  maxCapacity: number;
+  title: string;
+  price: number;
+};
+
 async function fulfillClassBooking(session: Stripe.Checkout.Session, md: Record<string, string>): Promise<void> {
   const amountTotal = session.amount_total;
   if (amountTotal == null || amountTotal <= 0) {
@@ -300,6 +309,110 @@ async function fulfillScheduleBooking(session: Stripe.Checkout.Session, md: Reco
   }
 }
 
+async function fulfillRetreatBooking(session: Stripe.Checkout.Session, md: Record<string, string>): Promise<void> {
+  const amountTotal = session.amount_total;
+  if (amountTotal == null || amountTotal <= 0) {
+    console.error('[stripe webhook] invalid amount_total', session.id);
+    return;
+  }
+
+  const expectedFromMeta = md.amountCents != null && md.amountCents !== '' ? parseInt(md.amountCents, 10) : NaN;
+  if (Number.isFinite(expectedFromMeta) && expectedFromMeta !== amountTotal) {
+    await refundPaymentIntent(paymentIntentIdFromSession(session), 'amount_mismatch');
+    return;
+  }
+
+  if (!md.userId || !md.retreatId || !md.studioId) {
+    console.error('[stripe webhook] retreat checkout missing metadata', session.id);
+    return;
+  }
+
+  const paymentIntentId = paymentIntentIdFromSession(session);
+  let retreatSnapshot: RetreatLocked | null = null;
+  let bookingId = '';
+  let fulfilled = false;
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const locked = await tx.$queryRaw<RetreatLocked[]>(
+        Prisma.sql`
+          SELECT id, "studioId", enrolled, "maxCapacity", title, price
+          FROM "Retreat"
+          WHERE id = ${md.retreatId}
+          FOR UPDATE
+        `,
+      );
+      const retreat = locked[0];
+      if (!retreat) {
+        throw new Error('RETREAT_NOT_FOUND');
+      }
+      retreatSnapshot = retreat;
+
+      const dupAgain = await tx.payment.findUnique({
+        where: { stripeCheckoutSessionId: session.id },
+        select: { id: true },
+      });
+      if (dupAgain) return;
+
+      if (retreat.studioId !== md.studioId) {
+        throw new Error('METADATA_INVALID');
+      }
+      if (retreat.enrolled >= retreat.maxCapacity) {
+        throw new Error('RETREAT_FULL');
+      }
+
+      await tx.retreat.update({
+        where: { id: retreat.id },
+        data: { enrolled: { increment: 1 } },
+      });
+
+      const booking = await tx.retreatBooking.create({
+        data: { userId: md.userId, retreatId: retreat.id },
+      });
+      bookingId = booking.id;
+
+      await tx.payment.create({
+        data: {
+          retreatBookingId: booking.id,
+          status: 'paid',
+          amount: amountTotal,
+          currency: (session.currency ?? 'eur').toLowerCase(),
+          stripeCheckoutSessionId: session.id,
+          stripePaymentIntentId: paymentIntentId,
+        },
+      });
+      fulfilled = true;
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      await refundPaymentIntent(paymentIntentId, 'unique_violation');
+      return;
+    }
+    if (
+      err instanceof Error
+      && (err.message === 'RETREAT_FULL' || err.message === 'RETREAT_NOT_FOUND' || err.message === 'METADATA_INVALID')
+    ) {
+      await refundPaymentIntent(paymentIntentId, err.message.toLowerCase());
+      return;
+    }
+    throw err;
+  }
+
+  if (fulfilled && retreatSnapshot && bookingId) {
+    await trackServerEvent({
+      eventName: 'booking_completed',
+      userId: md.userId,
+      studioId: md.studioId,
+      metadata: {
+        kind: 'retreat',
+        retreatId: retreatSnapshot.id,
+        paymentMode: 'online',
+        checkoutSessionId: session.id,
+      },
+    });
+  }
+}
+
 async function handleStudioSubscriptionInvoiceFailed(invoice: Stripe.Invoice): Promise<void> {
   const subId =
     typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
@@ -336,6 +449,11 @@ async function handleCheckoutSessionCompleted(
 
   if (md.checkoutKind === 'schedule') {
     await fulfillScheduleBooking(session, md);
+    return;
+  }
+
+  if (md.checkoutKind === 'retreat') {
+    await fulfillRetreatBooking(session, md);
     return;
   }
 

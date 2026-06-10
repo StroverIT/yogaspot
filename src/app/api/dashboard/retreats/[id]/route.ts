@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
+import { assertStudioWriteAccess, jsonError, requireBusinessWriteAccess, requireRole, requireStripeConnectReady } from '@/lib/api-auth';
+import { includesOnlinePayment, parsePaymentModeFromBody } from '@/lib/booking-payment-mode';
 import { retreatToDto } from '@/lib/public-studio-dto';
 import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 
@@ -47,7 +48,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   const existing = await prisma.retreat.findUnique({
     where: { id },
-    select: { id: true, studioId: true, images: true, studio: { select: { businessId: true } } },
+    select: { id: true, studioId: true, price: true, paymentMode: true, images: true, studio: { select: { businessId: true } } },
   });
   if (!existing) return jsonError('Not found', 404);
 
@@ -66,6 +67,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   const duration = String(formData.get('duration') ?? '').trim();
   const maxCapacityRaw = String(formData.get('maxCapacity') ?? '').trim();
   const priceRaw = String(formData.get('price') ?? '').trim();
+  const paymentModeRaw = String(formData.get('paymentMode') ?? '').trim();
   const activities = formData
     .getAll('activities')
     .filter((x): x is string => typeof x === 'string')
@@ -85,6 +87,22 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
   if (lat == null || lng == null) return jsonError('Missing map coordinates', 400);
   if (!Number.isFinite(maxCapacity) || maxCapacity <= 0) return jsonError('Invalid maxCapacity', 400);
   if (!Number.isFinite(price) || price < 0) return jsonError('Invalid price', 400);
+
+  const paymentModeResult = parsePaymentModeFromBody(
+    paymentModeRaw || undefined,
+    price,
+    existing.paymentMode,
+  );
+  if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
+  const paymentMode = paymentModeResult.mode;
+
+  if (includesOnlinePayment(paymentMode)) {
+    const stripeGate = await requireStripeConnectReady(
+      gate.user,
+      'Свържете Stripe акаунта си, за да приемате онлайн плащания.',
+    );
+    if (!stripeGate.ok) return stripeGate.response;
+  }
 
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -128,6 +146,7 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
       duration,
       maxCapacity,
       price,
+      paymentMode,
       isPublished,
     },
   });

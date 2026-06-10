@@ -44,6 +44,9 @@ export function RetreatDetailSidebar({ retreat }: { retreat: HomeRetreat }) {
 
       <RetreatSignupButton
         retreatId={retreat.id}
+        retreatTitle={retreat.title}
+        price={retreat.price}
+        paymentMode={retreat.paymentMode}
         enrolled={retreat.enrolled}
         maxCapacity={retreat.maxCapacity}
         isEnrolled={retreat.isEnrolled}

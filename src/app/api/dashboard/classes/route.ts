@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
+import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole, requireStripeConnectReady } from '@/lib/api-auth';
+import { includesOnlinePayment, parsePaymentModeFromBody } from '@/lib/booking-payment-mode';
 import { yogaClassToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 import { trackServerEvent } from '@/lib/server-analytics';
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
     cancellationPolicy?: string;
     waitingList?: string[];
     acceptsMultisport?: boolean;
+    paymentMode?: string;
   };
   try {
     body = await request.json();
@@ -102,6 +104,18 @@ export async function POST(request: Request) {
   const priceError = validateYogaClassPrice(price, teachingMode);
   if (priceError) return jsonError(priceError, 400);
 
+  const paymentModeResult = parsePaymentModeFromBody(body.paymentMode, price, 'both');
+  if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
+  const paymentMode = paymentModeResult.mode;
+
+  if (includesOnlinePayment(paymentMode)) {
+    const stripeGate = await requireStripeConnectReady(
+      gate.user,
+      'Свържете Stripe акаунта си, за да приемате онлайн плащания.',
+    );
+    if (!stripeGate.ok) return stripeGate.response;
+  }
+
   const created = await prisma.yogaClass.create({
     data: {
       studioId: body.studioId,
@@ -113,6 +127,7 @@ export async function POST(request: Request) {
       maxCapacity,
       enrolled: typeof body.enrolled === 'number' ? body.enrolled : 0,
       price,
+      paymentMode,
       yogaType: typeof body.yogaType === 'string' ? body.yogaType : '',
       difficulty: typeof body.difficulty === 'string' ? body.difficulty : 'начинаещ',
       cancellationPolicy: typeof body.cancellationPolicy === 'string' ? body.cancellationPolicy : '',
@@ -121,18 +136,20 @@ export async function POST(request: Request) {
     },
   });
 
-  try {
-    await ensureStripeCatalogEntry({
-      name: `Class: ${created.name}`,
-      baseAmount: created.price,
-      metadata: {
-        type: 'class',
-        classId: created.id,
-        studioId: created.studioId,
-      },
-    });
-  } catch (error) {
-    console.error('Stripe catalog sync failed for class', created.id, error);
+  if (includesOnlinePayment(paymentMode)) {
+    try {
+      await ensureStripeCatalogEntry({
+        name: `Class: ${created.name}`,
+        baseAmount: created.price,
+        metadata: {
+          type: 'class',
+          classId: created.id,
+          studioId: created.studioId,
+        },
+      });
+    } catch (error) {
+      console.error('Stripe catalog sync failed for class', created.id, error);
+    }
   }
 
   const studioClassCount = await prisma.yogaClass.count({

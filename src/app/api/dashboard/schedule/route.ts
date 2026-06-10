@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole } from '@/lib/api-auth';
+import { jsonError, listStudioIdsForActor, requireBusinessWriteAccess, requireRole, requireStripeConnectReady } from '@/lib/api-auth';
+import { includesOnlinePayment, parsePaymentModeFromBody } from '@/lib/booking-payment-mode';
 import { scheduleEntryToDto } from '@/lib/public-studio-dto';
 import { ensureStripeCatalogEntry } from '@/lib/stripe-catalog';
 import { trackServerEvent } from '@/lib/server-analytics';
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     price?: number;
     isRecurring?: boolean;
     acceptsMultisport?: boolean;
+    paymentMode?: string;
   };
   try {
     body = await request.json();
@@ -98,6 +100,18 @@ export async function POST(request: Request) {
   const priceError = validateYogaClassPrice(price, teachingMode);
   if (priceError) return jsonError(priceError, 400);
 
+  const paymentModeResult = parsePaymentModeFromBody(body.paymentMode, price, 'both');
+  if (!paymentModeResult.ok) return jsonError(paymentModeResult.error, 400);
+  const paymentMode = paymentModeResult.mode;
+
+  if (includesOnlinePayment(paymentMode)) {
+    const stripeGate = await requireStripeConnectReady(
+      gate.user,
+      'Свържете Stripe акаунта си, за да приемате онлайн плащания.',
+    );
+    if (!stripeGate.ok) return stripeGate.response;
+  }
+
   const created = await prisma.scheduleEntry.create({
     data: {
       studioId: body.studioId,
@@ -110,23 +124,26 @@ export async function POST(request: Request) {
       endTime: body.endTime,
       maxCapacity,
       price,
+      paymentMode,
       isRecurring: typeof body.isRecurring === 'boolean' ? body.isRecurring : true,
       acceptsMultisport: resolveAcceptsMultisport(body.acceptsMultisport, teachingMode),
     },
   });
 
-  try {
-    await ensureStripeCatalogEntry({
-      name: `Schedule: ${created.className} (${created.day} ${created.startTime})`,
-      baseAmount: created.price,
-      metadata: {
-        type: 'schedule',
-        scheduleId: created.id,
-        studioId: created.studioId,
-      },
-    });
-  } catch (error) {
-    console.error('Stripe catalog sync failed for schedule', created.id, error);
+  if (includesOnlinePayment(paymentMode)) {
+    try {
+      await ensureStripeCatalogEntry({
+        name: `Schedule: ${created.className} (${created.day} ${created.startTime})`,
+        baseAmount: created.price,
+        metadata: {
+          type: 'schedule',
+          scheduleId: created.id,
+          studioId: created.studioId,
+        },
+      });
+    } catch (error) {
+      console.error('Stripe catalog sync failed for schedule', created.id, error);
+    }
   }
 
   const studioScheduleCount = await prisma.scheduleEntry.count({
