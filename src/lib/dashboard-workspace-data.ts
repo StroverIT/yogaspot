@@ -7,6 +7,7 @@ import type {
   Studio,
   StudioSubscription,
   SubscriptionRequestDto,
+  SubscriptionVideo,
   YogaClass,
 } from '@/data/mock-data';
 import { listStudioIdsForActor, type SessionUser } from '@/lib/api-auth';
@@ -28,6 +29,7 @@ import {
 } from '@/lib/public-studio-dto';
 import type { Studio as PrismaStudio } from '@prisma/client';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
+import { subscriptionVideoToDto } from '@/lib/subscription-video-dto';
 
 export type DashboardWorkspaceData = {
   studios: Studio[];
@@ -36,6 +38,7 @@ export type DashboardWorkspaceData = {
   retreats: Retreat[];
   schedule: ScheduleEntry[];
   subscriptions: StudioSubscription[];
+  subscriptionVideos: SubscriptionVideo[];
   subscriptionRequests: SubscriptionRequestDto[];
   recentSignups: DashboardRecentSignup[];
   bookingRevenue: DashboardBookingRevenue;
@@ -74,6 +77,7 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
       retreats: [],
       schedule: [],
       subscriptions: [],
+      subscriptionVideos: [],
       subscriptionRequests: [],
       recentSignups: [],
       bookingRevenue: emptyDashboardBookingRevenue,
@@ -89,6 +93,7 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     retreats,
     schedule,
     subscriptions,
+    subscriptionVideos,
     subscriptionRequests,
     recentSignups,
     bookingRevenue,
@@ -117,6 +122,11 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     prisma.studioSubscription.findMany({
       where: { studioId: { in: studioIds } },
     }),
+    prisma.subscriptionVideo.findMany({
+      where: { studioId: { in: studioIds } },
+      include: { subscriptions: { select: { studioSubscriptionId: true } } },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    }),
     prisma.subscriptionRequest.findMany({
       where: { studioId: { in: studioIds } },
       orderBy: { createdAt: 'desc' },
@@ -132,6 +142,7 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     retreats: retreats.map(retreatToDto),
     schedule: schedule.map(scheduleEntryToDto),
     subscriptions: subscriptions.map(subscriptionToDto),
+    subscriptionVideos: subscriptionVideos.map(subscriptionVideoToDto),
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
     recentSignups,
     bookingRevenue,

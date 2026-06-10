@@ -126,6 +126,7 @@ export interface Retreat {
 }
 
 export interface StudioSubscription {
+  id: string;
   studioId: string;
   hasMonthlySubscription: boolean;
   name?: string;
@@ -133,6 +134,17 @@ export interface StudioSubscription {
   includes?: string;
   durationMonths?: number;
   subscriptionNote?: string;
+}
+
+export interface SubscriptionVideo {
+  id: string;
+  studioId: string;
+  title?: string;
+  youtubeUrl: string;
+  youtubeVideoId: string;
+  sortOrder: number;
+  subscriptionIds: string[];
+  createdAt: string;
 }
 
 export type SubscriptionRequestStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
@@ -340,6 +352,7 @@ export const mockSchedule: ScheduleEntry[] = [
 
 export const mockSubscriptions: StudioSubscription[] = [
   {
+    id: 'sub-s1',
     studioId: 's1',
     hasMonthlySubscription: true,
     name: 'Месечен пълен достъп',
@@ -349,6 +362,7 @@ export const mockSubscriptions: StudioSubscription[] = [
     subscriptionNote: '8 посещения месечно, всеки клас',
   },
   {
+    id: 'sub-s2',
     studioId: 's2',
     hasMonthlySubscription: true,
     name: 'Неограничен абонамент',
@@ -357,8 +371,9 @@ export const mockSubscriptions: StudioSubscription[] = [
     durationMonths: 1,
     subscriptionNote: 'Неограничени посещения',
   },
-  { studioId: 's3', hasMonthlySubscription: false },
+  { id: 'sub-s3', studioId: 's3', hasMonthlySubscription: false },
   {
+    id: 'sub-s4',
     studioId: 's4',
     hasMonthlySubscription: true,
     name: 'Комбиниран пакет',

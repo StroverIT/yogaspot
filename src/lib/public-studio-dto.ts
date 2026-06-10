@@ -126,6 +126,7 @@ export function retreatToDto(r: PrismaRetreat): Retreat {
 
 export function subscriptionToDto(sub: PrismaSub): StudioSubscription {
   return {
+    id: sub.id,
     studioId: sub.studioId,
     hasMonthlySubscription: sub.hasMonthlySubscription,
     name: sub.name ?? undefined,

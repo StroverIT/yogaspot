@@ -48,6 +48,7 @@ export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData 
     retreats: data?.retreats ?? [],
     schedule: data?.schedule ?? [],
     subscriptions: data?.subscriptions ?? [],
+    subscriptionVideos: data?.subscriptionVideos ?? [],
     subscriptionRequests: data?.subscriptionRequests ?? [],
     recentSignups: data?.recentSignups ?? [],
     bookingRevenue: data?.bookingRevenue ?? emptyDashboardBookingRevenue,

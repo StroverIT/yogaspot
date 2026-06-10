@@ -7,6 +7,7 @@ export type Section =
   | 'classes'
   | 'schedule'
   | 'subscriptions'
+  | 'videos'
   | 'retreats';
 
 export const DASHBOARD_PATHS: Record<Section, string> = {
@@ -16,6 +17,7 @@ export const DASHBOARD_PATHS: Record<Section, string> = {
   classes: '/dashboard/classes',
   schedule: '/dashboard/schedule',
   subscriptions: '/dashboard/subscriptions',
+  videos: '/dashboard/videos',
   retreats: '/dashboard/retreats',
 };
 
@@ -28,6 +30,7 @@ export function getActiveSection(pathname: string): Section {
   if (sub === 'classes') return 'classes';
   if (sub === 'schedule') return 'schedule';
   if (sub === 'subscriptions') return 'subscriptions';
+  if (sub === 'videos') return 'videos';
   if (sub === 'retreats') return 'retreats';
   return 'overview';
 }

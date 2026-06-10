@@ -221,6 +221,7 @@ model Studio {
   retreats      Retreat[]
   subscription          StudioSubscription?
   subscriptionRequests  SubscriptionRequest[]
+  subscriptionVideos    SubscriptionVideo[]
   memberships           StudioMembership[]
   favorites             Favorite[]
 }
@@ -403,6 +404,33 @@ model StudioSubscription {
   stripeProductId        String?
   stripePriceId          String? @unique
   memberships            StudioMembership[]
+  videos                 SubscriptionVideoOnSubscription[]
+}
+
+model SubscriptionVideo {
+  id             String   @id @default(cuid())
+  studioId       String
+  studio         Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  title          String?
+  youtubeUrl     String
+  youtubeVideoId String
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subscriptions SubscriptionVideoOnSubscription[]
+
+  @@index([studioId, sortOrder])
+}
+
+model SubscriptionVideoOnSubscription {
+  videoId              String
+  video                SubscriptionVideo    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  studioSubscriptionId String
+  studioSubscription   StudioSubscription @relation(fields: [studioSubscriptionId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, studioSubscriptionId])
+  @@index([studioSubscriptionId])
 }
 
 model StudioMembership {
