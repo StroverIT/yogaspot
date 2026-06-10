@@ -26,7 +26,7 @@ export async function StudioDetailPageContent({ id }: { id: string }) {
 
   return (
     <>
-      <div className={`container mx-auto px-4 py-8 ${STUDIO_DETAIL_MOBILE_CTA_OFFSET_CLASS}`}>
+      <div className={`container mx-auto px-4 py-8 ${STUDIO_DETAIL_MOBILE_CTA_OFFSET_CLASS} sm:mb-10`}>
         <Link
           href="/discover"
           className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
