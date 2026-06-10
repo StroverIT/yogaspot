@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { studioToDto, yogaClassToDto } from "@/lib/public-studio-dto";
 import type { Studio, YogaClass } from "@/data/mock-data";
 import { CACHE_TAGS } from '@/lib/app-revalidate';
+import { filterPublicBusinessIds } from '@/lib/business-platform-billing';
 
 export type PublicCatalog = {
   studios: Studio[];
@@ -35,9 +36,13 @@ async function getPublicCatalogImpl(): Promise<PublicCatalog> {
     }),
   ]);
 
+  const listedBusinessIds = await filterPublicBusinessIds(studios.map((s) => s.businessId));
+  const visibleStudios = studios.filter((s) => listedBusinessIds.has(s.businessId));
+  const visibleStudioIds = new Set(visibleStudios.map((s) => s.id));
+
   return {
-    studios: studios.map(studioToDto),
-    classes: classes.map(yogaClassToDto),
+    studios: visibleStudios.map(studioToDto),
+    classes: classes.filter((c) => visibleStudioIds.has(c.studioId)).map(yogaClassToDto),
   };
 }
 

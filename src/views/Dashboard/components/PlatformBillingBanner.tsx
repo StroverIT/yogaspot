@@ -92,13 +92,19 @@ type PlatformBlockedOverlayProps = {
 
 export function PlatformBlockedOverlay({ billing }: PlatformBlockedOverlayProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const openPortal = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch('/api/dashboard/platform-billing/portal', { method: 'POST' });
-      const j = (await res.json().catch(() => ({}))) as { url?: string };
-      if (j.url) window.location.href = j.url;
+      const j = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (j.url) {
+        window.location.href = j.url;
+        return;
+      }
+      setError(j.error ?? 'Неуспешно отваряне на плащането. Опитайте отново.');
     } finally {
       setLoading(false);
     }
@@ -112,9 +118,10 @@ export function PlatformBlockedOverlay({ billing }: PlatformBlockedOverlayProps)
         <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-destructive" />
         <h2 className="font-display text-xl font-semibold text-foreground mb-2">Акаунтът е блокиран</h2>
         <p className="text-muted-foreground mb-6">
-          Достъпът е ограничен поради неплатена фактура. Моля, платете абонамента си ({billing.monthlyAmountEur}{' '}
-          €/месец), за да възстановите достъпа до таблото.
+          Пробният период приключи. Моля, платете абонамента си ({billing.monthlyAmountEur} €/месец), за да
+          възстановите достъпа до таблото.
         </p>
+        {error ? <p className="mb-4 text-sm text-destructive">{error}</p> : null}
         <Button size="lg" disabled={loading} onClick={() => void openPortal()}>
           <CreditCard className="mr-2 h-4 w-4" />
           Плати и възстанови достъпа

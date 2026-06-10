@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import type { Instructor, Review, ScheduleEntry, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
 import { getSessionUser } from '@/lib/api-auth';
+import { isBusinessPubliclyListed } from '@/lib/business-platform-billing';
 import { CACHE_TAGS, getPublicStudioTag } from '@/lib/app-revalidate';
 import {
   instructorToDto,
@@ -65,7 +66,7 @@ async function fetchPublicStudioCore(id: string): Promise<Omit<PublicStudioCoreP
     },
   });
 
-  if (!studio) {
+  if (!studio || studio.isHidden) {
     return null;
   }
 
@@ -175,6 +176,15 @@ async function loadMyBookings(
 }
 
 const loadPublicStudioCore = cache(async (id: string): Promise<LoadedStudioCore | null> => {
+  const studioMeta = await prisma.studio.findUnique({
+    where: { id },
+    select: { isHidden: true, businessId: true },
+  });
+  if (!studioMeta || studioMeta.isHidden) return null;
+
+  const listed = await isBusinessPubliclyListed(studioMeta.businessId);
+  if (!listed) return null;
+
   const [core, sessionUser] = await Promise.all([getCachedPublicStudioCore(id), getSessionUser()]);
 
   if (!core) {

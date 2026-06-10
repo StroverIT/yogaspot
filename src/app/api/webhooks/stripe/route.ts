@@ -6,6 +6,7 @@ import { getStripe } from '@/lib/stripe-server';
 import {
   handlePlatformInvoicePaid,
   handlePlatformInvoicePaymentFailed,
+  revalidatePlatformBillingPublicCache,
   syncSubscriptionFromStripe,
 } from '@/lib/business-platform-billing';
 import { syncConnectAccountFromStripe } from '@/lib/stripe-connect';
@@ -16,6 +17,13 @@ import {
 } from '@/lib/studio-subscription-fulfillment';
 
 export const runtime = 'nodejs';
+
+async function revalidatePlatformBillingFromStripeSub(subscription: Stripe.Subscription): Promise<void> {
+  const businessId = subscription.metadata?.businessId;
+  if (businessId) {
+    await revalidatePlatformBillingPublicCache(businessId);
+  }
+}
 
 async function handleStudioSubscriptionInvoiceFailed(invoice: Stripe.Invoice): Promise<void> {
   const subId =
@@ -93,6 +101,7 @@ export async function POST(request: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         if (subscription.metadata?.zennoKind === 'platform_subscription') {
           await syncSubscriptionFromStripe(subscription);
+          await revalidatePlatformBillingFromStripeSub(subscription);
         } else if (isStudioSubscriptionMetadata(subscription.metadata ?? {})) {
           await syncStudioMembershipLifecycle(subscription);
         }
@@ -109,6 +118,7 @@ export async function POST(request: Request) {
             if (sub.metadata?.zennoKind === 'platform_subscription') {
               await handlePlatformInvoicePaid(invoice);
               await syncSubscriptionFromStripe(sub, invoice);
+              await revalidatePlatformBillingFromStripeSub(sub);
             }
           }
         }
@@ -128,6 +138,7 @@ export async function POST(request: Request) {
           if (sub.metadata?.zennoKind === 'platform_subscription') {
             await handlePlatformInvoicePaymentFailed(invoice);
             await syncSubscriptionFromStripe(sub, invoice);
+            await revalidatePlatformBillingFromStripeSub(sub);
           } else if (isStudioSubscriptionMetadata(sub.metadata ?? {})) {
             await handleStudioSubscriptionInvoiceFailed(invoice);
           }

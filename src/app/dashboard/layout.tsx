@@ -26,12 +26,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const isDashboardActor =
     u?.id && (u.role === 'business' || u.role === 'admin');
 
-  const [initialPlatformBilling, initialWorkspace] = await Promise.all([
-    u?.role === 'business' && u.id ? getSubscriptionSummaryForOwnerUserId(u.id) : Promise.resolve(null),
-    isDashboardActor
-      ? getDashboardWorkspaceData({ id: u.id, role: u.role as Role })
-      : Promise.resolve(null),
-  ]);
+  const initialPlatformBilling =
+    u?.role === 'business' && u.id ? await getSubscriptionSummaryForOwnerUserId(u.id) : null;
+
+  const initialWorkspace =
+    isDashboardActor && !initialPlatformBilling?.isBlocked
+      ? await getDashboardWorkspaceData({ id: u.id, role: u.role as Role })
+      : null;
 
   return (
     <DashboardShell

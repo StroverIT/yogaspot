@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "db:seed": "prisma db seed",
     "db:deploy:production": "./scripts/deploy-db-production.sh",
-    "stripe:webhooks": "stripe listen --forward-to http://localhost:3000/api/webhooks/stripe"
+    "stripe:webhooks": "stripe listen --forward-to http://localhost:3000/api/webhooks/stripe",
+    "billing:repair": "tsx scripts/repair-platform-billing.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

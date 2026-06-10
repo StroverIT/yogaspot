@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/app-revalidate';
+import { filterPublicBusinessIds } from '@/lib/business-platform-billing';
 import { buildDiscoverStudiosFromPayload } from '@/lib/discover-studios';
 import { studioToDto, yogaClassToDto } from '@/lib/public-studio-dto';
 import { prisma } from '@/lib/prisma';
@@ -30,9 +31,13 @@ async function fetchDiscoverStudios(): Promise<DiscoverStudio[]> {
     }),
   ]);
 
+  const listedBusinessIds = await filterPublicBusinessIds(studios.map((s) => s.businessId));
+  const visibleStudios = studios.filter((s) => listedBusinessIds.has(s.businessId));
+  const visibleStudioIds = new Set(visibleStudios.map((s) => s.id));
+
   return buildDiscoverStudiosFromPayload(
-    studios.map(studioToDto),
-    classes.map(yogaClassToDto),
+    visibleStudios.map(studioToDto),
+    classes.filter((c) => visibleStudioIds.has(c.studioId)).map(yogaClassToDto),
   ).filter((s) => !s.isHidden);
 }
 
