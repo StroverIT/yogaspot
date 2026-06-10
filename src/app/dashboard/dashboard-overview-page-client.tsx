@@ -46,6 +46,9 @@ export default function DashboardOverviewPageClient() {
         myClasses={myClasses}
         myInstructors={myInstructors}
         bookingRevenue={ws.bookingRevenue}
+        monthlyRevenue={ws.monthlyRevenue}
+        allTimeSubscriptionRevenueBgn={ws.allTimeSubscriptionRevenueBgn}
+        subscribers={ws.subscribers}
         subscriptions={ws.subscriptions}
         recentSignups={ws.recentSignups}
       />

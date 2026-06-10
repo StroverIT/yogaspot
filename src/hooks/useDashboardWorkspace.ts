@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { DashboardWorkspaceData } from '@/lib/dashboard-workspace-data';
 import { emptyDashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
+import { emptyDashboardMonthlyRevenue } from '@/lib/dashboard-monthly-revenue';
 export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData | null) {
   const hasInitialData = initialWorkspace !== undefined;
   const [data, setData] = useState<DashboardWorkspaceData | null>(initialWorkspace ?? null);
@@ -52,6 +53,9 @@ export function useDashboardWorkspace(initialWorkspace?: DashboardWorkspaceData 
     subscriptionRequests: data?.subscriptionRequests ?? [],
     recentSignups: data?.recentSignups ?? [],
     bookingRevenue: data?.bookingRevenue ?? emptyDashboardBookingRevenue,
+    monthlyRevenue: data?.monthlyRevenue ?? emptyDashboardMonthlyRevenue,
+    allTimeSubscriptionRevenueBgn: data?.allTimeSubscriptionRevenueBgn ?? 0,
+    subscribers: data?.subscribers ?? [],
     platformBilling: data?.platformBilling ?? null,
     stripeConnect: data?.stripeConnect ?? null,
     loading,

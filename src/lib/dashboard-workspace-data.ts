@@ -16,8 +16,15 @@ import { getSubscriptionSummaryForOwnerUserId } from '@/lib/business-platform-bi
 import { getStripeConnectSummaryForOwnerUserId, type StripeConnectSummary } from '@/lib/stripe-connect';
 import { emptyDashboardBookingRevenue, getDashboardBookingRevenueSummary } from '@/lib/dashboard-booking-revenue';
 import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
+import {
+  emptyDashboardMonthlyRevenue,
+  getDashboardAllTimeSubscriptionRevenueBgn,
+  getDashboardMonthlyRevenue,
+  type DashboardMonthlyRevenuePoint,
+} from '@/lib/dashboard-monthly-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
 import { getDashboardRecentSignups } from '@/lib/dashboard-recent-signups';
+import { getDashboardSubscribers, type DashboardSubscriber } from '@/lib/dashboard-subscribers';
 import { prisma } from '@/lib/prisma';
 import {
   instructorToDto,
@@ -42,6 +49,9 @@ export type DashboardWorkspaceData = {
   subscriptionRequests: SubscriptionRequestDto[];
   recentSignups: DashboardRecentSignup[];
   bookingRevenue: DashboardBookingRevenue;
+  monthlyRevenue: DashboardMonthlyRevenuePoint[];
+  allTimeSubscriptionRevenueBgn: number;
+  subscribers: DashboardSubscriber[];
   platformBilling: PlatformBillingSummary | null;
   stripeConnect: StripeConnectSummary | null;
 };
@@ -63,9 +73,9 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
   const [platformBilling, stripeConnect] =
     user.role === 'business'
       ? await Promise.all([
-          getSubscriptionSummaryForOwnerUserId(user.id),
-          getStripeConnectSummaryForOwnerUserId(user.id),
-        ])
+        getSubscriptionSummaryForOwnerUserId(user.id),
+        getStripeConnectSummaryForOwnerUserId(user.id),
+      ])
       : [null, null];
 
   const studioIds = await listStudioIdsForActor(user);
@@ -81,6 +91,9 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
       subscriptionRequests: [],
       recentSignups: [],
       bookingRevenue: emptyDashboardBookingRevenue,
+      monthlyRevenue: emptyDashboardMonthlyRevenue,
+      allTimeSubscriptionRevenueBgn: 0,
+      subscribers: [],
       platformBilling,
       stripeConnect,
     };
@@ -97,6 +110,9 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     subscriptionRequests,
     recentSignups,
     bookingRevenue,
+    monthlyRevenue,
+    allTimeSubscriptionRevenueBgn,
+    subscribers,
   ] = await Promise.all([
     prisma.studio.findMany({
       where: { id: { in: studioIds } },
@@ -133,6 +149,9 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     }),
     getDashboardRecentSignups(studioIds, 20),
     getDashboardBookingRevenueSummary(studioIds),
+    getDashboardMonthlyRevenue(studioIds),
+    getDashboardAllTimeSubscriptionRevenueBgn(studioIds),
+    getDashboardSubscribers(studioIds),
   ]);
 
   return {
@@ -146,6 +165,9 @@ export const getDashboardWorkspaceData = cache(async function getDashboardWorksp
     subscriptionRequests: subscriptionRequests.map(subscriptionRequestToDto),
     recentSignups,
     bookingRevenue,
+    monthlyRevenue,
+    allTimeSubscriptionRevenueBgn,
+    subscribers,
     platformBilling,
     stripeConnect,
   };

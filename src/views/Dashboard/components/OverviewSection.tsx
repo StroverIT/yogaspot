@@ -1,12 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import type { Instructor, Studio, StudioSubscription, YogaClass } from '@/data/mock-data';
 import type { DashboardBookingRevenue } from '@/lib/dashboard-booking-revenue';
+import type { DashboardMonthlyRevenuePoint } from '@/lib/dashboard-monthly-revenue';
 import type { DashboardRecentSignup } from '@/lib/dashboard-recent-signups';
+import type { DashboardSubscriber } from '@/lib/dashboard-subscribers';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { calculateNetPayout, calculatePayoutFee, PAYOUT_MINIMUM_AMOUNT } from '@/lib/payments';
-import { BarChart3, Calendar, MapPin, Star, TrendingUp, Users } from 'lucide-react';
+import { BarChart3, Calendar, CreditCard, MapPin, Star, TrendingUp, Users } from 'lucide-react';
 
 import { dashboardCardClass, dashboardInsetClass } from '../dashboardUi';
+import { DashboardMonthlyRevenueChart } from './DashboardMonthlyRevenueChart';
 import { DashboardOccupancyBar } from './DashboardOccupancyBar';
 import { DashboardPageHeader } from './DashboardPageHeader';
 
@@ -19,6 +22,9 @@ export function OverviewSection({
   myClasses,
   myInstructors,
   bookingRevenue,
+  monthlyRevenue,
+  allTimeSubscriptionRevenueBgn,
+  subscribers,
   subscriptions,
   recentSignups,
 }: {
@@ -30,6 +36,9 @@ export function OverviewSection({
   myClasses: YogaClass[];
   myInstructors: Instructor[];
   bookingRevenue: DashboardBookingRevenue;
+  monthlyRevenue: DashboardMonthlyRevenuePoint[];
+  allTimeSubscriptionRevenueBgn: number;
+  subscribers: DashboardSubscriber[];
   subscriptions: StudioSubscription[];
   recentSignups: DashboardRecentSignup[];
 }) {
@@ -68,7 +77,7 @@ export function OverviewSection({
       />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {[
           {
             icon: TrendingUp,
@@ -97,6 +106,13 @@ export function OverviewSection({
             value: formatPriceDualFromBgn(eventsAndScheduleBgn),
             sub: 'събития и разписание',
             iconWrap: 'bg-muted text-yoga-secondary-deep',
+          },
+          {
+            icon: CreditCard,
+            label: 'Приход от абонаменти',
+            value: formatPriceDualFromBgn(allTimeSubscriptionRevenueBgn),
+            sub: 'общо за всички времена',
+            iconWrap: 'bg-yoga-tertiary/20 text-yoga-secondary-deep',
           },
         ].map((card, i) => (
           <div key={i} className={`${dashboardCardClass} p-5`}>
@@ -225,6 +241,51 @@ export function OverviewSection({
       ) : null}
 
       <div className={`${dashboardCardClass} p-6`}>
+        <div className="mb-4">
+          <h3 className="font-display font-semibold text-foreground">Приход по месеци</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Последните 12 месеца — записвания (събития и разписание) и активни абонаменти.
+          </p>
+        </div>
+        <DashboardMonthlyRevenueChart data={monthlyRevenue} />
+      </div>
+
+      {subscribers.length > 0 ? (
+        <div className={`${dashboardCardClass} p-6`}>
+          <div className="mb-4">
+            <h3 className="font-display font-semibold text-foreground">Абонирани клиенти</h3>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Активни абонаменти към вашите онлайн студиа.
+            </p>
+          </div>
+          <div className="space-y-2">
+            {subscribers.map((subscriber) => (
+              <div
+                key={subscriber.id}
+                className={`flex flex-col gap-1 rounded-xl border border-border/60 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between ${dashboardInsetClass}`}
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">{subscriber.userName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {subscriber.studioName} · {subscriber.subscriptionName}
+                    {subscriber.userEmail ? ` · ${subscriber.userEmail}` : ''}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-semibold text-foreground tabular-nums">
+                    {formatPriceDualFromBgn(subscriber.monthlyPrice)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    от {new Date(subscriber.subscribedAt).toLocaleDateString('bg-BG')}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className={`${dashboardCardClass} p-6`}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="font-display font-semibold text-foreground">Финанси</h3>
@@ -265,7 +326,11 @@ export function OverviewSection({
                 <span className="font-medium text-foreground">{formatPriceDualFromBgn(scheduleBookingsBgn)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Абонаменти (настройка)</span>
+                <span className="text-muted-foreground">Абонаменти (общо)</span>
+                <span className="font-medium text-foreground">{formatPriceDualFromBgn(allTimeSubscriptionRevenueBgn)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Месечна цена (настройка)</span>
                 <span className="font-medium text-foreground">{formatPriceDualFromBgn(subscriptionRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
