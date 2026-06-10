@@ -2,13 +2,6 @@ import { prisma } from '@/lib/prisma';
 import { instructorToDto, studioToDto, yogaClassToDto } from '@/lib/public-studio-dto';
 import type { Instructor, Studio, YogaClass } from '@/data/mock-data';
 
-export type ProfileHistoryActiveSubscription = {
-  studioId: string;
-  studioName: string;
-  monthlyPrice: number;
-  note: string;
-};
-
 export type ProfileConfirmedReservation = {
   id: string;
   source: 'class' | 'schedule';
@@ -31,7 +24,6 @@ export type ProfileHistoryPayload = {
   classes: YogaClass[];
   instructors: Instructor[];
   studios: Studio[];
-  activeSubscriptions: ProfileHistoryActiveSubscription[];
   confirmedReservations: ProfileConfirmedReservation[];
 };
 
@@ -204,37 +196,11 @@ export async function getProfileHistoryPayload(userId: string): Promise<ProfileH
 
   confirmedReservations.sort((a, b) => (a.bookedAt < b.bookedAt ? 1 : -1));
 
-  const favoriteStudioIds = (
-    await prisma.favorite.findMany({
-      where: { userId },
-      select: { studioId: true },
-    })
-  ).map((f) => f.studioId);
-
-  const subscriptionRows =
-    favoriteStudioIds.length === 0
-      ? []
-      : await prisma.studioSubscription.findMany({
-          where: {
-            studioId: { in: favoriteStudioIds },
-            hasMonthlySubscription: true,
-          },
-          include: { studio: { select: { id: true, name: true } } },
-        });
-
-  const activeSubscriptions: ProfileHistoryActiveSubscription[] = subscriptionRows.map((sub) => ({
-    studioId: sub.studioId,
-    studioName: sub.studio.name,
-    monthlyPrice: sub.monthlyPrice ?? 0,
-    note: sub.subscriptionNote ?? '',
-  }));
-
   return {
     attendedClasses,
     classes: [...classMap.values()],
     instructors: [...instructorMap.values()],
     studios: [...studioMap.values()],
-    activeSubscriptions,
     confirmedReservations,
   };
 }

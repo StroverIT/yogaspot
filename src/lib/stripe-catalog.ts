@@ -1,6 +1,10 @@
 import { calculateFinalCustomerAmount, calculateOnlinePaymentFee } from '@/lib/payments';
 import { prisma } from '@/lib/prisma';
-import { assertStripeConfigured, getStripe } from '@/lib/stripe-server';
+import {
+  assertStripeConfigured,
+  getStripe,
+  subscriptionBaseBgnToStripeUnitAmountEurCents,
+} from '@/lib/stripe-server';
 
 type StripeInterval = 'month' | 'year' | 'week' | 'day';
 
@@ -29,9 +33,7 @@ export type StripeCatalogIds = {
 };
 
 function toEurCentsFromBgnBase(baseAmountBgn: number): number {
-  const finalCharge = calculateFinalCustomerAmount(baseAmountBgn);
-  if (!Number.isFinite(finalCharge) || finalCharge <= 0) return 0;
-  return Math.round(finalCharge * 100);
+  return subscriptionBaseBgnToStripeUnitAmountEurCents(baseAmountBgn);
 }
 
 /** Platform fee as percent of the customer-facing recurring charge (fixed + percent fee blended). */
@@ -164,4 +166,24 @@ export async function syncStudioSubscriptionStripeCatalog(
   }
 
   return { productId, priceId };
+}
+
+export async function studioSubscriptionStripePriceMatchesCatalog(params: {
+  stripePriceId: string;
+  baseAmount: number;
+  stripeAccountId: string;
+}): Promise<boolean> {
+  const expectedCents = toEurCentsFromBgnBase(params.baseAmount);
+  if (expectedCents <= 0) return false;
+
+  try {
+    assertStripeConfigured();
+    const stripe = getStripe();
+    const price = await stripe.prices.retrieve(params.stripePriceId, {
+      stripeAccount: params.stripeAccountId,
+    });
+    return price.currency === 'eur' && price.unit_amount === expectedCents;
+  } catch {
+    return false;
+  }
 }

@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { ProfileHistoryTab } from '@/components/profile/profile-history-tab';
 import { ProfileClassDetailDialog } from '@/components/profile/profile-class-detail-dialog';
-import { bgnFromStripeEurTotalMinor, formatMonthlyDualFromBgn, formatPriceDualFromBgn } from '@/lib/eur-bgn';
+import { bgnFromStripeEurTotalMinor, formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { useProfileHistory } from '@/hooks/useProfileHistory';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -103,23 +103,17 @@ export default function ProfileHistoryPage() {
   }, [data]);
 
   const totalSpent = spendingHistory.reduce((sum, row) => sum + row.finalPaid, 0);
-  const activeSubscriptions = data?.activeSubscriptions ?? [];
   const confirmedReservations = data?.confirmedReservations ?? [];
   const totalEventRows = data ? eventRowsForTab.length : 0;
 
   if (isPending) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {[0, 1].map((i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-3">
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-4 w-full max-w-sm" />
-              <Skeleton className="h-10 w-48 mt-4" />
-              <Skeleton className="h-12 w-full rounded-lg" />
-              <Skeleton className="h-12 w-full rounded-lg" />
-            </div>
-          ))}
+        <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-10 w-48 mt-4" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
         </div>
         <Skeleton className="h-4 w-36" />
         <Skeleton className="h-32 w-full rounded-xl" />
@@ -180,47 +174,25 @@ export default function ProfileHistoryPage() {
           </ul>
         </div>
       ) : null}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-display text-lg font-semibold text-foreground">Моите разходи</h3>
-          <p className="mt-4 text-3xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(totalSpent)}</p>
-          <div className="mt-4 space-y-2">
-            {spendingHistory.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Няма плащания.</p>
-            ) : (
-              spendingHistory.slice(0, 6).map((row) => (
-                <div key={row.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">{row.reason}</p>
-                    <p className="truncate text-muted-foreground">
-                      {row.studioName} · {row.date}
-                    </p>
-                  </div>
-                  <p className="font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.finalPaid)}</p>
+      <div className="mb-6 rounded-2xl border border-border bg-card p-5">
+        <h3 className="font-display text-lg font-semibold text-foreground">Моите разходи</h3>
+        <p className="mt-4 text-3xl font-bold text-foreground leading-tight">{formatPriceDualFromBgn(totalSpent)}</p>
+        <div className="mt-4 space-y-2">
+          {spendingHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Няма плащания.</p>
+          ) : (
+            spendingHistory.slice(0, 6).map((row) => (
+              <div key={row.id} className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{row.reason}</p>
+                  <p className="truncate text-muted-foreground">
+                    {row.studioName} · {row.date}
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-display text-lg font-semibold text-foreground">Моите абонаменти</h3>
-          <div className="mt-4 space-y-2">
-            {activeSubscriptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Нямате любими студиа с активен месечен план.</p>
-            ) : (
-              activeSubscriptions.map((sub) => (
-                <div key={sub.studioId} className="rounded-lg bg-muted/40 px-3 py-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground">{sub.studioName}</p>
-                    <p className="text-sm font-semibold text-foreground leading-snug">
-                      {formatMonthlyDualFromBgn(sub.monthlyPrice)}
-                    </p>
-                  </div>
-                  {sub.note ? <p className="mt-1 text-xs text-muted-foreground">{sub.note}</p> : null}
-                </div>
-              ))
-            )}
-          </div>
+                <p className="font-semibold text-foreground leading-snug">{formatPriceDualFromBgn(row.finalPaid)}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
       <ProfileHistoryTab

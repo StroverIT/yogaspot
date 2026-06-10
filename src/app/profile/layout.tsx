@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     default: 'Профил',
     template: '%s | Профил',
   },
-  description: 'История на записванията, любими студиа и настройки на акаунта.',
+  description: 'История на записванията, активни абонаменти, любими студиа и настройки на акаунта.',
   robots: privateAreaRobots,
 };
 

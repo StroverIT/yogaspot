@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -22,6 +23,7 @@ import { CalendarDays, CreditCard, Edit, Plus, Trash2 } from 'lucide-react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatPriceDualFromBgn, formatSubscriptionDualFromBgn } from '@/lib/eur-bgn';
+import { calculateFinalCustomerAmount } from '@/lib/payments';
 import {
   formatClassCapacityDisplay,
   formatClassPriceDisplay,
@@ -447,7 +449,7 @@ function UserScheduleContent({
                 </p>
                 <p className="text-lg font-bold text-primary mt-1">
                   {formatSubscriptionDualFromBgn(
-                    subscription.monthlyPrice ?? 0,
+                    calculateFinalCustomerAmount(subscription.monthlyPrice ?? 0),
                     subscription.durationMonths ?? 1,
                   )}
                 </p>

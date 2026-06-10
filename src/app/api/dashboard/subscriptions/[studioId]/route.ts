@@ -9,7 +9,11 @@ import {
 import { prisma } from '@/lib/prisma';
 import { subscriptionToDto } from '@/lib/public-studio-dto';
 import { buildSubscriptionNoteFromRequest } from '@/lib/subscription-request-dto';
-import { getConnectAccountIdForStudio, syncStudioSubscriptionStripeCatalog } from '@/lib/stripe-catalog';
+import {
+  getConnectAccountIdForStudio,
+  studioSubscriptionStripePriceMatchesCatalog,
+  syncStudioSubscriptionStripeCatalog,
+} from '@/lib/stripe-catalog';
 
 export const runtime = 'nodejs';
 
@@ -111,7 +115,12 @@ export async function PUT(req: Request, context: RouteContext) {
   const catalogUnchanged =
     Boolean(existing?.stripePriceId) &&
     existing?.monthlyPrice === monthlyPrice &&
-    existing?.durationMonths === durationMonths;
+    existing?.durationMonths === durationMonths &&
+    (await studioSubscriptionStripePriceMatchesCatalog({
+      stripePriceId: existing!.stripePriceId!,
+      baseAmount: monthlyPrice,
+      stripeAccountId: connectAccountId,
+    }));
 
   if (catalogUnchanged && existing?.stripePriceId) {
     stripeProductId = existing.stripeProductId;

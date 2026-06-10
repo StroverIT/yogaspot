@@ -13,6 +13,7 @@ import type {
   PublicStudioExtras,
   PublicStudioPayload,
 } from '@/lib/get-public-studio';
+import { StudioMembershipBanner } from '@/components/studio-detail/studio-membership-banner';
 import { isClassAtCapacity } from '@/lib/yoga-class-limits';
 
 const TAB_KEYS: TabKey[] = ['schedule', 'events', 'instructors', 'reviews'];
@@ -196,6 +197,8 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
           }}
         />
       ) : null}
+
+      {hasActiveMembership ? <StudioMembershipBanner /> : null}
 
       <StudioDetailTabs
         key={studio.id}

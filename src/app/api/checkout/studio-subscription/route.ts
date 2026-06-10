@@ -3,8 +3,13 @@ import { jsonError, requireSession } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { trackServerEvent } from '@/lib/server-analytics';
 import { isStripeConnectReady } from '@/lib/stripe-connect';
-import { studioSubscriptionApplicationFeePercent } from '@/lib/stripe-catalog';
+import {
+  studioSubscriptionApplicationFeePercent,
+  studioSubscriptionStripePriceMatchesCatalog,
+  syncStudioSubscriptionStripeCatalog,
+} from '@/lib/stripe-catalog';
 import { assertStripeConfigured, getPublicAppBaseUrl, getStripe } from '@/lib/stripe-server';
+import { blocksStudioSubscriptionCheckout } from '@/lib/studio-membership';
 
 export const runtime = 'nodejs';
 
@@ -40,9 +45,12 @@ export async function POST(request: Request) {
       subscription: {
         select: {
           id: true,
+          name: true,
           hasMonthlySubscription: true,
           monthlyPrice: true,
+          durationMonths: true,
           stripePriceId: true,
+          stripeProductId: true,
         },
       },
       business: {
@@ -83,12 +91,43 @@ export async function POST(request: Request) {
     where: {
       userId: gate.user.id,
       studioId,
-      status: 'active',
     },
-    select: { id: true },
+    select: { id: true, status: true },
   });
-  if (existingMembership) {
+  if (existingMembership && blocksStudioSubscriptionCheckout(existingMembership.status)) {
     return jsonError('Вече имате активен абонамент за това студио.', 409);
+  }
+
+  let stripePriceId = sub.stripePriceId;
+  const priceMatches = await studioSubscriptionStripePriceMatchesCatalog({
+    stripePriceId,
+    baseAmount: sub.monthlyPrice,
+    stripeAccountId: connectSummary.accountId,
+  });
+  if (!priceMatches) {
+    try {
+      const catalog = await syncStudioSubscriptionStripeCatalog({
+        name: sub.name ?? 'Абонамент',
+        baseAmount: sub.monthlyPrice,
+        durationMonths: sub.durationMonths ?? 1,
+        studioId,
+        studioSubscriptionId: sub.id,
+        stripeAccountId: connectSummary.accountId,
+        existingProductId: sub.stripeProductId,
+        existingPriceId: sub.stripePriceId,
+      });
+      stripePriceId = catalog.priceId;
+      await prisma.studioSubscription.update({
+        where: { id: sub.id },
+        data: {
+          stripeProductId: catalog.productId,
+          stripePriceId: catalog.priceId,
+        },
+      });
+    } catch (error) {
+      console.error('Stripe subscription price resync failed', studioId, error);
+      return jsonError('Неуспешно синхронизиране на цената. Опитайте отново.', 502);
+    }
   }
 
   const applicationFeePercent = studioSubscriptionApplicationFeePercent(sub.monthlyPrice);
@@ -105,7 +144,7 @@ export async function POST(request: Request) {
     {
       mode: 'subscription',
       customer_email: gate.user.email ?? undefined,
-      line_items: [{ price: sub.stripePriceId, quantity: 1 }],
+      line_items: [{ price: stripePriceId, quantity: 1 }],
       subscription_data: {
         application_fee_percent: applicationFeePercent > 0 ? applicationFeePercent : undefined,
         metadata: { ...metaBase },

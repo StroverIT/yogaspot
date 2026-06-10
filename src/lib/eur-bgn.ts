@@ -58,6 +58,7 @@ export function formatSubscriptionDualFromBgn(bgnAmount: number, durationMonths 
   return `${price} / ${durationMonths} ${durationLabelBg(durationMonths)}`;
 }
 
+
 /** Prefill EUR field from stored BGN (class / schedule list prices). */
 export function formatEurInputFromBgn(bgn: number): string {
   if (!Number.isFinite(bgn)) return '';

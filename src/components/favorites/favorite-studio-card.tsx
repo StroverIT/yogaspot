@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatSubscriptionDualFromBgn } from "@/lib/eur-bgn";
+import { calculateFinalCustomerAmount } from "@/lib/payments";
 import { getStudioCoverSrc } from "@/lib/studio-cover-src";
 
 export type FavoriteStudioDetailBundle = {
@@ -104,7 +105,7 @@ export function FavoriteStudioCard({ studio, bundle, onRemove }: FavoriteStudioC
               <Badge variant="outline" className="rounded-full gap-1 text-xs text-primary border-primary/30">
                 <CreditCard className="h-3 w-3" />{' '}
                 {formatSubscriptionDualFromBgn(
-                  subscription.monthlyPrice ?? 0,
+                  calculateFinalCustomerAmount(subscription.monthlyPrice ?? 0),
                   subscription.durationMonths ?? 1,
                 )}
               </Badge>

@@ -1,6 +1,22 @@
 import type { StudioMembershipStatus } from '@prisma/client';
 import type Stripe from 'stripe';
 
+export const ACTIVE_STUDIO_MEMBERSHIP_STATUSES = ['active', 'past_due'] as const satisfies readonly StudioMembershipStatus[];
+
+export const BLOCKING_STUDIO_MEMBERSHIP_STATUSES = [
+  'active',
+  'past_due',
+  'incomplete',
+] as const satisfies readonly StudioMembershipStatus[];
+
+export function isActiveStudioMembershipStatus(status: StudioMembershipStatus): boolean {
+  return (ACTIVE_STUDIO_MEMBERSHIP_STATUSES as readonly StudioMembershipStatus[]).includes(status);
+}
+
+export function blocksStudioSubscriptionCheckout(status: StudioMembershipStatus): boolean {
+  return (BLOCKING_STUDIO_MEMBERSHIP_STATUSES as readonly StudioMembershipStatus[]).includes(status);
+}
+
 export function mapStripeSubscriptionStatus(status: Stripe.Subscription.Status): StudioMembershipStatus {
   switch (status) {
     case 'active':

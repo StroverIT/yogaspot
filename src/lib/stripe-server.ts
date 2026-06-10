@@ -15,6 +15,7 @@
  *   sending mailbox (Gmail send scope); see mailer.ts
  */
 import Stripe from 'stripe';
+import { bgnToEur } from '@/lib/eur-bgn';
 import { calculateFinalCustomerAmount } from '@/lib/payments';
 
 let stripeSingleton: Stripe | null = null;
@@ -36,13 +37,21 @@ export function getStripe(): Stripe {
   return stripeSingleton;
 }
 
+/** Final customer charge in BGN → Stripe Checkout `unit_amount` in EUR minor units. */
+export function bgnFinalAmountToStripeUnitAmountEurCents(finalAmountBgn: number): number {
+  if (!Number.isFinite(finalAmountBgn) || finalAmountBgn <= 0) return 0;
+  return Math.round(bgnToEur(finalAmountBgn) * 100);
+}
+
 /**
  * Final customer charge (same as catalog sync) rounded to EUR minor units for Stripe Checkout.
  */
 export function classPriceToStripeUnitAmountEurCents(classPriceBase: number): number {
-  const finalAmount = calculateFinalCustomerAmount(classPriceBase);
-  if (!Number.isFinite(finalAmount) || finalAmount <= 0) return 0;
-  return Math.round(finalAmount * 100);
+  return bgnFinalAmountToStripeUnitAmountEurCents(calculateFinalCustomerAmount(classPriceBase));
+}
+
+export function subscriptionBaseBgnToStripeUnitAmountEurCents(baseAmountBgn: number): number {
+  return bgnFinalAmountToStripeUnitAmountEurCents(calculateFinalCustomerAmount(baseAmountBgn));
 }
 
 export function getPublicAppBaseUrl(): string {

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
-import { Calendar, Heart, User } from 'lucide-react';
+import { Calendar, CreditCard, Heart, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useProfileHistory } from '@/hooks/useProfileHistory';
@@ -79,6 +79,13 @@ export default function ProfileShell({
           >
             <Calendar className="h-4 w-4" />
             Посетени класове
+          </Link>
+          <Link
+            href="/profile/subscriptions"
+            className={cn(profileNavLinkClass(pathname === '/profile/subscriptions'))}
+          >
+            <CreditCard className="h-4 w-4" />
+            Абонаменти
           </Link>
           <Link
             href="/profile/favorites"
