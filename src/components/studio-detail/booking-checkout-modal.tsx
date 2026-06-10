@@ -17,7 +17,7 @@ import {
   includesOnsitePayment,
   includesOnlinePayment,
 } from '@/lib/booking-payment-mode';
-import { calculateFinalCustomerAmount } from '@/lib/payments';
+import { calculateOnlinePaymentFee } from '@/lib/payments';
 import { formatClassPriceDisplay, isFreeClassPrice } from '@/lib/yoga-class-limits';
 import { toast } from 'sonner';
 
@@ -64,7 +64,7 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
   const isFreeClassBooking = isFreeClassPrice(basePrice);
   const showOnline = !isFreeClassBooking && includesOnlinePayment(paymentMode);
   const showOnsite = isFreeClassBooking || includesOnsitePayment(paymentMode);
-  const finalPrice = showOnline ? calculateFinalCustomerAmount(basePrice) : basePrice;
+  const onlineFee = calculateOnlinePaymentFee(basePrice);
 
   const handlePay = async () => {
     if (!target) return;
@@ -85,6 +85,9 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
         body,
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
+      // #region agent log
+      fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'a2d8e4' }, body: JSON.stringify({ sessionId: 'a2d8e4', location: 'booking-checkout-modal.tsx:handlePay', message: 'checkout API response', data: { kind: target.kind, status: res.ok, httpStatus: res.status, hasUrl: typeof data.url === 'string', error: data.error ?? null, targetId: target.kind === 'class' ? target.yogaClass.id : target.entry.id }, timestamp: Date.now(), hypothesisId: 'E' }) }).catch(() => { });
+      // #endregion
       if (!res.ok) {
         toast.error(typeof data.error === 'string' ? data.error : `Грешка (${res.status})`);
         return;
@@ -148,23 +151,9 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
           <DialogDescription asChild>
             <div className="space-y-2 text-left text-sm text-muted-foreground">
               <p className="font-medium text-foreground">{title}</p>
-              <p>{subtitle}</p>
 
               <>
                 <p className="text-foreground/90">Желаете ли да се запишете за часа / събитието?</p>
-                <p>
-                  Цена:{' '}
-                  <span className="font-semibold text-foreground">
-                    {isFreeClassBooking
-                      ? formatClassPriceDisplay(0)
-                      : formatPriceDualFromBgn(showOnline ? finalPrice : basePrice)}
-                  </span>
-                </p>
-                {showOnline && showOnsite ? (
-                  <p className="text-xs">Можете да платите онлайн или на място в студиото.</p>
-                ) : showOnsite && !showOnline ? (
-                  <p className="text-xs">Плащането се извършва на място в студиото.</p>
-                ) : null}
               </>
             </div>
           </DialogDescription>
@@ -179,9 +168,14 @@ export function BookingCheckoutModal({ open, target, onClose, onBooked }: Props)
             </Button>
           ) : null}
           {showOnline ? (
-            <Button type="button" onClick={() => void handlePay()} disabled={paying || !target}>
-              {paying ? 'Зареждане…' : 'Плащане онлайн'}
-            </Button>
+            <div className="relative">
+              <p className="pointer-events-none absolute bottom-full left-0 right-0 mb-1 whitespace-nowrap text-center text-xs text-muted-foreground sm:text-right">
+                +{formatPriceDualFromBgn(onlineFee)}
+              </p>
+              <Button type="button" onClick={() => void handlePay()} disabled={paying || !target}>
+                {paying ? 'Зареждане…' : 'Плащане онлайн'}
+              </Button>
+            </div>
           ) : null}
         </DialogFooter>
       </DialogContent>

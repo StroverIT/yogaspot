@@ -170,6 +170,12 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
   const hasActiveMembership = core.myBookings?.hasActiveMembership ?? false;
 
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a2d8e4'},body:JSON.stringify({sessionId:'a2d8e4',location:'studio-detail-interactive.tsx:myBookings',message:'studio page booking state',data:{studioId:studio.id,bookedClassIds,bookedScheduleEntryIds,eventsCount:studioClasses.length},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+  }, [studio.id, bookedClassIds, bookedScheduleEntryIds, studioClasses.length]);
+
+  useEffect(() => {
     const subscriptionParam = searchParams.get('subscription');
     const sessionId = searchParams.get('session_id');
     if (subscriptionParam !== 'success' || handledSubscriptionReturn.current) return;

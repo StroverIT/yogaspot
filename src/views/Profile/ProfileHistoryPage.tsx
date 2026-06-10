@@ -26,7 +26,21 @@ export default function ProfileHistoryPage() {
 
   useEffect(() => {
     if (searchParams.get('checkout') !== 'success') return;
-    void refetch();
+    const stripeSessionId = searchParams.get('session_id');
+    void (async () => {
+      if (stripeSessionId) {
+        await fetch('/api/checkout/booking/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: stripeSessionId }),
+        });
+      }
+      const result = await refetch();
+      const reservations = result.data?.confirmedReservations ?? [];
+      // #region agent log
+      fetch('http://127.0.0.1:7719/ingest/4ef9124f-801d-4bd7-a1fe-597ca17d2e31',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'a2d8e4'},body:JSON.stringify({sessionId:'a2d8e4',location:'ProfileHistoryPage.tsx:checkoutSuccess',message:'profile history refetch after checkout',data:{stripeSessionId,reservationCount:reservations.length,reservationIds:reservations.map((r)=>r.id)},timestamp:Date.now(),hypothesisId:'D',runId:'post-fix'})}).catch(()=>{});
+      // #endregion
+    })();
     const path = window.location.pathname;
     window.history.replaceState({}, '', path);
   }, [searchParams, refetch]);
