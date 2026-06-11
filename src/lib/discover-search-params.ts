@@ -26,6 +26,7 @@ export function parseDiscoverFiltersFromSearchParams(
     ratingSort: (searchParams.get('ratingSort') as 'asc' | 'desc') || null,
     nearMe: searchParams.get('nearMe') === 'true',
     format: parseTeachingFormat(searchParams.get('format')),
+    multisport: searchParams.get('multisport') === 'true',
   };
 }
 
@@ -57,6 +58,7 @@ export function stringifyDiscoverQuery(
   if (filters.yogaTypes.length > 0) params.set('yogaTypes', filters.yogaTypes.join(','));
   if (filters.ratingSort) params.set('ratingSort', filters.ratingSort);
   if (filters.format !== 'all') params.set('format', filters.format);
+  if (filters.multisport) params.set('multisport', 'true');
   if (filters.nearMe) params.set('nearMe', 'true');
   if (filters.nearMe && options.userLocation) {
     params.set('userLat', String(options.userLocation.lat));

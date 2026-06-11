@@ -38,6 +38,7 @@ export interface DiscoverStudio {
   id: string;
   name: string;
   teachingMode: "physical" | "online";
+  hasMultisport: boolean;
   image: string;
   rating: number;
   reviewCount: number;

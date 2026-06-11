@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, MapPin, ArrowUp, ArrowDown, X } from "lucide-react";
+import { Search, MapPin, ArrowUp, ArrowDown, X, Video, Building2 } from "lucide-react";
 import {
   YOGA_LEVELS,
   YOGA_TYPES,
@@ -61,10 +61,27 @@ export function DiscoverFilters({
     onFiltersChange({ ...filters, yogaTypes: newTypes });
   };
 
-  const handleFormatChange = (value: string) => {
+  const toggleOnline = () => {
+    const nextFormat = filters.format === "online" ? "all" : "online";
     onFiltersChange({
       ...filters,
-      format: value === 'online' || value === 'physical' ? value : 'all',
+      format: nextFormat,
+      multisport: nextFormat === "online" ? false : filters.multisport,
+    });
+  };
+
+  const togglePhysical = () => {
+    const nextFormat = filters.format === "physical" ? "all" : "physical";
+    onFiltersChange({
+      ...filters,
+      format: nextFormat,
+    });
+  };
+
+  const toggleMultisport = () => {
+    onFiltersChange({
+      ...filters,
+      multisport: !filters.multisport,
     });
   };
 
@@ -77,6 +94,7 @@ export function DiscoverFilters({
       ratingSort: null,
       nearMe: false,
       format: "all",
+      multisport: false,
     });
   };
 
@@ -87,7 +105,8 @@ export function DiscoverFilters({
     filters.ratingSort !== null ||
     filters.levelSort !== null ||
     filters.nearMe ||
-    filters.format !== "all";
+    filters.format !== "all" ||
+    filters.multisport;
 
   return (
     <div className="space-y-4">
@@ -104,25 +123,52 @@ export function DiscoverFilters({
 
       <div className="space-y-2">
         <label className="text-sm font-medium text-yoga-text">Формат</label>
-        <Select value={filters.format} onValueChange={handleFormatChange}>
-          <SelectTrigger className="w-full border-yoga-accent-soft text-yoga-text">
-            <SelectValue placeholder="Всички формати" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Всички формати</SelectItem>
-            <SelectItem value="physical">В студио</SelectItem>
-            <SelectItem value="online">Онлайн</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant={filters.format === "online" ? "default" : "outline"}
+            className={`gap-2 ${filters.format === "online"
+              ? "bg-yoga-accent hover:bg-yoga-accent/90 text-white"
+              : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
+              }`}
+            onClick={toggleOnline}
+          >
+            <Video className="h-4 w-4" />
+            Онлайн
+          </Button>
+          <Button
+            type="button"
+            variant={filters.format === "physical" ? "default" : "outline"}
+            className={`gap-2 ${filters.format === "physical"
+              ? "bg-yoga-accent hover:bg-yoga-accent/90 text-white"
+              : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
+              }`}
+            onClick={togglePhysical}
+          >
+            <Building2 className="h-4 w-4" />
+            В студио
+          </Button>
+          <Button
+            type="button"
+            variant={filters.multisport ? "default" : "outline"}
+            disabled={filters.format === "online"}
+            className={`gap-2 ${filters.multisport
+              ? "bg-yoga-accent hover:bg-yoga-accent/90 text-white"
+              : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
+              }`}
+            onClick={toggleMultisport}
+          >
+            Multisport
+          </Button>
+        </div>
       </div>
 
       <Button
         variant={filters.nearMe ? "default" : "outline"}
-        className={`w-full gap-2 ${
-          filters.nearMe
-            ? "bg-yoga-accent hover:bg-yoga-accent/90 text-white"
-            : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
-        }`}
+        className={`w-full gap-2 ${filters.nearMe
+          ? "bg-yoga-accent hover:bg-yoga-accent/90 text-white"
+          : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
+          }`}
         onClick={onNearMeClick}
         disabled={isLocating}
       >
@@ -171,9 +217,8 @@ export function DiscoverFilters({
         <label className="text-sm font-medium text-yoga-text">Рейтинг</label>
         <Button
           variant="outline"
-          className={`w-full justify-between border-yoga-accent-soft ${
-            filters.ratingSort ? "bg-yoga-accent-soft" : ""
-          }`}
+          className={`w-full justify-between border-yoga-accent-soft ${filters.ratingSort ? "bg-yoga-accent-soft" : ""
+            }`}
           onClick={toggleRatingSort}
         >
           <span className="text-yoga-text">
@@ -200,11 +245,10 @@ export function DiscoverFilters({
             <Badge
               key={type}
               variant={filters.yogaTypes.includes(type) ? "default" : "outline"}
-              className={`cursor-pointer transition-colors ${
-                filters.yogaTypes.includes(type)
-                  ? "bg-yoga-accent text-white hover:bg-yoga-accent/90"
-                  : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
-              }`}
+              className={`cursor-pointer transition-colors ${filters.yogaTypes.includes(type)
+                ? "bg-yoga-accent text-white hover:bg-yoga-accent/90"
+                : "border-yoga-accent-soft text-yoga-text hover:bg-yoga-accent-soft"
+                }`}
               onClick={() => toggleYogaType(type)}
             >
               {type}

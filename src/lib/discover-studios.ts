@@ -1,4 +1,5 @@
-import type { Studio, YogaClass } from "@/data/mock-data";
+import type { ScheduleEntry, Studio, YogaClass } from "@/data/mock-data";
+import { studioAcceptsMultisport } from "@/lib/multisport";
 import type { DiscoverStudio, YogaLevel, YogaType } from "@/types/studio-discovery";
 
 const PLACEHOLDER_IMAGES = [
@@ -88,12 +89,23 @@ function firstUsableImageUrl(images: string[] | undefined, index: number): strin
   return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
 }
 
+type ScheduleMultisportSlice = Pick<ScheduleEntry, "acceptsMultisport">;
+
 /** Build discover cards from catalog DTOs (DB-backed via `getPublicCatalog`). */
-export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: YogaClass[]): DiscoverStudio[] {
-  return studios.map((s, index) => ({
+export function buildDiscoverStudiosFromPayload(
+  studios: Studio[],
+  classes: YogaClass[],
+  scheduleByStudio: Map<string, ScheduleMultisportSlice[]> = new Map(),
+): DiscoverStudio[] {
+  return studios.map((s, index) => {
+    const studioClasses = classes.filter((c) => c.studioId === s.id);
+    const studioSchedule = scheduleByStudio.get(s.id) ?? [];
+
+    return {
     id: s.id,
     name: s.name,
     teachingMode: s.teachingMode,
+    hasMultisport: studioAcceptsMultisport(s, studioSchedule, studioClasses),
     image: firstUsableImageUrl(s.images, index),
     rating: s.rating,
     reviewCount: s.reviewCount,
@@ -107,5 +119,6 @@ export function buildDiscoverStudiosFromPayload(studios: Studio[], classes: Yoga
     lat: s.lat,
     lng: s.lng,
     nextClass: nextClassForStudio(s.id, classes),
-  }));
+  };
+  });
 }

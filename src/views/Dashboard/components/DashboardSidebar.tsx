@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
-import { BarChart3, Building2, CalendarDays, ChevronRight, CreditCard, GraduationCap, LayoutDashboard, BookOpen, Palmtree, Video } from 'lucide-react';
+import { BarChart3, Building2, CalendarDays, ChevronRight, CreditCard, GraduationCap, LayoutDashboard, BookOpen, Palmtree, RefreshCw, Video } from 'lucide-react';
 import { formatPriceDualFromBgn } from '@/lib/eur-bgn';
 import { DASHBOARD_PATHS, type Section } from '../dashboardTypes';
 
@@ -14,6 +14,7 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
   { key: 'subscriptions', label: 'Абонаменти', icon: CreditCard },
   { key: 'videos', label: 'Видеа', icon: Video },
   { key: 'retreats', label: 'Рийтрийти', icon: Palmtree },
+  { key: 'fitsys', label: 'fitsys', icon: RefreshCw },
 ];
 
 export function DashboardSidebar({

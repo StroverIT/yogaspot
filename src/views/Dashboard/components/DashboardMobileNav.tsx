@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Building2, CalendarDays, CreditCard, GraduationCap, LayoutDashboard, BookOpen, Palmtree, Video } from 'lucide-react';
+import { Building2, CalendarDays, CreditCard, GraduationCap, LayoutDashboard, BookOpen, Palmtree, RefreshCw, Video } from 'lucide-react';
 import { DASHBOARD_PATHS, type Section } from '../dashboardTypes';
 
 const navItems: { key: Section; label: string; icon: React.ElementType }[] = [
@@ -11,6 +11,7 @@ const navItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: 'subscriptions', label: 'Абонаменти', icon: CreditCard },
   { key: 'videos', label: 'Видеа', icon: Video },
   { key: 'retreats', label: 'Рийтрийти', icon: Palmtree },
+  { key: 'fitsys', label: 'fitsys', icon: RefreshCw },
 ];
 
 export function DashboardMobileNav({

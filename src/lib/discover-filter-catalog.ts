@@ -55,6 +55,10 @@ export function applyDiscoverFilters(
     result = result.filter((s) => s.teachingMode === filters.format);
   }
 
+  if (filters.multisport) {
+    result = result.filter((s) => s.hasMultisport);
+  }
+
   type WithDistance = DiscoverStudio & { calculatedDistance?: number };
 
   if (userLocation) {

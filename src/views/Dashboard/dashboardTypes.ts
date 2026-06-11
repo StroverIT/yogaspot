@@ -8,7 +8,8 @@ export type Section =
   | 'schedule'
   | 'subscriptions'
   | 'videos'
-  | 'retreats';
+  | 'retreats'
+  | 'fitsys';
 
 export const DASHBOARD_PATHS: Record<Section, string> = {
   overview: '/dashboard',
@@ -19,6 +20,7 @@ export const DASHBOARD_PATHS: Record<Section, string> = {
   subscriptions: '/dashboard/subscriptions',
   videos: '/dashboard/videos',
   retreats: '/dashboard/retreats',
+  fitsys: '/dashboard/fitsys',
 };
 
 export function getActiveSection(pathname: string): Section {
@@ -32,6 +34,7 @@ export function getActiveSection(pathname: string): Section {
   if (sub === 'subscriptions') return 'subscriptions';
   if (sub === 'videos') return 'videos';
   if (sub === 'retreats') return 'retreats';
+  if (sub === 'fitsys') return 'fitsys';
   return 'overview';
 }
 

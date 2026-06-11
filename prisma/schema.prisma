@@ -26,6 +26,12 @@ enum SubscriptionRequestStatus {
   DECLINED
 }
 
+enum FitsysSyncRequestStatus {
+  PENDING
+  SYNCED
+  DECLINED
+}
+
 enum TeachingMode {
   PHYSICAL
   ONLINE
@@ -227,6 +233,7 @@ model Studio {
   retreats      Retreat[]
   subscription          StudioSubscription?
   subscriptionRequests  SubscriptionRequest[]
+  fitsysSyncRequests    FitsysSyncRequest[]
   subscriptionVideos    SubscriptionVideo[]
   memberships           StudioMembership[]
   favorites             Favorite[]
@@ -474,6 +481,20 @@ model SubscriptionRequest {
   monthlyPrice Float
   includes     String                     @db.Text
   adminNote    String?                    @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studioId, status])
+  @@index([status, createdAt])
+}
+
+model FitsysSyncRequest {
+  id        String                  @id @default(cuid())
+  studioId  String
+  studio    Studio                  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  fitsysUrl String
+  status    FitsysSyncRequestStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -8,4 +8,5 @@ export interface DiscoverFiltersState {
   ratingSort: "asc" | "desc" | null;
   nearMe: boolean;
   format: DiscoverTeachingFormat;
+  multisport: boolean;
 }
