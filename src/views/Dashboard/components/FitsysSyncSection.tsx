@@ -139,8 +139,7 @@ export function FitsysSyncSection({ studios }: { studios: Studio[] }) {
           <div className="space-y-1">
             <h2 className="font-display text-lg font-semibold text-foreground">Линк към fitsys</h2>
             <p className="text-sm text-muted-foreground">
-              Поставете публичния линк към календара в fitsys - обикновено започва с{' '}
-              <span className="font-medium text-foreground">studio.вашият-домейн.com</span>. Не е нужно да водите графика на две места.
+              Поставете публичния линк към календара или профила ви в fitsys. Не е нужно да водите графика на две места.
             </p>
           </div>
         </div>
@@ -203,7 +202,7 @@ export function FitsysSyncSection({ studios }: { studios: Studio[] }) {
               <Label htmlFor="fitsys-url">Линк към fitsys</Label>
               <Input
                 id="fitsys-url"
-                type="url"
+                type="text"
                 inputMode="url"
                 placeholder={FITSYS_URL_PLACEHOLDER}
                 value={fitsysUrl}

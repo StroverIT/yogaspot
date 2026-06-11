@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
   if (!studioId) return jsonError('Изберете студио.', 400);
   if (!fitsysUrl) {
-    return jsonError('Въведете валиден публичен линк към fitsys календара (studio.вашият-домейн.com).', 400);
+    return jsonError('Въведете линк.', 400);
   }
 
   const access = await assertStudioWriteAccess(gate.user, studioId);
