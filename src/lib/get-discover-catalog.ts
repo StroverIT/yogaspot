@@ -41,3 +41,16 @@ const getDiscoverStudiosCachedImpl = unstable_cache(getDiscoverStudiosImpl, ['di
 export async function getDiscoverStudiosCached(): Promise<DiscoverStudio[]> {
   return getDiscoverStudiosCachedImpl();
 }
+
+export async function getDiscoverCitiesCached(): Promise<string[]> {
+  const studios = await getDiscoverStudiosCached();
+  const cities = new Set<string>();
+
+  for (const studio of studios) {
+    if (studio.teachingMode !== 'online' && studio.city) {
+      cities.add(studio.city);
+    }
+  }
+
+  return Array.from(cities).sort((a, b) => a.localeCompare(b, 'bg'));
+}

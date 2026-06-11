@@ -39,18 +39,28 @@ export function DiscoverStudioCard({ studio, priority = false }: DiscoverStudioC
             <TeachingModePill mode={studio.teachingMode} className="shrink-0" />
           </div>
 
-          <div className="mt-2 flex items-center gap-1 text-yoga-text-soft text-sm">
+          <div className="mt-2 flex items-start gap-1.5 text-yoga-text-soft text-sm">
             {studio.teachingMode === "online" ? (
-              <Video className="w-4 h-4 flex-shrink-0 text-yoga-accent" />
+              <>
+                <Video className="mt-0.5 h-4 w-4 shrink-0 text-yoga-accent" />
+                <span className="truncate">Онлайн</span>
+              </>
             ) : (
-              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <>
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-yoga-text">{studio.city}</p>
+                  {studio.streetAddress ? (
+                    <p className="truncate text-xs">{studio.streetAddress}</p>
+                  ) : null}
+                </div>
+              </>
             )}
-            <span className="truncate">{studio.location}</span>
-            {studio.distance && (
-              <span className="ml-1 text-yoga-secondary font-medium flex-shrink-0">
-                • {studio.distance}
+            {studio.distance ? (
+              <span className="ml-auto shrink-0 text-yoga-secondary font-medium">
+                {studio.distance}
               </span>
-            )}
+            ) : null}
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">

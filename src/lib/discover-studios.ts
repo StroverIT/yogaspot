@@ -1,5 +1,6 @@
 import type { ScheduleEntry, Studio, YogaClass } from "@/data/mock-data";
 import { studioAcceptsMultisport } from "@/lib/multisport";
+import { cityFromAddress, streetFromAddress } from "@/lib/studio-address";
 import type { DiscoverStudio, YogaLevel, YogaType } from "@/types/studio-discovery";
 
 const PLACEHOLDER_IMAGES = [
@@ -33,12 +34,6 @@ function studioLevelFromClasses(studioId: string, classes: YogaClass[]): YogaLev
     if (set.has("среден")) return "intermediate";
   }
   return "all";
-}
-
-function locationFromAddress(address: string): string {
-  const parts = address.split(",").map((p) => p.trim());
-  if (parts.length >= 2) return `${parts[parts.length - 1]}, ${parts[0]}`;
-  return address;
 }
 
 function amenitiesFromStudio(studio: Studio): DiscoverStudio["amenities"] {
@@ -101,6 +96,11 @@ export function buildDiscoverStudiosFromPayload(
     const studioClasses = classes.filter((c) => c.studioId === s.id);
     const studioSchedule = scheduleByStudio.get(s.id) ?? [];
 
+    const city =
+      s.teachingMode === 'online' ? '' : cityFromAddress(s.address);
+    const streetAddress =
+      s.teachingMode === 'online' ? '' : streetFromAddress(s.address);
+
     return {
     id: s.id,
     name: s.name,
@@ -109,7 +109,9 @@ export function buildDiscoverStudiosFromPayload(
     image: firstUsableImageUrl(s.images, index),
     rating: s.rating,
     reviewCount: s.reviewCount,
-    location: s.teachingMode === 'online' ? 'Онлайн' : locationFromAddress(s.address),
+    location: s.teachingMode === 'online' ? 'Онлайн' : city,
+    city,
+    streetAddress,
     address: s.address,
     styles: stylesForStudio(s.id, classes),
     level: studioLevelFromClasses(s.id, classes),

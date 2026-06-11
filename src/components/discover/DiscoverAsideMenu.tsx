@@ -18,10 +18,11 @@ export type DiscoverAsideVariant = "sidebar" | "mobile-toolbar";
 
 type Props = {
   variant: DiscoverAsideVariant;
+  cities: string[];
 };
 
 /** Filters + “near me” - URL is the source of truth (searchParams). */
-export function DiscoverAsideMenu({ variant }: Props) {
+export function DiscoverAsideMenu({ variant, cities }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -86,6 +87,7 @@ export function DiscoverAsideMenu({ variant }: Props) {
   const filtersChrome = (
     <DiscoverFilters
       filters={filters}
+      cities={cities}
       onFiltersChange={setFilters}
       onNearMeClick={handleNearMeClick}
       isLocating={isLocating}

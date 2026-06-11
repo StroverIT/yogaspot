@@ -2,6 +2,7 @@ import type { DiscoverTeachingFormat, YogaLevel, YogaType } from "@/types/studio
 
 export interface DiscoverFiltersState {
   search: string;
+  city: string;
   level: YogaLevel | "all";
   levelSort: "asc" | "desc" | null;
   yogaTypes: YogaType[];

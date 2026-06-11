@@ -43,6 +43,8 @@ export interface DiscoverStudio {
   rating: number;
   reviewCount: number;
   location: string;
+  city: string;
+  streetAddress: string;
   address: string;
   distance?: string;
   nextClass?: string;

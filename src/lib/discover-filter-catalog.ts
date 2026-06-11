@@ -39,8 +39,15 @@ export function applyDiscoverFilters(
       (s) =>
         s.name.toLowerCase().includes(searchLower) ||
         s.location.toLowerCase().includes(searchLower) ||
+        s.city.toLowerCase().includes(searchLower) ||
+        s.streetAddress.toLowerCase().includes(searchLower) ||
         s.address.toLowerCase().includes(searchLower),
     );
+  }
+
+  if (filters.city) {
+    const cityLower = filters.city.toLowerCase();
+    result = result.filter((s) => s.city.toLowerCase() === cityLower);
   }
 
   if (filters.level !== 'all') {

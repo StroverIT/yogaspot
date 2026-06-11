@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import { DiscoverAsideMenu } from '@/components/discover/DiscoverAsideMenu';
+import { getDiscoverCitiesCached } from '@/lib/get-discover-catalog';
 import { defaultShareOgImages, defaultShareTwitterImagePaths } from '@/lib/share-metadata';
 import { DiscoverMainContent } from '@/components/discover/discover-main-content';
 import { DiscoverPageAsideColumn } from '@/components/discover/discover-page-aside-column';
@@ -49,7 +50,9 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function DiscoverPage({ searchParams }: PageProps) {
+export default async function DiscoverPage({ searchParams }: PageProps) {
+  const cities = await getDiscoverCitiesCached();
+
   return (
     <div className="flex min-h-screen flex-col bg-yoga-bg">
       <PageViewTracker event="discover_page_view" />
@@ -65,12 +68,12 @@ export default function DiscoverPage({ searchParams }: PageProps) {
 
         <div className="flex gap-8">
           <Suspense fallback={<DiscoverFiltersSkeleton />}>
-            <DiscoverPageAsideColumn />
+            <DiscoverPageAsideColumn cities={cities} />
           </Suspense>
 
           <div className="min-w-0 flex-1">
             <Suspense fallback={null}>
-              <DiscoverAsideMenu variant="mobile-toolbar" />
+              <DiscoverAsideMenu variant="mobile-toolbar" cities={cities} />
             </Suspense>
 
             <DiscoverMainContent searchParams={searchParams} />

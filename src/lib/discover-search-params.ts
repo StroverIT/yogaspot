@@ -20,6 +20,7 @@ export function parseDiscoverFiltersFromSearchParams(
 
   return {
     search: searchParams.get('search') || '',
+    city: searchParams.get('city') || '',
     level: parseLevel(levelRaw),
     levelSort: (searchParams.get('levelSort') as 'asc' | 'desc') || null,
     yogaTypes,
@@ -53,6 +54,7 @@ export function stringifyDiscoverQuery(
   const params = new URLSearchParams();
   if (options.page > 1) params.set('page', String(options.page));
   if (filters.search) params.set('search', filters.search);
+  if (filters.city) params.set('city', filters.city);
   if (filters.level !== 'all') params.set('level', filters.level);
   if (filters.levelSort) params.set('levelSort', filters.levelSort);
   if (filters.yogaTypes.length > 0) params.set('yogaTypes', filters.yogaTypes.join(','));

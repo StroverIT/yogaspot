@@ -23,6 +23,7 @@ export type { DiscoverFiltersState };
 
 interface DiscoverFiltersProps {
   filters: DiscoverFiltersState;
+  cities: string[];
   onFiltersChange: (filters: DiscoverFiltersState) => void;
   onNearMeClick: () => void;
   isLocating: boolean;
@@ -30,6 +31,7 @@ interface DiscoverFiltersProps {
 
 export function DiscoverFilters({
   filters,
+  cities,
   onFiltersChange,
   onNearMeClick,
   isLocating,
@@ -85,9 +87,14 @@ export function DiscoverFilters({
     });
   };
 
+  const handleCityChange = (value: string) => {
+    onFiltersChange({ ...filters, city: value === "all" ? "" : value });
+  };
+
   const clearFilters = () => {
     onFiltersChange({
       search: "",
+      city: "",
       level: "all",
       levelSort: null,
       yogaTypes: [],
@@ -100,6 +107,7 @@ export function DiscoverFilters({
 
   const hasActiveFilters =
     filters.search ||
+    filters.city ||
     filters.level !== "all" ||
     filters.yogaTypes.length > 0 ||
     filters.ratingSort !== null ||
@@ -120,6 +128,25 @@ export function DiscoverFilters({
           className="pl-10 h-11 bg-yoga-surface border-yoga-accent-soft focus:border-yoga-accent text-yoga-text"
         />
       </div>
+
+      {cities.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-yoga-text">Град</label>
+          <Select value={filters.city || "all"} onValueChange={handleCityChange}>
+            <SelectTrigger className="w-full border-yoga-accent-soft text-yoga-text">
+              <SelectValue placeholder="Избери град" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Всички градове</SelectItem>
+              {cities.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="text-sm font-medium text-yoga-text">Формат</label>
