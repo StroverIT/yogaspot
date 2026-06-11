@@ -151,14 +151,37 @@ export function StudioDetailInteractive({ initialPayload }: StudioDetailInteract
     wasAuthenticated.current = isAuthenticated;
   }, [isAuthenticated, fetchFullPayload]);
 
-  const handleReviewSubmitted = useCallback(() => {
-    void fetchFullPayload().then((data) => {
-      if (!data) return;
-      const { classes, reviews, ...nextCore } = data;
-      setCore(nextCore);
-      setExtras({ classes, reviews });
-    });
-  }, [fetchFullPayload]);
+  const handleReviewSubmitted = useCallback(
+    (newReview: Review) => {
+      setExtras((prev) => {
+        const classes = prev?.classes ?? [];
+        const reviews = prev?.reviews ?? [];
+        if (reviews.some((r) => r.id === newReview.id)) {
+          return prev ?? { classes, reviews };
+        }
+        return { classes, reviews: [newReview, ...reviews] };
+      });
+      setCore((prev) => ({
+        ...prev,
+        studio: {
+          ...prev.studio,
+          reviewCount: prev.studio.reviewCount + 1,
+          rating:
+            prev.studio.reviewCount === 0
+              ? newReview.rating
+              : (prev.studio.rating * prev.studio.reviewCount + newReview.rating) /
+                (prev.studio.reviewCount + 1),
+        },
+      }));
+      void fetchFullPayload().then((data) => {
+        if (!data) return;
+        const { classes, reviews, ...nextCore } = data;
+        setCore(nextCore);
+        setExtras({ classes, reviews });
+      });
+    },
+    [fetchFullPayload],
+  );
 
   const { studio, instructors, schedule, subscription } = core;
   const studioClasses = extras?.classes ?? [];

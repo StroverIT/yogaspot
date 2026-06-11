@@ -44,7 +44,7 @@ export function ReviewsTabContent({
   studioId: string;
   studioOwnerUserId: string;
   studioReviews: Review[];
-  onReviewSubmitted: () => void;
+  onReviewSubmitted: (review: Review) => void;
 }) {
   const { user, isAuthenticated } = useAuth();
   const [rating, setRating] = useState(0);
@@ -52,7 +52,8 @@ export function ReviewsTabContent({
   const [submitting, setSubmitting] = useState(false);
 
   const isOwner = !!(user && studioOwnerUserId && user.id === studioOwnerUserId);
-  const canCompose = isAuthenticated && !isOwner;
+  const hasAlreadyReviewed = studioReviews.some((r) => r.userId === user?.id);
+  const canCompose = isAuthenticated && !isOwner && !hasAlreadyReviewed;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,15 +74,19 @@ export function ReviewsTabContent({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating, text: trimmed }),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as { error?: string; review?: Review };
       if (!res.ok) {
         toast.error(data.error ?? 'Неуспешно изпращане на отзива.');
+        return;
+      }
+      if (!data.review) {
+        toast.error('Неуспешно изпращане на отзива.');
         return;
       }
       toast.success('Благодарим за отзива!');
       setRating(0);
       setText('');
-      onReviewSubmitted();
+      onReviewSubmitted(data.review);
     } catch {
       toast.error('Мрежова грешка. Опитайте отново.');
     } finally {
@@ -146,7 +151,7 @@ export function ReviewsTabContent({
               className="resize-y"
             />
           </div>
-          <Button type="submit" disabled={submitting || rating < 1}>
+          <Button type="submit" disabled={submitting}>
             {submitting ? 'Изпращане…' : 'Публикувай отзив'}
           </Button>
         </form>

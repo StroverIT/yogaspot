@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getStudioBusinessOwnerUserId, jsonError, requireSession } from '@/lib/api-auth';
+import { invalidateAfterCatalogChange } from '@/lib/app-revalidate';
 import { reviewToDto } from '@/lib/public-studio-dto';
+import { runStudioReviewNotifications } from '@/lib/studio-review-notifications';
 
 export const runtime = 'nodejs';
 
@@ -99,6 +101,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     });
 
     return rev;
+  });
+
+  invalidateAfterCatalogChange(undefined, studioId);
+
+  await runStudioReviewNotifications({
+    userId: gate.user.id,
+    studioId,
+    rating: ratingRaw,
+    reviewText: text,
   });
 
   return NextResponse.json({ review: reviewToDto(created) });

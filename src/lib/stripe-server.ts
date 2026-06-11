@@ -11,8 +11,8 @@
  * - EMAIL_FROM - From address for booking emails (required for any mail transport)
  * - SMTP: SMTP_HOST (+ SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE as needed) - **if SMTP_HOST is set, SMTP is used**
  *   even when Google OAuth env vars exist (so NextAuth Google keys do not take over mail by mistake).
- * - Gmail OAuth (only when SMTP_HOST is unset): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REFRESH_TOKEN for the
- *   sending mailbox (Gmail send scope); see mailer.ts
+ * - Gmail OAuth (only when SMTP_HOST is unset): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+ *   GOOGLE_REFRESH_TOKEN (or REFRESH_TOKEN), REDIRECT_URI; see mailer.ts (DigiStart-style googleapis)
  */
 import Stripe from 'stripe';
 import { bgnToEur } from '@/lib/eur-bgn';

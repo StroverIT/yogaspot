@@ -14,7 +14,7 @@ export type BookingNotificationPayload = {
   scheduleDetail?: ScheduleEmailDetail;
 };
 
-/** Creates RecentEnrollment + sends confirmation emails. Swallows errors so Stripe/booking APIs are not failed by mail issues. */
+/** Sends confirmation emails, then records RecentEnrollment. Swallows errors so Stripe/booking APIs are not failed by mail issues. */
 export async function runBookingNotifications(payload: BookingNotificationPayload): Promise<void> {
   try {
     const [studio, buyer] = await Promise.all([
@@ -42,15 +42,6 @@ export async function runBookingNotifications(payload: BookingNotificationPayloa
         ? payload.classDetail.name
         : payload.scheduleDetail?.className ?? 'Резервация';
 
-    await prisma.recentEnrollment.create({
-      data: {
-        userDisplayName: displayName,
-        className: title,
-        studioName: studio.name,
-        enrolledAt: new Date(),
-      },
-    });
-
     const teachingMode = teachingModeFromPrisma(studio.teachingMode);
     await sendBookingConfirmationEmails({
       kind: payload.kind,
@@ -69,7 +60,20 @@ export async function runBookingNotifications(payload: BookingNotificationPayloa
       classDetail: payload.classDetail,
       scheduleDetail: payload.scheduleDetail,
     });
+
+    try {
+      await prisma.recentEnrollment.create({
+        data: {
+          userDisplayName: displayName,
+          className: title,
+          studioName: studio.name,
+          enrolledAt: new Date(),
+        },
+      });
+    } catch (enrollErr) {
+      console.error('[booking-notifications] RecentEnrollment create failed', enrollErr);
+    }
   } catch (err) {
-    console.error('[booking-notifications] failed (e.g. email or RecentEnrollment)', err);
+    console.error('[booking-notifications] failed (e.g. email)', err);
   }
 }

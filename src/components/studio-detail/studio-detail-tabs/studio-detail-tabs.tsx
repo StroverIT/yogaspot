@@ -54,7 +54,7 @@ export function StudioDetailTabs({
   onTabChange: (tab: TabKey) => void;
   onBookClass: (classId: string) => void;
   onRequestScheduleBook: (entry: ScheduleEntry) => void;
-  onReviewSubmitted: () => void;
+  onReviewSubmitted: (review: Review) => void;
   defaultTab?: TabKey;
   checkoutModalOpen: boolean;
   bookedClassIds: string[];

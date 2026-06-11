@@ -1,43 +1,75 @@
 import nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 
 /**
  * Outbound mail (nodemailer). **If `SMTP_HOST` is set, SMTP is used** (even when Google OAuth
  * env vars exist for NextAuth) so login credentials do not accidentally hijack mail transport.
  *
- * **SMTP** - when `SMTP_HOST` + `EMAIL_FROM` are set:
+ * **SMTP** - when `SMTP_HOST` + From address are set:
  * - `SMTP_PORT` (default 587), `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`
+ * - `SMTP_FROM` or `EMAIL_FROM` for the From header
  *
- * **Gmail / Google Workspace (OAuth2)** - only when `SMTP_HOST` is **not** set and all of:
- * - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `REFRESH_TOKEN` (refresh token must include a
- *   Gmail send scope, e.g. `https://mail.google.com/`)
- * - `EMAIL_FROM` - From header; mailbox address must match the Google account for `REFRESH_TOKEN`
+ * **Gmail OAuth2** (DigiStart-style, via `googleapis`) - when `SMTP_HOST` is **not** set:
+ * - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` (or legacy `REFRESH_TOKEN`)
+ * - `REDIRECT_URI` (e.g. `https://developers.google.com/oauthplayground` when using OAuth Playground)
+ * - Gmail user: `GOOGLE_EMAIL_USER`, `GMAIL_USER`, `SMTP_USER`, `NEXT_PUBLIC_EMAIL_SEND`, or `EMAIL_FROM`
+ * - From: `SMTP_FROM` or `EMAIL_FROM` or `Zenno <gmail-user>`
  *
- * Gmail sends obtain a fresh access token via Google’s token endpoint (more reliable than
- * relying on nodemailer’s implicit refresh alone).
+ * Refresh token must include Gmail send scope (`https://mail.google.com/`).
  */
 
-function mailboxFromEmailFrom(): string | null {
-  const raw = process.env.EMAIL_FROM?.trim();
-  if (!raw) return null;
-  const angle = raw.match(/<([^>]+)>/);
-  const addr = (angle ? angle[1] : raw).trim();
-  return addr || null;
+function extractEmailAddress(raw: string): string {
+  const trimmed = raw.trim();
+  const angle = trimmed.match(/<([^>]+)>/);
+  return (angle ? angle[1] : trimmed).trim();
+}
+
+/** Same candidate order as DigiStart order-emails / newsletter. */
+export function resolveGmailUser(): string | undefined {
+  const candidates = [
+    process.env.GOOGLE_EMAIL_USER,
+    process.env.GMAIL_USER,
+    process.env.SMTP_USER,
+    process.env.NEXT_PUBLIC_EMAIL_SEND,
+    process.env.EMAIL_FROM,
+  ] as const;
+
+  for (const raw of candidates) {
+    const value = raw?.trim();
+    if (!value) continue;
+    const addr = extractEmailAddress(value);
+    if (addr) return addr;
+  }
+  return undefined;
+}
+
+export function resolveGoogleRefreshToken(): string | undefined {
+  return process.env.GOOGLE_REFRESH_TOKEN?.trim() || process.env.REFRESH_TOKEN?.trim() || undefined;
+}
+
+export function resolveFromAddress(): string | undefined {
+  const explicit = process.env.SMTP_FROM?.trim() || process.env.EMAIL_FROM?.trim();
+  if (explicit) return explicit;
+  const gmailUser = resolveGmailUser();
+  return gmailUser ? `Zenno <${gmailUser}>` : undefined;
 }
 
 function useSmtpTransport(): boolean {
   return Boolean(process.env.SMTP_HOST?.trim());
 }
 
-function isGoogleMailOAuthConfigured(): boolean {
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-  const refreshToken = process.env.REFRESH_TOKEN?.trim();
-  const user = mailboxFromEmailFrom();
-  return Boolean(clientId && clientSecret && refreshToken && user);
+export function isGoogleMailOAuthConfigured(): boolean {
+  return Boolean(
+    resolveGmailUser() &&
+      process.env.GOOGLE_CLIENT_ID?.trim() &&
+      process.env.GOOGLE_CLIENT_SECRET?.trim() &&
+      resolveGoogleRefreshToken() &&
+      process.env.REDIRECT_URI?.trim(),
+  );
 }
 
 export function isMailConfigured(): boolean {
-  if (!process.env.EMAIL_FROM?.trim()) return false;
+  if (!resolveFromAddress()) return false;
   if (useSmtpTransport()) return true;
   return isGoogleMailOAuthConfigured();
 }
@@ -45,99 +77,95 @@ export function isMailConfigured(): boolean {
 /** Why mail is disabled (no secrets / PII). Use in logs when skipping send. */
 export function describeMailConfigGap(): {
   ready: boolean;
-  hasEmailFrom: boolean;
+  hasFrom: boolean;
   useSmtp: boolean;
   oauthComplete: boolean;
   hint: string;
 } {
-  const hasEmailFrom = Boolean(process.env.EMAIL_FROM?.trim());
+  const hasFrom = Boolean(resolveFromAddress());
   const useSmtp = useSmtpTransport();
   const oauthComplete = isGoogleMailOAuthConfigured();
   const ready = isMailConfigured();
   if (ready) {
-    return { ready: true, hasEmailFrom, useSmtp, oauthComplete, hint: '' };
+    return { ready: true, hasFrom, useSmtp, oauthComplete, hint: '' };
   }
-  if (!hasEmailFrom) {
+  if (!hasFrom) {
     return {
       ready: false,
-      hasEmailFrom,
+      hasFrom,
       useSmtp,
       oauthComplete,
-      hint: 'Set EMAIL_FROM (From address for outgoing mail).',
+      hint: 'Set SMTP_FROM or EMAIL_FROM (From address for outgoing mail).',
     };
   }
   return {
     ready: false,
-    hasEmailFrom,
+    hasFrom,
     useSmtp,
     oauthComplete,
     hint:
-      'Set SMTP_HOST for SMTP, or leave SMTP_HOST unset and set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + REFRESH_TOKEN (Gmail send scope) for OAuth.',
+      'Set SMTP_HOST for SMTP, or set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + GOOGLE_REFRESH_TOKEN + REDIRECT_URI + Gmail user for OAuth.',
   };
 }
 
-async function refreshGoogleAccessToken(): Promise<string> {
-  const client_id = process.env.GOOGLE_CLIENT_ID?.trim();
-  const client_secret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-  const refresh_token = process.env.REFRESH_TOKEN?.trim();
-  if (!client_id || !client_secret || !refresh_token) {
-    throw new Error('Gmail OAuth: missing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or REFRESH_TOKEN');
+async function createGoogleOAuthTransport(): Promise<nodemailer.Transporter> {
+  const gmailUser = resolveGmailUser();
+  const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  const googleRefreshToken = resolveGoogleRefreshToken();
+  const redirectUri = process.env.REDIRECT_URI?.trim();
+
+  if (!gmailUser || !googleClientId || !googleClientSecret || !googleRefreshToken || !redirectUri) {
+    const missing: string[] = [];
+    if (!gmailUser) missing.push('GOOGLE_EMAIL_USER|GMAIL_USER|SMTP_USER|NEXT_PUBLIC_EMAIL_SEND|EMAIL_FROM');
+    if (!googleClientId) missing.push('GOOGLE_CLIENT_ID');
+    if (!googleClientSecret) missing.push('GOOGLE_CLIENT_SECRET');
+    if (!googleRefreshToken) missing.push('GOOGLE_REFRESH_TOKEN|REFRESH_TOKEN');
+    if (!redirectUri) missing.push('REDIRECT_URI');
+    throw new Error(`Gmail OAuth mail not configured: ${missing.join(', ')}`);
   }
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id,
-      client_secret,
-      refresh_token,
-      grant_type: 'refresh_token',
-    }),
-  });
+  const oauth2Client = new google.auth.OAuth2(googleClientId, googleClientSecret, redirectUri);
+  oauth2Client.setCredentials({ refresh_token: googleRefreshToken });
 
-  const json = (await res.json()) as {
-    access_token?: string;
-    error?: string;
-    error_description?: string;
-  };
-
-  if (!res.ok || !json.access_token) {
-    const detail = json.error_description || json.error || JSON.stringify(json);
-    throw new Error(`Gmail OAuth token refresh failed (${res.status}): ${detail}`);
+  let accessToken: string | null | undefined;
+  try {
+    const tokenResponse = await oauth2Client.getAccessToken();
+    accessToken = tokenResponse.token;
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    if (/invalid_grant/i.test(errMsg)) {
+      throw new Error(
+        `Gmail OAuth refresh token is invalid or expired (invalid_grant). ` +
+          `Set GOOGLE_REFRESH_TOKEN (or REFRESH_TOKEN) from OAuth Playground with scope https://mail.google.com/, ` +
+          `same GOOGLE_CLIENT_ID/SECRET, REDIRECT_URI=${redirectUri}, and account ${gmailUser}.`,
+      );
+    }
+    throw err;
   }
 
-  return json.access_token;
-}
-
-async function createGoogleOAuthTransport() {
-  const user = mailboxFromEmailFrom();
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
-  const refreshToken = process.env.REFRESH_TOKEN?.trim();
-  if (!user || !clientId || !clientSecret || !refreshToken) {
-    throw new Error('Gmail OAuth mail: set EMAIL_FROM (mailbox), GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REFRESH_TOKEN');
+  if (!accessToken) {
+    throw new Error('Gmail OAuth: failed to obtain access token');
   }
-
-  const accessToken = await refreshGoogleAccessToken();
 
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       type: 'OAuth2',
-      user,
-      clientId,
-      clientSecret,
-      refreshToken,
+      user: gmailUser,
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
+      refreshToken: googleRefreshToken,
       accessToken,
     },
   });
 }
 
-function createSmtpTransport() {
+function createSmtpTransport(): nodemailer.Transporter {
   const host = process.env.SMTP_HOST?.trim();
   const port = parseInt(process.env.SMTP_PORT?.trim() || '587', 10);
   const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASS?.trim();
+  const pass = process.env.SMTP_PASS?.trim() || process.env.SMTP_PASSWORD?.trim();
   const secure =
     process.env.SMTP_SECURE?.trim().toLowerCase() === 'true' || port === 465;
 
@@ -153,7 +181,7 @@ function createSmtpTransport() {
   });
 }
 
-async function createTransportFromEnv() {
+async function createTransportFromEnv(): Promise<nodemailer.Transporter> {
   if (useSmtpTransport()) {
     return createSmtpTransport();
   }
@@ -161,7 +189,7 @@ async function createTransportFromEnv() {
     return createGoogleOAuthTransport();
   }
   throw new Error(
-    '[mailer] No transport: set SMTP_HOST, or set EMAIL_FROM + GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + REFRESH_TOKEN (without SMTP_HOST for Gmail OAuth)',
+    '[mailer] No transport: set SMTP_HOST, or Gmail OAuth (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, REDIRECT_URI, Gmail user).',
   );
 }
 
@@ -171,16 +199,15 @@ export async function sendHtmlEmail(params: {
   html: string;
   text?: string;
 }): Promise<void> {
-  const from = process.env.EMAIL_FROM?.trim();
+  const from = resolveFromAddress();
   if (!from) {
-    console.warn('[mailer] EMAIL_FROM missing; skipping send');
+    console.warn('[mailer] From address missing; skipping send');
     return;
   }
 
   if (!isMailConfigured()) {
-    console.warn(
-      '[mailer] Mail not configured: set EMAIL_FROM and SMTP_HOST, or EMAIL_FROM + GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET + REFRESH_TOKEN (Gmail; leave SMTP_HOST unset)',
-    );
+    const gap = describeMailConfigGap();
+    console.warn('[mailer] Mail not configured:', gap.hint);
     return;
   }
 

@@ -8,6 +8,7 @@ import {
   mapStripeSubscriptionStatus,
   subscriptionPeriodEnd,
 } from '@/lib/studio-membership';
+import { runStudioSubscriptionNotifications } from '@/lib/studio-subscription-notifications';
 
 export function isStudioSubscriptionMetadata(md: Record<string, string | undefined>): boolean {
   return md.zennoKind === 'studio_subscription' || md.checkoutKind === 'studio_subscription';
@@ -86,6 +87,11 @@ export async function upsertStudioMembershipFromStripe(
         },
       });
       await trackStudioMembershipCompleted(userId, studioId, subscription.id, studioSubscriptionId);
+      await runStudioSubscriptionNotifications({
+        userId,
+        studioId,
+        studioSubscriptionId,
+      });
     } else {
       console.error(
         '[studio subscription] duplicate membership blocked',
@@ -106,6 +112,11 @@ export async function upsertStudioMembershipFromStripe(
   });
 
   await trackStudioMembershipCompleted(userId, studioId, subscription.id, studioSubscriptionId);
+  await runStudioSubscriptionNotifications({
+    userId,
+    studioId,
+    studioSubscriptionId,
+  });
 }
 
 export async function fulfillStudioSubscriptionCheckout(
