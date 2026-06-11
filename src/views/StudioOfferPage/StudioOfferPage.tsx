@@ -349,7 +349,7 @@ export function StudioOfferPage({
   }[] = [
       { value: `${stats.studioCount}+`, label: "Партньорски студиа" },
       { value: `${stats.classCount}+`, label: "Предстоящи класове" },
-      { value: `${fmt(stats.totalEnrolled)}+`, label: "Записани места" },
+      // { value: `${fmt(stats.totalEnrolled)}+`, label: "Записани места" },
       { value: stats.avgRating, label: "Средна оценка", showStar: true },
     ];
 
