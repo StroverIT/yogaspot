@@ -31,13 +31,19 @@ import {
   type BookingPaymentMode,
 } from '@/lib/booking-payment-mode';
 import { isStripeConnectReady, type StripeConnectSummary } from '@/lib/stripe-connect';
-import { cn } from '@/lib/utils';
 import { PaymentModeField } from '@/views/Dashboard/components/PaymentModeField';
 import { preventDialogOutsideClose } from '@/views/Dashboard/components/preventDialogOutsideClose';
+import { ModalStepBar } from '@/views/Dashboard/components/modals/ModalStepBar';
 import { StripeConnectSetupModal } from '@/views/Dashboard/components/modals/StripeConnectSetupModal';
 
 const INCOMPLETE_MSG =
   'Попълнете всички полета и изберете всички опции преди запазване.';
+
+const CLASS_MODAL_STEPS = [
+  { id: 'basics', label: 'Основни' },
+  { id: 'schedule', label: 'Дата и час' },
+  { id: 'details', label: 'Детайли' },
+] as const;
 
 export type ClassModalPayload = {
   id?: string;
@@ -96,6 +102,7 @@ export function ClassModal({
   const [acceptsMultisport, setAcceptsMultisport] = useState(false);
   const [paymentMode, setPaymentMode] = useState<BookingPaymentMode>('onsite');
   const [stripeSetupOpen, setStripeSetupOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const parsedEur = parseEurInput(price);
   const hasValidBasePrice = price.trim() !== '' && Number.isFinite(parsedEur) && parsedEur >= 0;
@@ -161,6 +168,7 @@ export function ClassModal({
     setAcceptsMultisport(false);
     setPaymentMode('onsite');
     setStripeSetupOpen(false);
+    setCurrentStep(0);
   }, [open, classToEdit]);
 
   useEffect(() => {
@@ -209,9 +217,27 @@ export function ClassModal({
   );
 
   const canSave = detailsComplete && !onlineStudioBlocked && !saving;
+  const isLastStep = currentStep === CLASS_MODAL_STEPS.length - 1;
 
-  const showScheduleSection = isEditing || basicsComplete;
-  const showDetailsSection = isEditing || scheduleComplete;
+  const isStepComplete = (step: number) => {
+    if (step === 0) return basicsComplete && !onlineStudioBlocked;
+    if (step === 1) return scheduleComplete;
+    return detailsComplete;
+  };
+
+  const canGoNext = isStepComplete(currentStep);
+
+  const goNext = () => {
+    if (!canGoNext) {
+      toast.error(INCOMPLETE_MSG);
+      return;
+    }
+    setCurrentStep(prev => Math.min(prev + 1, CLASS_MODAL_STEPS.length - 1));
+  };
+
+  const goBack = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 0));
+  };
 
   const handleSave = async () => {
     const resolvedCapacity = isOnlineStudio && noCapacityLimit
@@ -272,11 +298,20 @@ export function ClassModal({
           <DialogDescription>
             {classToEdit
               ? 'Променете данните и запазете.'
-              : 'Попълвайте стъпка по стъпка — следващите полета се появяват, когато предишните са готови.'}
+              : 'Попълвайте стъпка по стъпка с бутоните Назад и Напред.'}
           </DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-2 sm:px-0 sm:pb-0">
+        <div className="shrink-0 border-b px-4 pb-4 pt-1 sm:border-b-0 sm:px-0 sm:pb-0">
+          <ModalStepBar
+            steps={[...CLASS_MODAL_STEPS]}
+            currentIndex={currentStep}
+            onStepClick={setCurrentStep}
+            canJumpToStep={index => isEditing || index <= currentStep}
+          />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4 sm:px-0 sm:pb-0">
           <div className="space-y-4">
+            {currentStep === 0 ? (
             <section className="space-y-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Основни данни</p>
               <div>
@@ -337,14 +372,10 @@ export function ClassModal({
                 </div>
               </div>
             </section>
+            ) : null}
 
-            {showScheduleSection ? (
-              <section
-                className={cn(
-                  'space-y-4 border-t border-border/70 pt-4',
-                  !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
-                )}
-              >
+            {currentStep === 1 ? (
+              <section className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Дата и час</p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
@@ -363,13 +394,8 @@ export function ClassModal({
               </section>
             ) : null}
 
-            {showDetailsSection ? (
-              <section
-                className={cn(
-                  'space-y-4 border-t border-border/70 pt-4',
-                  !isEditing && 'animate-in fade-in-0 slide-in-from-top-1 duration-300',
-                )}
-              >
+            {currentStep === 2 ? (
+              <section className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Детайли за класа</p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
@@ -501,13 +527,35 @@ export function ClassModal({
             ) : null}
           </div>
         </div>
-        <DialogFooter className="mt-0 shrink-0 gap-3 border-t bg-background px-4 py-4 sm:mt-4 sm:border-t-0 sm:px-0 sm:py-0 [&_button]:w-full sm:[&_button]:w-auto">
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="mt-0 shrink-0 gap-2 border-t bg-background px-4 py-4 sm:mt-4 sm:border-t-0 sm:px-0 sm:py-0">
+          <Button variant="outline" onClick={onClose} className="w-full sm:mr-auto sm:w-auto">
             Отказ
           </Button>
-          <Button onClick={() => void handleSave()} disabled={!canSave}>
-            {saving ? 'Запазване…' : 'Запази'}
-          </Button>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goBack}
+              disabled={currentStep === 0}
+              className="flex-1 sm:flex-none"
+            >
+              Назад
+            </Button>
+            {isLastStep ? (
+              <Button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={!canSave}
+                className="flex-1 sm:flex-none"
+              >
+                {saving ? 'Запазване…' : classToEdit ? 'Запази' : 'Приключи'}
+              </Button>
+            ) : (
+              <Button type="button" onClick={goNext} disabled={!canGoNext} className="flex-1 sm:flex-none">
+                Напред
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
       <StripeConnectSetupModal
