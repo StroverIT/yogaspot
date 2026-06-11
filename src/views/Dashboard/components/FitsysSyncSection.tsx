@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Studio } from '@/data/mock-data';
-import type { FitsysSyncRequestDto } from '@/lib/fitsys-sync-request-dto';
+import { FITSYS_URL_PLACEHOLDER, type FitsysSyncRequestDto } from '@/lib/fitsys-sync-request-dto';
 import { dashboardCardClass } from '../dashboardUi';
 import { DashboardPageHeader } from './DashboardPageHeader';
 
@@ -128,7 +128,7 @@ export function FitsysSyncSection({ studios }: { studios: Studio[] }) {
     <div className="space-y-6">
       <DashboardPageHeader
         title="Синхронизация с fitsys"
-        description="Ако вече ползвате fitsys, споделете линк към профила си — нашият екип ще синхронизира графика в Zenno."
+        description="Ако вече ползвате fitsys, споделете линк към профила си - нашият екип ще синхронизира графика в Zenno."
       />
 
       <div className={`${dashboardCardClass} p-6 sm:p-8`}>
@@ -139,7 +139,8 @@ export function FitsysSyncSection({ studios }: { studios: Studio[] }) {
           <div className="space-y-1">
             <h2 className="font-display text-lg font-semibold text-foreground">Линк към fitsys</h2>
             <p className="text-sm text-muted-foreground">
-              Поставете публичния или административния линк към вашето студио в fitsys. Не е нужно да водите графика на две места.
+              Поставете публичния линк към календара в fitsys - обикновено започва с{' '}
+              <span className="font-medium text-foreground">studio.вашият-домейн.com</span>. Не е нужно да водите графика на две места.
             </p>
           </div>
         </div>
@@ -168,7 +169,7 @@ export function FitsysSyncSection({ studios }: { studios: Studio[] }) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mt-2"
+                    className="mt-2 ml-4"
                     onClick={() => {
                       setSubmitted(false);
                       setFitsysUrl(latestRequestForStudio.fitsysUrl);
@@ -204,14 +205,11 @@ export function FitsysSyncSection({ studios }: { studios: Studio[] }) {
                 id="fitsys-url"
                 type="url"
                 inputMode="url"
-                placeholder="https://app.fitsys.bg/..."
+                placeholder={FITSYS_URL_PLACEHOLDER}
                 value={fitsysUrl}
                 onChange={(e) => setFitsysUrl(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                Линкът трябва да сочи към fitsys (напр. app.fitsys.bg).
-              </p>
             </div>
 
             <Button type="submit" disabled={submitting}>

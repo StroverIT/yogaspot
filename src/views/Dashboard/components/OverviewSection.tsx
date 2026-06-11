@@ -244,7 +244,7 @@ export function OverviewSection({
         <div className="mb-4">
           <h3 className="font-display font-semibold text-foreground">Приход по месеци</h3>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Последните 12 месеца — записвания (събития и разписание) и активни абонаменти.
+            Последните 12 месеца - записвания (събития и разписание) и активни абонаменти.
           </p>
         </div>
         <DashboardMonthlyRevenueChart data={monthlyRevenue} />

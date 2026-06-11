@@ -37,7 +37,7 @@ const getDiscoverStudiosCachedImpl = unstable_cache(getDiscoverStudiosImpl, ['di
   revalidate: 300,
 });
 
-/** Same catalog cache as home + `/api/public/studios` — avoids stale discover-only results. */
+/** Same catalog cache as home + `/api/public/studios` - avoids stale discover-only results. */
 export async function getDiscoverStudiosCached(): Promise<DiscoverStudio[]> {
   return getDiscoverStudiosCachedImpl();
 }

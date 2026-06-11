@@ -3,6 +3,7 @@ import type { Review, Studio, SubscriptionRequestDto, YogaClass } from '@/data/m
 import { getPublicCatalog } from '@/lib/get-public-catalog';
 import { prisma } from '@/lib/prisma';
 import { reviewToDto, studioToDto } from '@/lib/public-studio-dto';
+import { fitsysSyncRequestToDto } from '@/lib/fitsys-sync-request-dto';
 import { subscriptionRequestToDto } from '@/lib/subscription-request-dto';
 
 export type AdminStudioRow = Studio & {
@@ -30,6 +31,10 @@ export type AdminSubscriptionRequestListItem = SubscriptionRequestDto & {
   studioName: string;
   ownerName: string;
   ownerEmail: string;
+};
+
+export type AdminFitsysSyncRequestListItem = ReturnType<typeof fitsysSyncRequestToDto> & {
+  studioName: string;
 };
 
 export async function getAdminStudiosForList(): Promise<AdminStudioRow[]> {
@@ -139,6 +144,20 @@ export async function getAdminLatestSubscriptionRequestsForOverview(): Promise<A
     studioName: r.studio.name,
     ownerName: r.studio.business.owner.name ?? '',
     ownerEmail: r.studio.business.owner.email ?? '',
+  }));
+}
+
+export async function getAdminFitsysSyncRequestsForList(): Promise<AdminFitsysSyncRequestListItem[]> {
+  const rows = await prisma.fitsysSyncRequest.findMany({
+    orderBy: [{ createdAt: 'desc' }],
+    include: {
+      studio: { select: { name: true } },
+    },
+  });
+
+  return rows.map((r) => ({
+    ...fitsysSyncRequestToDto(r),
+    studioName: r.studio.name,
   }));
 }
 

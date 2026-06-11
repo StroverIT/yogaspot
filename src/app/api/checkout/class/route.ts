@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   }
 
   if (isFreeClassPrice(yogaClass.price)) {
-    return jsonError('Този клас е безплатен — използвайте директно записване.', 400);
+    return jsonError('Този клас е безплатен - използвайте директно записване.', 400);
   }
 
   const existing = await prisma.booking.findUnique({

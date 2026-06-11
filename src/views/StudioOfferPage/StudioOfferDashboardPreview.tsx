@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, CalendarDays, Users, MapPin } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, MapPin, TrendingDown, BarChart3 } from "lucide-react";
 
 export function StudioOfferDashboardPreview() {
   return (
@@ -35,16 +35,21 @@ export function StudioOfferDashboardPreview() {
         </div>
         <div className="space-y-3 p-4">
           <div className="h-3 w-2/3 rounded-full bg-foreground/10" />
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-border bg-background p-3">
-              <div className="mb-2 h-2 w-1/2 rounded-full bg-primary/20" />
-              <div className="font-display text-lg font-bold text-foreground">12</div>
-              <div className="text-[10px] text-muted-foreground">Записвания</div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-xl border border-border bg-background p-2.5">
+              <BarChart3 className="mb-1.5 h-3 w-3 text-primary" />
+              <div className="font-display text-sm font-bold text-foreground">1 240 лв.</div>
+              <div className="text-[9px] font-medium text-muted-foreground">Приход</div>
             </div>
-            <div className="rounded-xl border border-border bg-background p-3">
-              <div className="mb-2 h-2 w-1/2 rounded-full bg-primary/20" />
-              <div className="font-display text-lg font-bold text-foreground">4.8</div>
-              <div className="text-[10px] text-muted-foreground">Оценка</div>
+            <div className="rounded-xl border border-border bg-background p-2.5">
+              <TrendingDown className="mb-1.5 h-3 w-3 text-muted-foreground" />
+              <div className="font-display text-sm font-bold text-foreground">320 лв.</div>
+              <div className="text-[9px] font-medium text-muted-foreground">Разход</div>
+            </div>
+            <div className="rounded-xl border border-border bg-background p-2.5">
+              <BarChart3 className="mb-1.5 h-3 w-3 text-primary/70" />
+              <div className="font-display text-sm font-bold text-foreground">+18%</div>
+              <div className="text-[9px] font-medium text-muted-foreground">Анализи</div>
             </div>
           </div>
           <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">

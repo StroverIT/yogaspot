@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   }
 
   if (isFreeClassPrice(entry.price)) {
-    return jsonError('Този час е безплатен — използвайте директно записване.', 400);
+    return jsonError('Този час е безплатен - използвайте директно записване.', 400);
   }
 
   const existing = await prisma.scheduleEntryBooking.findUnique({

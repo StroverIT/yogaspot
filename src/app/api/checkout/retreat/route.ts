@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   }
 
   if (isFreeClassPrice(retreat.price)) {
-    return jsonError('Този рийтрийт е безплатен — използвайте директно записване.', 400);
+    return jsonError('Този рийтрийт е безплатен - използвайте директно записване.', 400);
   }
 
   const existing = await prisma.retreatBooking.findUnique({

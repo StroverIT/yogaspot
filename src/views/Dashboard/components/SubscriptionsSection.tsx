@@ -115,7 +115,7 @@ export function SubscriptionsSection({
     <div className="space-y-6">
       <DashboardPageHeader
         title="Абонаменти"
-        description="Управлявайте абонаментните планове за вашите студиа — цена, продължителност и какво включват."
+        description="Управлявайте абонаментните планове за вашите студиа - цена, продължителност и какво включват."
         actions={
           stripeReady ? (
             <Button

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
+  BarChart3,
   Bell,
   Building2,
   Calendar,
@@ -54,6 +55,14 @@ type TeachingMode = "physical" | "online";
 function teachingModeFromParam(value: string | null): TeachingMode {
   return value === "online" ? "online" : "physical";
 }
+
+const dashboardFinanceBenefit = {
+  icon: BarChart3,
+  title: "Приход, разход и анализи",
+  outcome: "За онлайн и физически класове",
+  desc: "В бизнес таблото следите приходите от записвания и абонаменти, разходите и месечните анализи - на едно място, без Excel.",
+  featured: false,
+};
 
 const physicalBenefits = [
   {
@@ -119,6 +128,7 @@ const physicalBenefits = [
     desc: "Ако вече ползвате fitsys, разписанието Ви може да се синхронизира и в Zenno - без да водите графика на две места.",
     featured: false,
   },
+  dashboardFinanceBenefit,
 ];
 
 const onlineBenefits = [
@@ -157,6 +167,7 @@ const onlineBenefits = [
     desc: "Млади практикуващи от цяла България ви откриват в Zenno - вие водите от вкъщи или студио, те се включват отвсякъде.",
     featured: false,
   },
+  dashboardFinanceBenefit,
 ];
 
 const physicalComparison = {
@@ -173,6 +184,7 @@ const physicalComparison = {
     "Онлайн записвания денонощно",
     "Онлайн плащане или на място + Google Calendar и напомняния",
     "Синхронизация със Sysfit - без двоен график",
+    "Приход, разход и анализи в бизнес таблото",
   ],
 };
 
@@ -188,6 +200,7 @@ const onlineComparison = {
     "Напомняния един ден и един час преди класа",
     "Групов чат за всеки клас",
     "Видими сте за млади практикуващи в цялата страна",
+    "Приход, разход и анализи в бизнес таблото",
   ],
 };
 
@@ -409,7 +422,7 @@ export function StudioOfferPage({
               <div className="offer-hero-preview">
                 <StudioOfferDashboardPreview />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
-                  Таблото ви - разписание, записвания и настройка на едно място
+                  Таблото ви - приход, разход и анализи за онлайн и физически класове
                 </p>
               </div>
             </div>

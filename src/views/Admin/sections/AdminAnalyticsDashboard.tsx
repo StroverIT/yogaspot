@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AdminAnalyticsPayload } from '@/lib/admin-analytics';
+import type { AdminFitsysSyncRequestListItem } from '@/lib/admin-queries';
+import { AdminFitsysSyncRequestsTable } from '@/views/Admin/components/AdminFitsysSyncRequestsTable';
 import { BookingsLineChart } from '@/views/Admin/components/analytics/BookingsLineChart';
 import { FunnelBarChart } from '@/views/Admin/components/analytics/FunnelBarChart';
 
 type AdminAnalyticsDashboardProps = {
   analytics: AdminAnalyticsPayload;
+  fitsysSyncRequests: AdminFitsysSyncRequestListItem[];
 };
 
 function percent(value: number): string {
@@ -27,7 +30,7 @@ function MetricLabel({ label, tooltip }: { label: string; tooltip: string }) {
   );
 }
 
-export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardProps) {
+export function AdminAnalyticsDashboard({ analytics, fitsysSyncRequests }: AdminAnalyticsDashboardProps) {
   const [studioViewsSort, setStudioViewsSort] = useState<'most' | 'least'>('most');
   const funnel = [
     { step: 'Signup', count: analytics.userFunnel.signupCompleted },
@@ -305,6 +308,10 @@ export function AdminAnalyticsDashboard({ analytics }: AdminAnalyticsDashboardPr
             </Card>
           </section>
         ) : null}
+
+        <section>
+          <AdminFitsysSyncRequestsTable requests={fitsysSyncRequests} />
+        </section>
       </div>
     </TooltipProvider>
   );
