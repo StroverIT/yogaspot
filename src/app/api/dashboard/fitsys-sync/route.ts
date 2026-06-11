@@ -7,6 +7,7 @@ import {
   requireBusinessWriteAccess,
   requireRole,
 } from '@/lib/api-auth';
+import { sendFitsysSyncRequestEmail } from '@/lib/fitsys-sync-email';
 import { fitsysSyncRequestToDto, parseFitsysUrl } from '@/lib/fitsys-sync-request-dto';
 
 export const runtime = 'nodejs';
@@ -45,10 +46,25 @@ export async function POST(request: Request) {
   const access = await assertStudioWriteAccess(gate.user, studioId);
   if (!access.ok) return access.response;
 
-  const existingPending = await prisma.fitsysSyncRequest.findFirst({
-    where: { studioId, status: 'PENDING' },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [existingPending, studio] = await Promise.all([
+    prisma.fitsysSyncRequest.findFirst({
+      where: { studioId, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.studio.findUnique({
+      where: { id: studioId },
+      select: {
+        name: true,
+        business: {
+          select: {
+            owner: { select: { name: true, email: true } },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const isUpdate = Boolean(existingPending);
 
   const saved = existingPending
     ? await prisma.fitsysSyncRequest.update({
@@ -58,6 +74,15 @@ export async function POST(request: Request) {
     : await prisma.fitsysSyncRequest.create({
         data: { studioId, fitsysUrl },
       });
+
+  void sendFitsysSyncRequestEmail({
+    studioName: studio?.name ?? studioId,
+    studioId,
+    fitsysUrl,
+    ownerName: studio?.business.owner.name,
+    ownerEmail: studio?.business.owner.email,
+    isUpdate,
+  });
 
   return NextResponse.json({ request: fitsysSyncRequestToDto(saved) });
 }
