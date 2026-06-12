@@ -265,7 +265,7 @@ const physicalFaqItems = [
   },
   {
     q: "Колко струва?",
-    a: "Първите партньорски студиа получават пробен период, след което месечна абонаментна такса. Цената е актуална на тази страница - без скрити такси за записвания от практикуващи.",
+    a: "Абонаментът започва чак когато съберем достатъчно студиа и се фокусираме върху практикуващите. Докато се съберат достатъчно практикуващи, ще отмине най-много един месец — затова първият месец е безплатен. След това студиото плаща 10 €/месец. Важно: практикуващите не плащат за абонамента — студиата плащат.",
   },
   {
     q: "Нужен ли ми е собствен сайт?",
@@ -304,9 +304,37 @@ const onlineFaqItems = [
   },
   {
     q: "Колко струва?",
-    a: "Първите партньорски студиа получават пробен период, след което месечна абонаментна такса. Цената е актуална на тази страница - без скрити такси за записвания.",
+    a: "Абонаментът започва чак когато съберем достатъчно студиа и се фокусираме върху практикуващите. Докато се съберат достатъчно практикуващи, ще отмине най-много един месец — затова първият месец е безплатен. След това студиото плаща 10 €/месец. Важно: практикуващите не плащат за абонамента — студиата плащат.",
   },
 ];
+
+function SubscriptionPricingNotice({
+  monthlyPriceEur,
+  className,
+}: {
+  monthlyPriceEur: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border-2 border-destructive bg-destructive/10 px-5 py-5 md:px-8 md:py-6",
+        className,
+      )}
+    >
+      <p className="text-center text-sm font-bold uppercase tracking-wide text-destructive">
+        Важно за абонамента
+      </p>
+      <p className="mt-3 text-center text-base leading-relaxed text-foreground md:text-lg">
+        Абонаментът започва чак когато съберем достатъчно студиа и се фокусираме върху практикуващите.
+        Докато се съберат достатъчно практикуващи, ще отмине най-много един месец - затова първият
+        месец е безплатен. След това таксуваме{" "}
+        <span className="font-semibold text-destructive">{monthlyPriceEur} €/месец</span>.
+      </p>
+
+    </div>
+  );
+}
 
 export function StudioOfferPage({
   offer,
@@ -426,6 +454,15 @@ export function StudioOfferPage({
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="border-y-2 border-destructive/30 bg-destructive/5 py-8 md:py-10">
+          <div className="container mx-auto px-4">
+            <SubscriptionPricingNotice
+              monthlyPriceEur={offer.monthlyPriceEur}
+              className="offer-animate mx-auto max-w-3xl shadow-sm"
+            />
           </div>
         </section>
 
@@ -713,8 +750,12 @@ export function StudioOfferPage({
                     безплатни места за партньорски студиа
                   </p>
                   <p className="offer-animate mt-3 text-muted-foreground">
-                    {offer.trialDays} дни пробен период · след това {offer.monthlyPriceEur} €/месец
+                    1 месец безплатно · след това {offer.monthlyPriceEur} €/месец за студиото
                   </p>
+                  <SubscriptionPricingNotice
+                    monthlyPriceEur={offer.monthlyPriceEur}
+                    className="offer-animate mt-6 text-left"
+                  />
                 </>
               ) : (
                 <>
@@ -722,8 +763,12 @@ export function StudioOfferPage({
                     Станете част от общността
                   </h2>
                   <p className="offer-animate mt-3 text-lg text-muted-foreground">
-                    {offer.monthlyPriceEur} €/месец · без пробен период
+                    {offer.monthlyPriceEur} €/месец за студиото
                   </p>
+                  <SubscriptionPricingNotice
+                    monthlyPriceEur={offer.monthlyPriceEur}
+                    className="offer-animate mt-6 text-left"
+                  />
                 </>
               )}
               <div className="offer-animate mt-8">
