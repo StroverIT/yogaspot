@@ -34,7 +34,7 @@ export function parseFitsysUrl(raw: string): string | null {
       return url.toString();
     }
   } catch {
-    // fall through — accept any non-empty string below
+    // fall through - accept any non-empty string below
   }
 
   return trimmed;

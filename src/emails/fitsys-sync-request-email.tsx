@@ -34,7 +34,7 @@ export function FitsysSyncRequestEmail({
               Студио: {studioName} ({studioId})
             </Text>
             <Text style={{ fontSize: '14px', color: '#444', margin: '6px 0' }}>
-              Собственик: {ownerName || '—'}
+              Собственик: {ownerName || '-'}
               {ownerEmail ? ` · ${ownerEmail}` : ''}
             </Text>
             <Text style={{ fontSize: '14px', color: '#444', margin: '6px 0' }}>

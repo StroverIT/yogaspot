@@ -38,7 +38,7 @@ export async function sendFitsysSyncRequestEmail(params: {
         studioName: params.studioName,
         studioId: params.studioId,
         fitsysUrl: params.fitsysUrl,
-        ownerName: params.ownerName?.trim() || '—',
+        ownerName: params.ownerName?.trim() || '-',
         ownerEmail: params.ownerEmail?.trim() || '',
         isUpdate: params.isUpdate,
       }),
